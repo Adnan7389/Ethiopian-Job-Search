@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const pool = require('./config/db');
 
 // Load environment variables
 dotenv.config();
@@ -10,7 +11,16 @@ const PORT = process.env.PORT || 5000;
 // Middleware to parse JSON
 app.use(express.json());
 
-// Basic route
+app.get('/db-test', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1 + 1 AS result');
+    res.json({ message: 'Database connected', result: rows[0].result });
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed', details: error.message });
+  }
+});
+
+
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Ethiopian Job Search API' });
 });
