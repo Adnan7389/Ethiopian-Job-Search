@@ -16,6 +16,9 @@ node_modules/
 dist/
 build/
 
+#tests
+backend/*.http
+
 #keeping sensitive information secure
 .env
 
