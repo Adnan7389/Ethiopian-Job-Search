@@ -4,9 +4,10 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <h1>Ethiopian Job Search</h1>
         <Routes>
           <Route path="/" element={<div>Home Page</div>} />
+          <Route path="/search" element={<div>Job Search</div>} />
+          <Route path="/dashboard" element={<div>Dashboard</div>} />
         </Routes>
       </div>
     </Router>
