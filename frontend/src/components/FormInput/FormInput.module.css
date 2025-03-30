@@ -1,0 +1,33 @@
+.inputGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .input:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+  
+  .error {
+    border-color: #e74c3c;
+  }
+  
+  .errorMessage {
+    color: #e74c3c;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
