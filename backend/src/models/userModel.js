@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const User = {
   async create({ username, email, password, user_type }) {
@@ -19,11 +20,21 @@ const User = {
   async createEmailVerification(email) {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    await pool.query(
+    console.log('Creating email verification for:', email, 'Token:', token);
+   
+  
+    const [result] = await pool.query(
       'INSERT INTO email_verifications (email, token, expires_at) VALUES (?, ?, ?)',
       [email, token, expiresAt]
     );
-    return token; // Mock email send in controller
+
+    console.log('Query result:', result);
+    if (!result.affectedRows) {
+      throw new Error('Failed to create email verification token - no rows affected');
+    }
+    
+    console.log('Returning token:', token);
+    return token; // Mock email send in controller    
   },
 
   async verifyEmailToken(token) {
