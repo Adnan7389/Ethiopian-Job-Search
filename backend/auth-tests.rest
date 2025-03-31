@@ -1,13 +1,13 @@
 # Authentication Tests for Ethiopian Job Search Backend
 # Base URL: http://localhost:5000/api/auth
 
-### 1. Register a New User (Job Seeker)
+### Register a New User (Job Seeker)
 POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "johndoee",
-  "email": "john.doee@example.com",
+  "username": "masmith",
+  "email": "marsmith@example.com",
   "password": "securepass123",
   "confirmPassword": "securepass123",
   "user_type": "job_seeker"
@@ -18,7 +18,7 @@ POST http://localhost:5000/api/auth/verify-email
 Content-Type: application/json
 
 {
-  "token": "PASTE_REGISTER_TOKEN_HERE"
+  "token": "a4d0cbe1356cb64a7b2b1b4bc78ff3538aad566ceeea5cb8cf2e52f8d28a39f6"
 }
 
 ### 3. Login with Email
@@ -26,7 +26,7 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "identifier": "john.doe@example.com",
+  "identifier": "marsmith@example.com",
   "password": "securepass123"
 }
 
@@ -35,7 +35,7 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "identifier": "johndoe",
+  "identifier": "masmith",
   "password": "securepass123"
 }
 
@@ -52,7 +52,7 @@ POST http://localhost:5000/api/auth/reset-password
 Content-Type: application/json
 
 {
-  "token": "PASTE_FORGOT_PASSWORD_TOKEN_HERE",
+  "token": "a822600478439187b653ab67269d2fe1c191b0d3b6c899911218613da64453b2",
   "password": "newsecurepass456"
 }
 
@@ -61,6 +61,6 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "identifier": "john.doe@example.com",
+  "identifier": "marsmith@example.com",
   "password": "newsecurepass456"
 }

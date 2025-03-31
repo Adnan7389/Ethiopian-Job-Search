@@ -21,10 +21,17 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = await User.create({ username, email, password: hashedPassword, user_type });
-    const token = User.createEmailVerification(email);
+    console.log('User created with ID:', userId);
+    const token = await Promise.resolve(User.createEmailVerification(email));
+    console.log('Generated token:', token); // Debug log
+
+    if (!token || typeof token !== 'string') {
+      throw new Error('Token generation failed');
+    }
 
     res.status(201).json({ message: 'Registered, please verify your email', token });
   } catch (error) {
+    console.error('Registration error:', error.message); // Debug log
     res.status(500).json({ error: 'Registration failed', details: error.message });
   }
 };
@@ -67,7 +74,7 @@ const resetPassword = async (req, res) => {
     if (!reset) {
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
-    const hashedPassword = await bcryptjs.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     await User.updatePassword(reset.email, hashedPassword);
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
