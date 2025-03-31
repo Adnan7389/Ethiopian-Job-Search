@@ -1,43 +1,37 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar';
-import JobCard from './components/JobCard/JobCard';
-import FormInput from './components/FormInput/FormInput';
-import Button from './components/Button/Button';
-import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
+import RoleSelection from './pages/RoleSelection/RoleSelection';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
 
+
+function PrivateRoute({ children }) {
+  const { token, isVerified } = useSelector((state) => state.auth);
+  if (!token) return <Navigate to="/login" />;
+  if (!isVerified) return <Navigate to="/login" />;
+  return children;
+}
 
 function App() {
-  
-    const sampleJob = {
-      job_id: 1,
-      job_title: 'Software Engineer',
-      company_name: 'TechCorp',
-      location: 'Addis Ababa',
-      job_type: 'full_time',
-      salary_min: 50000,
-      salary_max: 70000
-    };
   return (
     <Router>
       <Navbar />
       <div style={{ padding: '2rem' }}>
         <Routes>
-        <Route
-            path="/"
-            element={
-              <>
-                <JobCard job={sampleJob} onApply={(id) => alert(`Apply to job ${id}`)} />
-                <FormInput label="Test Input" name="test" type="text" register={() => {}} />
-                <Button variant="primary">Primary Button</Button>
-                <Button variant="secondary" disabled>
-                  Disabled Button
-                </Button>
-                <LoadingSpinner />
-              </>
-            }
+          <Route path="/" element={<div>Home Page</div>} />
+          <Route path="/role-selection" element={<RoleSelection />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route
+            path="/dashboard"
+            element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}
           />
-          <Route path="/search" element={<div>Job Search</div>} />
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
         </Routes>
       </div>
     </Router>
