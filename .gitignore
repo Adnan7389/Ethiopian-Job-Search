@@ -18,6 +18,7 @@ build/
 
 #tests
 backend/*.http
+backend/*.rest
 
 #keeping sensitive information secure
 .env
