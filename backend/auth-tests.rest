@@ -1,0 +1,66 @@
+# Authentication Tests for Ethiopian Job Search Backend
+# Base URL: http://localhost:5000/api/auth
+
+### 1. Register a New User (Job Seeker)
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoee",
+  "email": "john.doee@example.com",
+  "password": "securepass123",
+  "confirmPassword": "securepass123",
+  "user_type": "job_seeker"
+}
+
+### 2. Verify Email (Replace token from Register response)
+POST http://localhost:5000/api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "PASTE_REGISTER_TOKEN_HERE"
+}
+
+### 3. Login with Email
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "john.doe@example.com",
+  "password": "securepass123"
+}
+
+### 4. Login with Username
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "johndoe",
+  "password": "securepass123"
+}
+
+### 5. Forgot Password
+POST http://localhost:5000/api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com"
+}
+
+### 6. Reset Password (Replace token from Forgot Password response)
+POST http://localhost:5000/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "PASTE_FORGOT_PASSWORD_TOKEN_HERE",
+  "password": "newsecurepass456"
+}
+
+### 7. Login with New Password
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "john.doe@example.com",
+  "password": "newsecurepass456"
+}
