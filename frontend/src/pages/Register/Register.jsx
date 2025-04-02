@@ -1,69 +1,95 @@
-import { useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import FormInput from '../../components/FormInput/FormInput';
-import Button from '../../components/Button/Button';
-import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import FormInput from "../../components/FormInput/FormInput";
+import Button from "../../components/Button/Button";
+import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { register } from "../../features/auth/authSlice";
-import styles from './Register.module.css';
+import styles from "./Register.module.css";
 
 function Register() {
-  const { register: formRegister, handleSubmit, watch, formState: { errors } } = useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { selectedRole, loading, error } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const userType = location.state?.userType || "job_seeker";
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    user_type: userType,
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (data) => {
-    dispatch(register({ ...data, user_type: selectedRole })).then((result) => {
-      if (result.meta.requestStatus === 'fulfilled') {
-        navigate('/login');
-      }
-    });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const result = await dispatch(register(formData)).unwrap();
+      navigate("/enter-code", { state: { email: result.email } });
+    } catch (err) {
+      setError(err || "Registration failed. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Register as {selectedRole === 'job_seeker' ? 'Job Seeker' : 'Employer'}</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <h1 className={styles.title}>Register as {userType === "employer" ? "Employer" : "Job Seeker"}</h1>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <FormInput
           label="Username"
           name="username"
-          register={formRegister}
-          error={errors.username}
-          {...formRegister('username', { required: 'Username is required' })}
+          value={formData.username}
+          onChange={handleChange}
+          required
         />
         <FormInput
           label="Email"
           name="email"
           type="email"
-          register={formRegister}
-          error={errors.email}
-          {...formRegister('email', { required: 'Email is required', pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' } })}
+          value={formData.email}
+          onChange={handleChange}
+          required
         />
         <FormInput
           label="Password"
           name="password"
           type="password"
-          register={formRegister}
-          error={errors.password}
-          {...formRegister('password', { required: 'Password is required', minLength: { value: 6, message: 'Minimum 6 characters' } })}
+          value={formData.password}
+          onChange={handleChange}
+          required
         />
         <FormInput
           label="Confirm Password"
           name="confirmPassword"
           type="password"
-          register={formRegister}
-          error={errors.confirmPassword}
-          {...formRegister('confirmPassword', {
-            required: 'Confirm password is required',
-            validate: (value) => value === watch('password') || 'Passwords do not match'
-          })}
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
         />
         {error && <p className={styles.error}>{error}</p>}
-        <Button type="submit" disabled={loading}>
-          {loading ? <LoadingSpinner /> : 'Register'}
+        <Button type="submit" variant="primary" disabled={loading}>
+          {loading ? <LoadingSpinner /> : "Register"}
         </Button>
       </form>
+      <p className={styles.link}>
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 }

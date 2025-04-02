@@ -1,21 +1,45 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-export const register = createAsyncThunk('auth/register', async (data, { rejectWithValue }) => {
+const initialState = {
+  token: localStorage.getItem('token') || null,
+  userType: localStorage.getItem('userType') || null,
+  userId: localStorage.getItem('userId') || null,
+  isVerified: localStorage.getItem('isVerified') === 'true' || false,
+  status: 'idle',
+  error: null,
+};
+
+export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
   try {
-    const response = await api.post('/auth/register', data);
-    return response.data;
+    const response = await api.post('/auth/register', userData);
+    return { email: userData.email };
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
 
-export const login = createAsyncThunk('auth/login', async (data, { rejectWithValue }) => {
+export const verifyCode = createAsyncThunk('auth/verifyCode', async ({ email, code }, { rejectWithValue }) => {
   try {
-    const response = await api.post('/auth/login', data);
+    const response = await api.post('/auth/verify-code', { email, code });
+    localStorage.setItem('isVerified', 'true');
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.response?.data?.error || error.message);
+  }
+});
+
+export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
+  try {
+    const response = await api.post('/auth/login', credentials);
+    const { token, user_type, userId } = response.data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('userType', user_type);
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('isVerified', 'true');
+    return { token, userType: user_type, userId };
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
 
@@ -24,7 +48,7 @@ export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (ema
     const response = await api.post('/auth/forgot-password', { email });
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
 
@@ -33,81 +57,92 @@ export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ tok
     const response = await api.post('/auth/reset-password', { token, password });
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response.data);
-  }
-});
-
-export const verifyEmail = createAsyncThunk('auth/verifyEmail', async (token, { rejectWithValue }) => {
-  try {
-    const response = await api.post('/auth/verify-email', { token });
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: {
-    token: localStorage.getItem('token') || null,
-    userType: localStorage.getItem('userType') || null,
-    userId: localStorage.getItem('userId') || null,
-    isVerified: localStorage.getItem('isVerified') === 'true' || false,
-    selectedRole: null,
-    loading: false,
-    error: null
-  },
+  initialState,
   reducers: {
-    setCredentials: (state, action) => {
-      state.token = action.payload.token;
-      state.userType = action.payload.user_type;
-      state.userId = action.payload.userId;
-      state.isVerified = true;
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('userType', action.payload.user_type);
-      localStorage.setItem('userId', action.payload.userId);
-      localStorage.setItem('isVerified', 'true');
+    setRole: (state, action) => {
+      state.userType = action.payload;
+      localStorage.setItem('userType', action.payload); // Persist the role in localStorage
     },
     logout: (state) => {
+      localStorage.clear();
       state.token = null;
       state.userType = null;
       state.userId = null;
       state.isVerified = false;
-      localStorage.clear();
+      state.status = 'idle';
+      state.error = null;
     },
-    setRole: (state, action) => {
-      state.selectedRole = action.payload;
-    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(register.fulfilled, (state) => { state.loading = false; })
-      .addCase(register.rejected, (state, action) => { state.loading = false; state.error = action.payload.error; })
-      .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(register.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(verifyCode.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(verifyCode.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.isVerified = true;
+      })
+      .addCase(verifyCode.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(login.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
+        state.status = 'succeeded';
         state.token = action.payload.token;
-        state.userType = action.payload.user_type;
+        state.userType = action.payload.userType;
         state.userId = action.payload.userId;
         state.isVerified = true;
-        localStorage.setItem('token', action.payload.token);
-        localStorage.setItem('userType', action.payload.user_type);
-        localStorage.setItem('userId', action.payload.userId);
-        localStorage.setItem('isVerified', 'true');
       })
-      .addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload.error; })
-      .addCase(forgotPassword.pending, (state) => { state.loading = true; })
-      .addCase(forgotPassword.fulfilled, (state) => { state.loading = false; })
-      .addCase(forgotPassword.rejected, (state, action) => { state.loading = false; state.error = action.payload.error; })
-      .addCase(resetPassword.pending, (state) => { state.loading = true; })
-      .addCase(resetPassword.fulfilled, (state) => { state.loading = false; })
-      .addCase(resetPassword.rejected, (state, action) => { state.loading = false; state.error = action.payload.error; })
-      .addCase(verifyEmail.pending, (state) => { state.loading = true; })
-      .addCase(verifyEmail.fulfilled, (state) => { state.loading = false; state.isVerified = true; localStorage.setItem('isVerified', 'true'); })
-      .addCase(verifyEmail.rejected, (state, action) => { state.loading = false; state.error = action.payload.error; });
-  }
+      .addCase(login.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(forgotPassword.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(resetPassword.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      });
+  },
 });
 
-export const { setCredentials, logout, setRole } = authSlice.actions;
+export const { setRole, logout } = authSlice.actions; // Export setRole
 export default authSlice.reducer;
