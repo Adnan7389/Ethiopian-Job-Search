@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from './components/Navbar/Navbar';
 import RoleSelection from './pages/RoleSelection/RoleSelection';
@@ -7,7 +7,7 @@ import Register from './pages/Register/Register';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
-
+import JobSearch from './pages/JobSearch/JobSearch';
 
 function PrivateRoute({ children }) {
   const { token, isVerified } = useSelector((state) => state.auth);
@@ -32,6 +32,10 @@ function App() {
           <Route
             path="/dashboard"
             element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}
+          />
+          <Route
+            path="/job-search"
+            element={<PrivateRoute><JobSearch /></PrivateRoute>}
           />
         </Routes>
       </div>

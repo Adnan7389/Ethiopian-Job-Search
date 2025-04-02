@@ -1,0 +1,188 @@
+.container {
+  padding: 1rem;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+}
+
+.title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.createButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.searchForm,
+.editForm,
+.createForm {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-size: 0.875rem;
+  color: #2c3e50;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.formGroup textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.formActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.jobList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.message {
+  font-size: 1.25rem;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+.error {
+  font-size: 1.25rem;
+  color: #e74c3c;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+  .title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  .createButtonContainer {
+    margin-bottom: 2rem;
+  }
+  .searchForm,
+  .editForm,
+  .createForm {
+    padding: 1.5rem;
+  }
+  .formTitle {
+    font-size: 1.5rem;
+  }
+  .formRow {
+    flex-direction: row;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .formGroup {
+    flex: 1;
+    min-width: 200px;
+  }
+  .formGroup label {
+    font-size: 1rem;
+  }
+  .formGroup input,
+  .formGroup select,
+  .formGroup textarea {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+  .jobList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .message,
+  .error {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    padding: 3rem;
+  }
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .createButtonContainer {
+    margin-bottom: 2.5rem;
+  }
+  .searchForm,
+  .editForm,
+  .createForm {
+    padding: 2rem;
+  }
+  .formTitle {
+    font-size: 1.75rem;
+  }
+  .formRow {
+    gap: 2rem;
+  }
+  .formGroup {
+    min-width: 250px;
+  }
+  .formGroup label {
+    font-size: 1.125rem;
+  }
+  .formGroup input,
+  .formGroup select,
+  .formGroup textarea {
+    padding: 0.875rem;
+    font-size: 1.125rem;
+  }
+  .jobList {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .message,
+  .error {
+    font-size: 1.75rem;
+  }
+}

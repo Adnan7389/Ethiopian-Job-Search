@@ -1,66 +1,121 @@
-# Authentication Tests for Ethiopian Job Search Backend
-# Base URL: http://localhost:5000/api/auth
-
-### Register a New User (Job Seeker)
+### 1. Register an Employer User
 POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "masmith",
-  "email": "marsmith@example.com",
-  "password": "securepass123",
-  "confirmPassword": "securepass123",
-  "user_type": "job_seeker"
+  "username": "employer5",
+  "email": "employer5@example.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "user_type": "employer"
 }
 
-### 2. Verify Email (Replace token from Register response)
+### 2. Verify Email (Use the token from the register response)
 POST http://localhost:5000/api/auth/verify-email
 Content-Type: application/json
 
 {
-  "token": "a4d0cbe1356cb64a7b2b1b4bc78ff3538aad566ceeea5cb8cf2e52f8d28a39f6"
+  "token": "67efe02245a4ec2ea303bb36713951b2d00c98d6e26ae198e04955fbea29a327"
 }
 
-### 3. Login with Email
+### 3. Login as Employer to Get JWT Token
 POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "identifier": "marsmith@example.com",
-  "password": "securepass123"
+  "identifier": "employer5@example.com",
+  "password": "password123"
 }
 
-### 4. Login with Username
+### 4. Get All Jobs (Latest First)
+GET http://localhost:5000/api/jobs
+Authorization: Bearer <PASTE_JWT_TOKEN_HERE>
+
+### 5. Search Jobs with Filters (Latest First)
+GET http://localhost:5000/api/jobs/search?category=IT&location=Addis%20Ababa&job_type=full_time
+Authorization: Bearer <PASTE_JWT_TOKEN_HERE>
+
+### 6. Create a New Job
+POST http://localhost:5000/api/jobs
+Content-Type: application/json
+Authorization: Bearer <PASTE_JWT_TOKEN_HERE>
+
+{
+  "job_title": "Data Analyst",
+  "job_type": "full_time",
+  "category": "Finance",
+  "location": "Addis Ababa",
+  "company_name": "Data Insights",
+  "salary_min": 45000,
+  "salary_max": 65000,
+  "description": "Analyze data to provide business insights"
+}
+
+### 7. Update the Created Job (Use job_id from the create response)
+PUT http://localhost:5000/api/jobs/<PASTE_JOB_ID_HERE>
+Content-Type: application/json
+Authorization: Bearer <PASTE_JWT_TOKEN_HERE>
+
+{
+  "job_title": "Senior Data Analyst",
+  "job_type": "full_time",
+  "category": "Finance",
+  "location": "Addis Ababa",
+  "company_name": "Data Insights",
+  "salary_min": 50000,
+  "salary_max": 70000,
+  "description": "Lead data analysis projects"
+}
+
+### 8. Delete the Created Job
+DELETE http://localhost:5000/api/jobs/<PASTE_JOB_ID_HERE>
+Authorization: Bearer <PASTE_JWT_TOKEN_HERE>
+
+### 9. Register a Job Seeker (To Test Unauthorized Access)
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "jobseeker1",
+  "email": "jobseeker1@example.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "user_type": "job_seeker"
+}
+
+### 10. Verify Email for Job Seeker
+POST http://localhost:5000/api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "<PASTE_TOKEN_FROM_JOBSEEKER_REGISTER_RESPONSE>"
+}
+
+### 11. Login as Job Seeker to Get JWT Token
 POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "identifier": "masmith",
-  "password": "securepass123"
+  "identifier": "jobseeker1@example.com",
+  "password": "password123"
 }
 
-### 5. Forgot Password
-POST http://localhost:5000/api/auth/forgot-password
+### 12. Attempt to Update a Job as Job Seeker (Should Fail)
+PUT http://localhost:5000/api/jobs/<PASTE_JOB_ID_HERE>
 Content-Type: application/json
+Authorization: Bearer <PASTE_JOBSEEKER_JWT_TOKEN_HERE>
 
 {
-  "email": "john.doe@example.com"
+  "job_title": "Unauthorized Update",
+  "job_type": "full_time",
+  "category": "Finance",
+  "location": "Addis Ababa",
+  "company_name": "Data Insights",
+  "salary_min": 50000,
+  "salary_max": 70000,
+  "description": "This should fail"
 }
 
-### 6. Reset Password (Replace token from Forgot Password response)
-POST http://localhost:5000/api/auth/reset-password
-Content-Type: application/json
-
-{
-  "token": "a822600478439187b653ab67269d2fe1c191b0d3b6c899911218613da64453b2",
-  "password": "newsecurepass456"
-}
-
-### 7. Login with New Password
-POST http://localhost:5000/api/auth/login
-Content-Type: application/json
-
-{
-  "identifier": "marsmith@example.com",
-  "password": "newsecurepass456"
-}
+### 13. Attempt to Delete a Job as Job Seeker (Should Fail)
+DELETE http://localhost:5000/api/jobs/<PASTE_JOB_ID_HERE>
+Authorization: Bearer <PASTE_JOBSEEKER_JWT_TOKEN_HERE>

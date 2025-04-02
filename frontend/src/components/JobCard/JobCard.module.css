@@ -1,40 +1,89 @@
 .card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.company {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.location {
+  font-size: 0.875rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.jobType {
+  font-size: 0.875rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.salary {
+  font-size: 0.875rem;
+  color: #3498db;
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: #34495e;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
   }
-  
   .title {
-    font-size: 1.25rem;
-    margin: 0 0 0.5rem;
-    color: #2c3e50;
+    font-size: 1.5rem;
   }
-  
   .company {
-    font-size: 1rem;
-    color: #7f8c8d;
-    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
   }
-  
-  .details {
-    font-size: 0.9rem;
-    color: #95a5a6;
-    margin: 0 0 1rem;
-  }
-  
-  .applyButton {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+  .location,
+  .jobType,
+  .salary,
+  .description {
     font-size: 1rem;
   }
-  
-  .applyButton:hover {
-    background-color: #2980b9;
+}
+
+@media (min-width: 1025px) {
+  .card {
+    padding: 2rem;
   }
+  .title {
+    font-size: 1.75rem;
+  }
+  .company {
+    font-size: 1.25rem;
+  }
+  .location,
+  .jobType,
+  .salary,
+  .description {
+    font-size: 1.125rem;
+  }
+}

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import FormInput from '../../components/FormInput/FormInput';
 import Button from '../../components/Button/Button';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
-import { forgotPassword } from '../../store/authSlice';
+import { forgotPassword  } from "../../features/auth/authSlice";
 import styles from './ForgotPassword.module.css';
 
 function ForgotPassword() {

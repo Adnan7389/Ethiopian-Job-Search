@@ -1,72 +1,60 @@
-const pool = require('../config/db');
+const pool = require('../config/db.js');
 
 const Job = {
-  async create({ job_title, employer_id, job_type, category, location, company_name, salary_min, salary_max, description }) {
+  async create(job) {
+    const { job_title, employer_id, job_type, category, location, company_name, salary_min, salary_max, description } = job;
     const [result] = await pool.query(
-      'INSERT INTO jobs (job_title, employer_id, job_type, category, location, company_name, salary_min, salary_max, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [job_title, employer_id, job_type, category, location, company_name, salary_min || null, salary_max || null, description]
+      'INSERT INTO jobs (job_title, employer_id, job_type, category, location, company_name, salary_min, salary_max, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+      [job_title, employer_id, job_type, category, location, company_name, salary_min, salary_max, description]
     );
     return result.insertId;
   },
 
   async findAll() {
-    const [rows] = await pool.query('SELECT * FROM jobs ORDER BY created_at DESC');
-    return rows;
-  },
-
-  async findById(job_id) {
-    const [rows] = await pool.query('SELECT * FROM jobs WHERE job_id = ?', [job_id]);
-    return rows[0];
-  },
-
-  async update(job_id, updates) {
-    const [result] = await pool.query('UPDATE jobs SET ? WHERE job_id = ?', [updates, job_id]);
-    return result.affectedRows;
-  },
-
-  async delete(job_id) {
-    const [result] = await pool.query('DELETE FROM jobs WHERE job_id = ?', [job_id]);
-    return result.affectedRows;
+    const [jobs] = await pool.query('SELECT * FROM jobs ORDER BY created_at DESC');
+    return jobs;
   },
 
   async search(filters) {
-    let query = 'SELECT * FROM jobs WHERE 1=1'; // Base query
-    const params = [];
+    const { category, job_title, location, job_type } = filters;
+    let query = 'SELECT * FROM jobs WHERE 1=1';
+    const values = [];
 
-    if (filters.category) {
+    if (category) {
       query += ' AND category = ?';
-      params.push(filters.category);
+      values.push(category);
     }
-    if (filters.job_title) {
+    if (job_title) {
       query += ' AND job_title LIKE ?';
-      params.push(`%${filters.job_title}%`);
+      values.push(`%${job_title}%`);
     }
-    if (filters.location) {
+    if (location) {
       query += ' AND location LIKE ?';
-      params.push(`%${filters.location}%`);
+      values.push(`%${location}%`);
     }
-    if (filters.company_name) {
-      query += ' AND company_name LIKE ?';
-      params.push(`%${filters.company_name}%`);
-    }
-    if (filters.job_type) {
+    if (job_type) {
       query += ' AND job_type = ?';
-      params.push(filters.job_type);
-    }
-    if (filters.salary_min) {
-      query += ' AND (salary_max >= ? OR salary_max IS NULL)';
-      params.push(filters.salary_min);
-    }
-    if (filters.salary_max) {
-      query += ' AND (salary_min <= ? OR salary_min IS NULL)';
-      params.push(filters.salary_max);
+      values.push(job_type);
     }
 
-    query += ' ORDER BY created_at DESC'; // Latest jobs first
+    query += ' ORDER BY created_at DESC';
+    const [jobs] = await pool.query(query, values);
+    return jobs;
+  },
 
-    const [rows] = await pool.query(query, params);
-    return rows;
-  }
+  async update(jobId, employerId, updates) {
+    const { job_title, job_type, category, location, company_name, salary_min, salary_max, description } = updates;
+    const [result] = await pool.query(
+      'UPDATE jobs SET job_title = ?, job_type = ?, category = ?, location = ?, company_name = ?, salary_min = ?, salary_max = ?, description = ? WHERE job_id = ? AND employer_id = ?',
+      [job_title, job_type, category, location, company_name, salary_min, salary_max, description, jobId, employerId]
+    );
+    return result.affectedRows;
+  },
+
+  async delete(jobId, employerId) {
+    const [result] = await pool.query('DELETE FROM jobs WHERE job_id = ? AND employer_id = ?', [jobId, employerId]);
+    return result.affectedRows;
+  },
 };
 
 module.exports = Job;

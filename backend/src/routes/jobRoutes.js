@@ -1,10 +1,13 @@
 const express = require('express');
-const { createJob, getJobs, searchJobs } = require('../controllers/jobController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { getJobs, createJob, searchJobs, updateJob, deleteJob } = require('../controllers/jobController.js');
+const authenticateToken = require('../middleware/auth.js');
+
 const router = express.Router();
 
-router.post('/', authMiddleware, createJob); // Protected: only employers can post
-router.get('/', getJobs); // Public: all jobs
-router.get('/search', searchJobs); // Public: filtered search
+router.get('/', authenticateToken, getJobs);
+router.get('/search', authenticateToken, searchJobs);
+router.post('/', authenticateToken, createJob);
+router.put('/:jobId', authenticateToken, updateJob);
+router.delete('/:jobId', authenticateToken, deleteJob);
 
 module.exports = router;

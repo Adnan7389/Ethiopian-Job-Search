@@ -47,12 +47,19 @@
   .navbar {
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     padding: 1rem 2rem;
   }
   .navLinks {
     flex-direction: row;
-    gap: 1rem;
+    gap: 1.5rem;
     margin-top: 0;
+  }
+  .logo a {
+    font-size: 1.75rem;
+  }
+  .link, .logoutButton {
+    font-size: 1.125rem;
   }
 }
 
@@ -63,7 +70,10 @@
   .navLinks {
     gap: 2rem;
   }
+  .logo a {
+    font-size: 2rem;
+  }
   .link, .logoutButton {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 }
