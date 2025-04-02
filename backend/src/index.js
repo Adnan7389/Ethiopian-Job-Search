@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
+const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
@@ -9,6 +10,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(cors({
+  origin: 'http://localhost:5173', // Allow requests from the frontend
+  credentials: true, // If you plan to use cookies or auth headers
+}));
 
 app.use(express.json());
 app.use('/api/auth', authRoutes);

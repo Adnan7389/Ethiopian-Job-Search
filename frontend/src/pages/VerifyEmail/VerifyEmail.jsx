@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
-import { verifyEmail } from '../../store/authSlice';
+import { verifyEmail } from "../../features/auth/authSlice";
 import styles from './VerifyEmail.module.css';
 
 function VerifyEmail() {

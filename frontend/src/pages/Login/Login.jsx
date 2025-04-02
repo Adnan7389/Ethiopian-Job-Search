@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import FormInput from '../../components/FormInput/FormInput';
 import Button from '../../components/Button/Button';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
-import { login } from '../../store/authSlice';
+import { login } from "../../features/auth/authSlice";
 import styles from './Login.module.css';
 
 function Login() {

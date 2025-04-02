@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import FormInput from '../../components/FormInput/FormInput';
 import Button from '../../components/Button/Button';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
-import { resetPassword } from '../../store/authSlice';
+import { resetPassword } from '../../features/auth/authSlice';
 import styles from './ResetPassword.module.css';
 
 function ResetPassword() {

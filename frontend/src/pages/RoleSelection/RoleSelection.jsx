@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import styles from './RoleSelection.module.css';
-import { setRole } from '../../store/authSlice';
+import { setRole } from '../../features/auth/authSlice';
 
 function RoleSelection() {
   const dispatch = useDispatch();
