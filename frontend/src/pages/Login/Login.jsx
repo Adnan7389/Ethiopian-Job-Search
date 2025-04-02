@@ -1,51 +1,75 @@
-import { useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
-import FormInput from '../../components/FormInput/FormInput';
-import Button from '../../components/Button/Button';
-import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import FormInput from "../../components/FormInput/FormInput";
+import Button from "../../components/Button/Button";
+import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { login } from "../../features/auth/authSlice";
-import styles from './Login.module.css';
+import styles from "./Login.module.css";
 
 function Login() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const successMessage = location.state?.message || "";
+  const [formData, setFormData] = useState({
+    identifier: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (data) => {
-    dispatch(login({ identifier: data.identifier, password: data.password })).then((result) => {
-      if (result.meta.requestStatus === 'fulfilled') {
-        navigate('/dashboard');
-      }
-    });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      await dispatch(login(formData)).unwrap();
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Login</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <h1 className={styles.title}>Login</h1>
+      {successMessage && <p className={styles.success}>{successMessage}</p>}
+      <form onSubmit={handleSubmit} className={styles.form}>
         <FormInput
           label="Email or Username"
           name="identifier"
-          register={register}
-          error={errors.identifier}
-          {...register('identifier', { required: 'Email or username is required' })}
+          value={formData.identifier}
+          onChange={handleChange}
+          required
         />
         <FormInput
           label="Password"
           name="password"
           type="password"
-          register={register}
-          error={errors.password}
-          {...register('password', { required: 'Password is required' })}
+          value={formData.password}
+          onChange={handleChange}
+          required
         />
         {error && <p className={styles.error}>{error}</p>}
-        <Button type="submit" disabled={loading}>
-          {loading ? <LoadingSpinner /> : 'Login'}
+        <Button type="submit" variant="primary" disabled={loading}>
+          {loading ? <LoadingSpinner /> : "Login"}
         </Button>
-        <Link to="/forgot-password" className={styles.link}>Forgot Password?</Link>
       </form>
+      <p className={styles.link}>
+        Forgot your password? <Link to="/forgot-password">Reset it</Link>
+      </p>
+      <p className={styles.link}>
+        Don't have an account? <Link to="/role-selection">Register</Link>
+      </p>
     </div>
   );
 }

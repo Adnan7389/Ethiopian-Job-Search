@@ -6,7 +6,7 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
-import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
+import EnterCode from './pages/EnterCode/EnterCode';
 import JobSearch from './pages/JobSearch/JobSearch';
 
 function PrivateRoute({ children }) {
@@ -28,7 +28,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/enter-code" element={<EnterCode />} /> {/* New route */}
           <Route
             path="/dashboard"
             element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}
