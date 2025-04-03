@@ -8,6 +8,7 @@ import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import EnterCode from './pages/EnterCode/EnterCode';
 import JobSearch from './pages/JobSearch/JobSearch';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'; // Import ErrorBoundary
 
 function PrivateRoute({ children }) {
   const { token, isVerified } = useSelector((state) => state.auth);
@@ -19,6 +20,7 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <Router>
+      <ErrorBoundary>
       <Navbar />
       <div style={{ padding: '2rem' }}>
         <Routes>
@@ -39,6 +41,7 @@ function App() {
           />
         </Routes>
       </div>
+      </ErrorBoundary>
     </Router>
   );
 }
