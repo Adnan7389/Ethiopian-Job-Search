@@ -1,29 +1,16 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import Button from '../Button/Button';
-import styles from './JobCard.module.css';
+import React from "react";
+import styles from "./JobCard.module.css";
 
-const JobCard = ({ job, onEdit, onDelete }) => {
-  const { userType, userId } = useSelector((state) => state.auth);
-  const isEmployer = userType === 'employer';
-  const isOwner = isEmployer && job.employer_id === parseInt(userId);
-
+const JobCard = ({ job }) => {
   return (
     <div className={styles.card}>
-      <h3 className={styles.title}>{job.job_title}</h3>
-      <p className={styles.company}>{job.company_name}</p>
-      <p className={styles.location}>{job.location}</p>
-      <p className={styles.jobType}>{job.job_type.replace('_', ' ').toUpperCase()}</p>
-      <p className={styles.salary}>
-        Salary: {job.salary_min} - {job.salary_max} ETB
-      </p>
-      <p className={styles.description}>{job.description}</p>
-      {isOwner && (
-        <div className={styles.actions}>
-          <Button onClick={() => onEdit(job)} variant="primary">Edit</Button>
-          <Button onClick={() => onDelete(job.job_id)} variant="secondary">Delete</Button>
-        </div>
-      )}
+      <h3>{job.title}</h3>
+      <p><strong>Industry:</strong> {job.industry}</p>
+      <p><strong>Location:</strong> {job.location || "Not specified"}</p>
+      <p><strong>Job Type:</strong> {job.job_type}</p>
+      <p><strong>Experience Level:</strong> {job.experience_level}</p>
+      {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
+      <p>{job.description}</p>
     </div>
   );
 };
