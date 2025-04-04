@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
 const cors = require('cors');
+const cron = require("node-cron");
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
@@ -20,6 +21,19 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applicants', applicantRoutes);
+
+// Schedule job expiry notifications (runs every hour)
+cron.schedule("0 * * * *", async () => {
+  try {
+    const expiringJobs = await Job.findExpiringJobs();
+    for (const job of expiringJobs) {
+      console.log(`Mock Notification: Job "${job.title}" (ID: ${job.job_id}) is expiring soon for employer ${job.email}`);
+      // In production, send an email using nodemailer
+    }
+  } catch (error) {
+    console.error("Error in job expiry notification task:", error.message);
+  }
+});
 
 app.get('/db-test', async (req, res) => {
   try {
