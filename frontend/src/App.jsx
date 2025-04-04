@@ -7,8 +7,9 @@ import Register from './pages/Register/Register';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import EnterCode from './pages/EnterCode/EnterCode';
+import EnterResetCode from './pages/EnterResetCode/EnterResetCode';
 import JobSearch from './pages/JobSearch/JobSearch';
-import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'; // Import ErrorBoundary
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 
 function PrivateRoute({ children }) {
   const { token, isVerified } = useSelector((state) => state.auth);
@@ -21,26 +22,27 @@ function App() {
   return (
     <Router>
       <ErrorBoundary>
-      <Navbar />
-      <div style={{ padding: '2rem' }}>
-        <Routes>
-          <Route path="/" element={<div>Home Page</div>} />
-          <Route path="/role-selection" element={<RoleSelection />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/enter-code" element={<EnterCode />} /> {/* New route */}
-          <Route
-            path="/dashboard"
-            element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}
-          />
-          <Route
-            path="/job-search"
-            element={<PrivateRoute><JobSearch /></PrivateRoute>}
-          />
-        </Routes>
-      </div>
+        <Navbar />
+        <div style={{ padding: '2rem' }}>
+          <Routes>
+            <Route path="/" element={<div>Home Page</div>} />
+            <Route path="/role-selection" element={<RoleSelection />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/enter-reset-code" element={<EnterResetCode />} /> 
+            <Route path="/reset-password" element={<ResetPassword />} /> 
+            <Route path="/enter-code" element={<EnterCode />} />
+            <Route
+              path="/dashboard"
+              element={<PrivateRoute><div>Dashboard</div></PrivateRoute>}
+            />
+            <Route
+              path="/job-search"
+              element={<PrivateRoute><JobSearch /></PrivateRoute>}
+            />
+          </Routes>
+        </div>
       </ErrorBoundary>
     </Router>
   );

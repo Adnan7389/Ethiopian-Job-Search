@@ -8,8 +8,8 @@ const initialState = {
   isVerified: localStorage.getItem('isVerified') === 'true' || false,
   status: 'idle',
   error: null,
-  resendStatus: 'idle', 
-  resendError: null, 
+  resendStatus: 'idle',
+  resendError: null,
   resendMessage: null,
 };
 
@@ -64,9 +64,18 @@ export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (ema
   }
 });
 
-export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ token, password }, { rejectWithValue }) => {
+export const verifyResetCode = createAsyncThunk('auth/verifyResetCode', async ({ email, code }, { rejectWithValue }) => {
   try {
-    const response = await api.post('/auth/reset-password', { token, password });
+    const response = await api.post('/auth/verify-reset-code', { email, code });
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.error || error.message);
+  }
+});
+
+export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ email, password }, { rejectWithValue }) => {
+  try {
+    const response = await api.post('/auth/reset-password', { email, password });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
@@ -159,6 +168,17 @@ const authSlice = createSlice({
         state.status = 'succeeded';
       })
       .addCase(forgotPassword.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(verifyResetCode.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(verifyResetCode.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(verifyResetCode.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
