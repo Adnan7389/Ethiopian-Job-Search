@@ -8,12 +8,24 @@ const initialState = {
   isVerified: localStorage.getItem('isVerified') === 'true' || false,
   status: 'idle',
   error: null,
+  resendStatus: 'idle', 
+  resendError: null, 
+  resendMessage: null,
 };
 
 export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
   try {
     const response = await api.post('/auth/register', userData);
     return { email: userData.email };
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.error || error.message);
+  }
+});
+
+export const resendCode = createAsyncThunk('auth/resendCode', async (email, { rejectWithValue }) => {
+  try {
+    const response = await api.post('/auth/resend-code', { email });
+    return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
   }
@@ -67,7 +79,7 @@ const authSlice = createSlice({
   reducers: {
     setRole: (state, action) => {
       state.userType = action.payload;
-      localStorage.setItem('userType', action.payload); // Persist the role in localStorage
+      localStorage.setItem('userType', action.payload);
     },
     logout: (state) => {
       localStorage.clear();
@@ -77,6 +89,13 @@ const authSlice = createSlice({
       state.isVerified = false;
       state.status = 'idle';
       state.error = null;
+      state.resendStatus = 'idle';
+      state.resendError = null;
+      state.resendMessage = null;
+    },
+    clearResendMessage: (state) => {
+      state.resendMessage = null;
+      state.resendError = null;
     },
   },
   extraReducers: (builder) => {
@@ -91,6 +110,19 @@ const authSlice = createSlice({
       .addCase(register.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      .addCase(resendCode.pending, (state) => {
+        state.resendStatus = 'loading';
+        state.resendError = null;
+        state.resendMessage = null;
+      })
+      .addCase(resendCode.fulfilled, (state, action) => {
+        state.resendStatus = 'succeeded';
+        state.resendMessage = action.payload.message;
+      })
+      .addCase(resendCode.rejected, (state, action) => {
+        state.resendStatus = 'failed';
+        state.resendError = action.payload;
       })
       .addCase(verifyCode.pending, (state) => {
         state.status = 'loading';
@@ -144,5 +176,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setRole, logout } = authSlice.actions; // Export setRole
+export const { setRole, logout, clearResendMessage } = authSlice.actions;
 export default authSlice.reducer;
