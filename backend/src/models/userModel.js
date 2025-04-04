@@ -78,6 +78,28 @@ const User = {
       [email]
     );
   },
+
+  async storeResetCode(email, code, expiresAt) {
+    await pool.query(
+      "UPDATE users SET reset_code = ?, reset_code_expires_at = ? WHERE email = ?",
+      [code, expiresAt, email]
+    );
+  },
+
+  async verifyResetCode(email, code) {
+    const [rows] = await pool.query(
+      "SELECT * FROM users WHERE email = ? AND reset_code = ?",
+      [email, code]
+    );
+    return rows[0];
+  },
+
+  async clearResetCode(email) {
+    await pool.query(
+      "UPDATE users SET reset_code = NULL, reset_code_expires_at = NULL WHERE email = ?",
+      [email]
+    );
+  },
 };
 
 module.exports = User;
