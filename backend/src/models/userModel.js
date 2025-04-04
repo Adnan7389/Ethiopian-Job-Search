@@ -43,7 +43,6 @@ const User = {
     return await bcrypt.compare(password, hashedPassword);
   },
 
-  // New methods for 6-digit code
   async storeVerificationCode(userId, code, expiresAt) {
     await pool.query(
       "UPDATE users SET verification_code = ?, code_expires_at = ? WHERE user_id = ?",
@@ -63,6 +62,20 @@ const User = {
     await pool.query(
       "UPDATE users SET verification_code = NULL, code_expires_at = NULL WHERE user_id = ?",
       [userId]
+    );
+  },
+
+  async updateResendAttempts(email, resendCount, lastResendAt, resendWindowStart) {
+    await pool.query(
+      "UPDATE users SET resend_count = ?, last_resend_at = ?, resend_window_start = ? WHERE email = ?",
+      [resendCount, lastResendAt, resendWindowStart, email]
+    );
+  },
+
+  async resetResendCount(email) {
+    await pool.query(
+      "UPDATE users SET resend_count = 0, resend_window_start = NULL WHERE email = ?",
+      [email]
     );
   },
 };
