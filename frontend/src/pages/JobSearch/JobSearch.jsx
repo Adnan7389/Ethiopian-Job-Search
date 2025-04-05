@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchEmployerJobs } from "../../features/job/jobSlice";
+import { fetchJobs } from "../../features/job/jobSlice"; // Import fetchJobs instead
 import JobCard from "../../components/JobCard/JobCard";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
@@ -24,7 +24,7 @@ const JobSearch = () => {
   useEffect(() => {
     // Fetch only open, non-archived, non-expired jobs for job seekers
     dispatch(
-      fetchEmployerJobs({
+      fetchJobs({
         page: 1,
         limit: 10,
         search: filters.search,

@@ -20,6 +20,16 @@ const initialState = {
   error: null,
 };
 
+// Thunk for job seekers to fetch available jobs
+export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
+  try {
+    const response = await api.get('/jobs', { params });
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.error || error.message);
+  }
+});
+
 export const createJob = createAsyncThunk('job/createJob', async (jobData, { rejectWithValue }) => {
   try {
     const response = await api.post('/jobs', jobData);
@@ -114,6 +124,22 @@ const jobSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Handle fetchJobs (for job seekers)
+      .addCase(fetchJobs.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchJobs.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.jobs = action.payload.jobs;
+        state.total = action.payload.total;
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
+      })
+      .addCase(fetchJobs.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
       .addCase(createJob.pending, (state) => {
         state.status = 'loading';
         state.error = null;
