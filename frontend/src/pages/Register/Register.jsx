@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import FormInput from "../../components/FormInput/FormInput";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
@@ -10,14 +10,13 @@ import styles from "./Register.module.css";
 function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const userType = location.state?.userType || "job_seeker";
+  const { userType, status, error: reduxError } = useSelector((state) => state.auth); // Retrieve userType from Redux
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    user_type: userType,
+    user_type: userType || "job_seeker", // Fallback to job_seeker if userType is not set
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +45,12 @@ function Register() {
       setLoading(false);
     }
   };
+
+  // If userType is not set, redirect to role selection
+  if (!userType) {
+    navigate('/role-selection');
+    return null;
+  }
 
   return (
     <div className={styles.container}>
@@ -83,6 +88,7 @@ function Register() {
           required
         />
         {error && <p className={styles.error}>{error}</p>}
+        {reduxError && <p className={styles.error}>{reduxError}</p>}
         <Button type="submit" variant="primary" disabled={loading}>
           {loading ? <LoadingSpinner /> : "Register"}
         </Button>

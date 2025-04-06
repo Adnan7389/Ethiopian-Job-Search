@@ -19,7 +19,7 @@ function PrivateRoute({ children, allowedRoles }) {
   const { token, userType, isVerified } = useSelector((state) => state.auth);
   if (!token) return <Navigate to="/login" />;
   if (!isVerified) return <Navigate to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(userType)) return <Navigate to="/dashboard" />;
+  if (allowedRoles && !allowedRoles.includes(userType)) return <Navigate to="/" />; // Redirect to home if role doesn't match
   return children;
 }
 
@@ -39,25 +39,21 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/enter-code" element={<EnterCode />} />
             <Route
-              path="/dashboard"
-              element={<PrivateRoute allowedRoles={["employer"]}><EmployerDashboard /></PrivateRoute>}
-            />
-            <Route
               path="/job-search"
               element={<PrivateRoute><JobSearch /></PrivateRoute>}
-            />
-            <Route
-              path="/post-job"
-              element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>}
-            />
-            <Route
-              path="/edit-job/:slug"
-              element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>}
             />
             <Route
               path="/jobs/:slug"
               element={<PrivateRoute><JobDetail /></PrivateRoute>}
             />
+            {/* Nested routes under /dashboard */}
+            <Route
+              path="/dashboard"
+              element={<PrivateRoute allowedRoles={["employer"]}><EmployerDashboard /></PrivateRoute>}
+            >
+              <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
+              <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
+            </Route>
           </Routes>
         </div>
       </ErrorBoundary>

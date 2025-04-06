@@ -20,7 +20,6 @@ const initialState = {
   error: null,
 };
 
-// Thunk for job seekers to fetch available jobs
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
   try {
     const response = await api.get('/jobs', { params });
@@ -68,7 +67,7 @@ export const updateJob = createAsyncThunk('job/updateJob', async ({ jobId, jobDa
 
 export const deleteJob = createAsyncThunk('job/deleteJob', async (jobId, { rejectWithValue }) => {
   try {
-    const response = await api.delete(`/jobs/${jobId}`);
+    const response = await api.put(`/jobs/${jobId}/archive`); // Changed to PUT /jobs/:jobId/archive
     return { jobId, message: response.data.message };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
@@ -77,7 +76,7 @@ export const deleteJob = createAsyncThunk('job/deleteJob', async (jobId, { rejec
 
 export const restoreJob = createAsyncThunk('job/restoreJob', async (jobId, { rejectWithValue }) => {
   try {
-    const response = await api.post(`/jobs/${jobId}/restore`);
+    const response = await api.put(`/jobs/${jobId}/restore`); // Changed to PUT /jobs/:jobId/restore
     return { jobId, message: response.data.message };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
@@ -124,7 +123,6 @@ const jobSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Handle fetchJobs (for job seekers)
       .addCase(fetchJobs.pending, (state) => {
         state.status = 'loading';
         state.error = null;
