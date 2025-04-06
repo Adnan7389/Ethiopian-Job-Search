@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Outlet } from "react-router-dom"; // Add Outlet
+import { useNavigate, Outlet } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import {
@@ -15,6 +15,7 @@ import {
   setIncludeArchived,
   clearFilters,
 } from "../../features/job/jobSlice";
+import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
 
 function EmployerDashboard() {
@@ -36,6 +37,35 @@ function EmployerDashboard() {
 
   const [confirmAction, setConfirmAction] = useState(null);
 
+  // Extract individual filter values to avoid reference changes
+  const { job_type, industry, experience_level, status: filterStatus, date_posted } = filters;
+
+  // Memoize the params to avoid unnecessary re-renders
+  const fetchParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      search,
+      job_type,
+      industry,
+      experience_level,
+      status: filterStatus,
+      date_posted,
+      includeArchived,
+    }),
+    [
+      currentPage,
+      pageSize,
+      search,
+      job_type,
+      industry,
+      experience_level,
+      filterStatus,
+      date_posted,
+      includeArchived,
+    ]
+  );
+
   console.log("EmployerDashboard state:", { jobs, status, error, userType });
 
   useEffect(() => {
@@ -47,21 +77,14 @@ function EmployerDashboard() {
       navigate("/");
     } else {
       console.log("Fetching employer jobs...");
-      dispatch(
-        fetchEmployerJobs({
-          page: currentPage,
-          limit: pageSize,
-          search,
-          job_type: filters.job_type,
-          industry: filters.industry,
-          experience_level: filters.experience_level,
-          status: filters.status,
-          date_posted: filters.date_posted,
-          includeArchived,
-        })
-      );
+      dispatch(fetchEmployerJobs(fetchParams)).catch((err) => {
+        if (err.message === "No token provided" || err.message === "Invalid token") {
+          dispatch(logout());
+          navigate("/login");
+        }
+      });
     }
-  }, [dispatch, currentPage, pageSize, search, filters, includeArchived, userType, navigate]);
+  }, [dispatch, userType, navigate, fetchParams]); // Use fetchParams as a dependency
 
   const handleDelete = (jobId) => {
     setConfirmAction({ type: "delete", jobId });
@@ -76,38 +99,14 @@ function EmployerDashboard() {
       await dispatch(deleteJob(confirmAction.jobId)).unwrap();
     } else if (confirmAction.type === "restore") {
       await dispatch(restoreJob(confirmAction.jobId)).unwrap();
-      dispatch(
-        fetchEmployerJobs({
-          page: currentPage,
-          limit: pageSize,
-          search,
-          job_type: filters.job_type,
-          industry: filters.industry,
-          experience_level: filters.experience_level,
-          status: filters.status,
-          date_posted: filters.date_posted,
-          includeArchived,
-        })
-      );
+      dispatch(fetchEmployerJobs(fetchParams));
     }
     setConfirmAction(null);
   };
 
   const handleDuplicate = async (jobId) => {
     await dispatch(duplicateJob(jobId)).unwrap();
-    dispatch(
-      fetchEmployerJobs({
-        page: currentPage,
-        limit: pageSize,
-        search,
-        job_type: filters.job_type,
-        industry: filters.industry,
-        experience_level: filters.experience_level,
-        status: filters.status,
-        date_posted: filters.date_posted,
-        includeArchived,
-      })
-    );
+    dispatch(fetchEmployerJobs(fetchParams));
   };
 
   const handlePageChange = (page) => {
@@ -140,13 +139,11 @@ function EmployerDashboard() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Employer Dashboard</h1>
-      {/* Render nested routes */}
       <Outlet />
-      {/* Only show the dashboard content when not on a nested route */}
       {window.location.pathname === "/dashboard" && (
         <>
           <Button
-            onClick={() => navigate("post-job")} // Relative path for nested route
+            onClick={() => navigate("post-job")}
             variant="primary"
             className={styles.postButton}
           >
@@ -236,7 +233,7 @@ function EmployerDashboard() {
                       <td>{new Date(job.created_at).toLocaleDateString()}</td>
                       <td>
                         <Button
-                          onClick={() => navigate(`edit-job/${job.slug}`)} // Relative path for nested route
+                          onClick={() => navigate(`edit-job/${job.slug}`)}
                           variant="primary"
                           className={styles.actionButton}
                         >
