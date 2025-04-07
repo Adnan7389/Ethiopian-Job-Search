@@ -17,6 +17,7 @@
   --secondary-light: #94a3b8;
   --success: #10b981;
   --danger: #ef4444;
+  --error: #dc2626; /* Bright red for error messages */
   --warning: #f59e0b;
   --background: #f8fafc;
   --text: #1e293b;

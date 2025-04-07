@@ -14,11 +14,21 @@ const Notification = {
   async create(data) {
     try {
       const [result] = await queryWithTimeout(
-        "INSERT INTO notifications (user_id, message, is_read) VALUES (?, ?, ?)",
-        [data.user_id, data.message, false]
+        "INSERT INTO notifications (user_id, message, type, reference_id, link, metadata, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          data.user_id, 
+          data.message, 
+          data.type || 'general', 
+          data.reference_id || null, 
+          data.link || null, 
+          data.metadata || null,
+          false,
+          new Date()
+        ]
       );
-      return { id: result.insertId, ...data };
+      return { id: result.insertId, ...data, created_at: new Date() };
     } catch (error) {
+      console.error('Error creating notification:', error);
       throw new Error(`Failed to create notification: ${error.message}`);
     }
   },

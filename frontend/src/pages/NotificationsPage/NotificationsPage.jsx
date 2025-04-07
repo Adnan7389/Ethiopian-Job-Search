@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { fetchNotifications, resetNotificationStatus } from "../../features/notification/notificationSlice";
 import { logout } from "../../features/auth/authSlice";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
@@ -13,7 +13,9 @@ import {
   FiInfo,
   FiClock,
   FiTrash2,
-  FiFileText
+  FiFileText,
+  FiBriefcase,
+  FiArrowRight
 } from "react-icons/fi";
 import Button from "../../components/Button/Button";
 import axios from "axios";
@@ -87,58 +89,26 @@ function NotificationsPage() {
         return <FiAlertCircle className={styles.notificationIconWarning} />;
       case 'application_status':
         return <FiFileText className={styles.notificationIconInfo} />;
+      case 'job_match':
+        return <FiBriefcase className={styles.notificationIconInfo} />;
       default:
         return <FiInfo className={styles.notificationIconInfo} />;
     }
   };
 
   const renderNotificationContent = (notification) => {
-    if (notification.type === 'application_status' && notification.payload) {
-      return (
-        <div className={styles.notificationContent}>
-          <p className={styles.notificationMessage}>{notification.message}</p>
-          
-          {notification.payload.match_details && (
-            <div className={styles.matchDetails}>
-              <h4>Match Details:</h4>
-              <ul>
-                <li>Skills Match: {Math.round(notification.payload.match_details.skillsMatch)}%</li>
-                <li>Education Match: {Math.round(notification.payload.match_details.educationMatch)}%</li>
-                <li>Experience Match: {Math.round(notification.payload.match_details.experienceMatch)}%</li>
-              </ul>
-            </div>
-          )}
-          
-          {notification.action && (
-            <Button
-              onClick={() => navigate(notification.action.url)}
-              variant="primary"
-              size="small"
-              className={styles.actionButton}
-            >
-              {notification.action.text || 'View'}
-            </Button>
-          )}
-        </div>
-      );
-    }
-
-    return (
+    const content = (
       <div className={styles.notificationContent}>
         <p className={styles.notificationMessage}>{notification.message}</p>
-        
-        {notification.action && (
-          <Button
-            onClick={() => navigate(notification.action.url)}
-            variant="primary"
-            size="small"
-            className={styles.actionButton}
-          >
-            {notification.action.text || 'View'}
-          </Button>
+        {notification.link && (
+          <Link to={notification.link} className={styles.notificationLink}>
+            View Details <FiArrowRight />
+          </Link>
         )}
       </div>
     );
+
+    return content;
   };
 
   const handleMarkAsRead = async (notificationId) => {

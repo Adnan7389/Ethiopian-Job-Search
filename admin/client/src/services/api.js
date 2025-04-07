@@ -38,10 +38,18 @@ api.interceptors.response.use(
 
 // Auth
 export const login = async (username, password) => {
+  console.log('Attempting login with username:', username);
   try {
+    console.log('Making login request to:', `${API_URL}/auth/login`);
     const res = await api.post('/auth/login', { username, password });
+    console.log('Login response:', res.data);
     return res;
   } catch (error) {
+    console.error('Login error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
     throw error.response?.data || error;
   }
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
+import Logo from '../../assets/images/logo';
 import styles from './Navbar.module.css';
 
 const Navbar = () => {
@@ -24,7 +25,12 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.navbarContainer}>
         <div className={styles.logo}>
-          <Link to="/" onClick={() => setIsMenuOpen(false)}>Ethio Jobs</Link>
+          <Link to="/" onClick={() => setIsMenuOpen(false)}>
+            <div className={styles.logoContainer}>
+              <Logo width="40" height="40" className={styles.logoImage} />
+              <span>Ethio Jobs</span>
+            </div>
+          </Link>
         </div>
         <button
           className={styles.menuToggle}

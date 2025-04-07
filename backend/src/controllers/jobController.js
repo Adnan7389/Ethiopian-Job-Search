@@ -8,6 +8,8 @@ const { invalidateCache } = require('../services/applicantMatchingService');
 const {queueApplicationProcessing} = require('../queues/matchingQueue')
 const JobReport = require("../models/jobReportModel");
 const { handleReportActions } = require("../services/reportService");
+const paymentService = require('../services/paymentService');
+const { v4: uuidv4 } = require('uuid');
 
 const queryWithTimeout = async (query, params, timeout = 10000) => {
   const queryPromise = pool.query(query, params);
@@ -18,7 +20,7 @@ const queryWithTimeout = async (query, params, timeout = 10000) => {
 };
 
 const createJob = async (req, res) => {
-  const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
+  const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline } = req.body;
   const employerId = req.user.userId;
 
   // Check if employer is approved
@@ -36,11 +38,14 @@ const createJob = async (req, res) => {
     return res.status(403).json({ error: "Only employers can create jobs" });
   }
 
-  if (!title || !description || !location || !job_type || !industry || !experience_level || !status) {
+  if (!title || !description || !location || !job_type || !industry || !experience_level) {
     return res.status(400).json({ error: "All required fields must be provided" });
   }
 
   try {
+    // Generate a unique transaction reference
+    const tx_ref = `job-${uuidv4()}`;
+
     const jobData = {
       employer_id: employerId,
       title,
@@ -51,17 +56,104 @@ const createJob = async (req, res) => {
       industry,
       experience_level,
       expires_at: application_deadline ? new Date(application_deadline) : null,
-      status,
+      status: 'pending',
       is_archived: false,
       created_at: new Date(),
       updated_at: new Date(),
+      payment_id: tx_ref,
+      payment_status: 'pending'
     };
+
+    // Create job with pending status
     const job = await Job.create(jobData);
-    const newJobId = job.insertId;
-    await updateAllRecommendations(newJobId);
-    res.status(201).json({ message: "Job created successfully", jobId: job.job_id, slug: job.slug });
+
+    // Get employer details for payment
+    const [[employer]] = await pool.query(
+      "SELECT email, username as first_name, '' as last_name FROM users WHERE user_id = ?",
+      [employerId]
+    );
+
+    if (!employer) {
+      return res.status(404).json({ error: "Employer details not found" });
+    }
+
+    // Prepare payment data for Chapa
+    const paymentData = {
+      amount: '500', // Fixed amount for job posting
+      customerEmail: employer.email,
+      customerFirstName: employer.first_name || 'Anonymous',
+      customerLastName: employer.last_name || '',
+      tx_ref: tx_ref,
+      callback_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payments/verify/${tx_ref}`,
+      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success`
+
+    };
+
+    // Initiate Chapa payment
+    const paymentResponse = await paymentService.initiateChapaPayment(paymentData);
+
+    // Return job data with payment URL
+    res.status(201).json({ 
+      message: "Job created successfully, pending payment", 
+      jobId: job.job_id, 
+      slug: job.slug,
+      paymentUrl: paymentResponse.data.checkout_url,
+      tx_ref: tx_ref,
+      callback_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payments/verify/${tx_ref}`,
+      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success`
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create job", details: error.message });
+    console.error("Create job error:", error);
+    res.status(500).json({ 
+      error: "Failed to create job", 
+      details: error.message 
+    });
+  }
+};
+
+const verifyPayment = async (req, res) => {
+  try {
+    const { tx_ref } = req.params;
+
+    // Verify payment with Chapa
+    const verificationData = await paymentService.verifyChapaPayment(tx_ref);
+
+    if (verificationData.status !== 'success') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment verification failed' 
+      });
+    }
+
+    // Find the job by payment reference
+    const jobs = await Job.findByPaymentReference(tx_ref);
+    if (!jobs || jobs.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Job not found for this payment' 
+      });
+    }
+    
+    const job = jobs[0];
+
+    // Update job payment status
+    await Job.update(job.slug, {
+      payment_status: 'completed',
+      status: 'open',
+      payment_date: new Date()
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Payment verified successfully', 
+      jobId: job.job_id 
+    });
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Failed to verify payment' 
+    });
   }
 };
 
@@ -555,6 +647,7 @@ const reportJob = async (req, res) => {
 
 module.exports = { 
   createJob, 
+  verifyPayment,
   getJobs, 
   getJobsByEmployer, 
   getJobBySlug, 

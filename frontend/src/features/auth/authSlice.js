@@ -23,7 +23,7 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { re
   const { hasInitialized } = getState().auth;
   if (hasInitialized) {
     console.log("initializeAuth: Already initialized, skipping");
-    return; // Skip if already initialized
+    return;
   }
 
   const token = localStorage.getItem('token');
@@ -139,8 +139,19 @@ export const verifyEmail = createAsyncThunk('auth/verifyEmail', async (token, { 
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
+    console.log('🔵 [AUTH] ===== LOGIN ATTEMPT STARTED =====');
+    console.log('🔵 [AUTH] Credentials:', { identifier: credentials.identifier });
+    
     try {
+      console.log('🔵 [AUTH] Making API request to /auth/login...');
       const response = await api.post('/auth/login', credentials);
+      console.log('🔵 [AUTH] API Response:', response.data);
+      
+      if (!response.data || !response.data.accessToken) {
+        console.error('🔴 [AUTH] ERROR: Invalid response format:', response.data);
+        return rejectWithValue('Invalid server response');
+      }
+
       const {
         accessToken,
         refreshToken,
@@ -151,6 +162,7 @@ export const login = createAsyncThunk(
         resume_url,
       } = response.data;
 
+      console.log('🔵 [AUTH] Storing data in localStorage...');
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userType', user_type);
@@ -160,6 +172,7 @@ export const login = createAsyncThunk(
       localStorage.setItem('resume_url', resume_url || '');
       localStorage.setItem('isVerified', 'true');
       
+      console.log('✅ [AUTH] Login successful!');
       return {
         token: accessToken,
         refreshToken,
@@ -170,10 +183,39 @@ export const login = createAsyncThunk(
         resume_url,
       };
     } catch (error) {
-      console.log('Login error response:', error.response);
-      // Get the error message from the response data
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-      console.log('Login error message:', errorMessage);
+      console.log('🔴 [AUTH] ===== LOGIN ERROR =====');
+      console.log('🔴 [AUTH] Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      let errorMessage;
+      
+      if (error.response?.status === 401) {
+        errorMessage = error.response?.data?.error || 'Invalid username or password';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = 'Invalid username or password';
+      }
+      
+      console.log('🔴 [AUTH] Final error message:', errorMessage);
+      
+      // Clear any existing auth data
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('email');
+      localStorage.removeItem('resume_url');
+      localStorage.removeItem('isVerified');
+      
       return rejectWithValue(errorMessage);
     }
   }
@@ -249,6 +291,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
       state.status = 'idle';
+      state.resendError = null;
+      state.resendMessage = null;
+      state.resendStatus = 'idle';
     },
   },
   extraReducers: (builder) => {
@@ -396,5 +441,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setRole, logout, clearResendMessage, initializeAuthSuccess } = authSlice.actions;
+export const { setRole, logout, clearResendMessage, initializeAuthSuccess, clearError } = authSlice.actions;
 export default authSlice.reducer;

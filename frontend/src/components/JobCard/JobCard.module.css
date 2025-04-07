@@ -1,18 +1,17 @@
+/* Job Card - Row Layout */
 .card {
   background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-default);
   border: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  margin-bottom: var(--space-3);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .expiredCard,
@@ -25,176 +24,115 @@
   opacity: 0.8;
 }
 
-/* Company Profile Section */
-.companyProfile {
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
-}
-
-.companyHeader {
+.cardContent {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
+}
+
+.companyLogoContainer {
+  flex-shrink: 0;
 }
 
 .companyLogo {
   width: 60px;
   height: 60px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   border: 1px solid var(--border-color);
 }
 
-.companyInfo {
+.jobDetails {
   flex: 1;
+  min-width: 0;
+}
+
+.jobHeader {
+  margin-bottom: var(--space-2);
 }
 
 .companyName {
-  font-size: 1.1rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
-}
-
-.companyMeta {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.companyLink {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.2s ease;
-}
-
-.companyLink:hover {
-  color: var(--primary-color);
-}
-
-/* Content Section */
-.content {
-  flex: 1;
+  color: var(--text-light);
+  margin: 0 0 var(--space-1) 0;
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.metaGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+.metaContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .metaItem {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+  gap: var(--space-2);
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
 }
 
 .icon {
-  color: var(--primary-color);
-  font-size: 1.1rem;
+  color: var(--primary);
+  font-size: var(--font-size-sm);
 }
 
-/* Match Score */
-.matchScore {
+.actionContainer {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.scoreLabel {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.scoreBadge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.excellent {
-  background-color: var(--success-light);
-  color: var(--success);
-}
-
-.good {
-  background-color: var(--info-light);
-  color: var(--info);
-}
-
-.average {
-  background-color: var(--warning-light);
-  color: var(--warning);
-}
-
-.poor {
-  background-color: var(--error-light);
-  color: var(--error);
-}
-
-/* Footer Section */
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .status {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .openBadge,
 .closedBadge,
 .expiredBadge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
 .openBadge {
-  background-color: var(--success-light);
+  background-color: rgba(16, 185, 129, 0.1);
   color: var(--success);
 }
 
 .closedBadge {
-  background-color: var(--error-light);
-  color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
 }
 
 .expiredBadge {
-  background-color: var(--warning-light);
+  background-color: rgba(245, 158, 11, 0.1);
   color: var(--warning);
 }
 
 .detailsLink {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--primary-color);
+  gap: var(--space-2);
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.2s ease;
+  font-size: var(--font-size-sm);
+  transition: var(--transition-default);
 }
 
 .detailsLink:hover {
@@ -203,53 +141,42 @@
 
 /* Invalid Card State */
 .invalidCard {
-  background-color: var(--error-light);
-  border-color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
 }
 
 .invalidContent {
   text-align: center;
-  color: var(--error);
-  padding: 1rem;
+  color: var(--danger);
+  padding: var(--space-3);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .card {
-    padding: 1rem;
-  }
-
-  .companyHeader {
+  .cardContent {
     flex-direction: column;
     align-items: flex-start;
-    text-align: center;
+    gap: var(--space-3);
   }
-  
+
   .companyLogo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
+    width: 50px;
+    height: 50px;
   }
 
-  .companyInfo {
-    text-align: center;
+  .title {
+    white-space: normal;
   }
 
-  .companyMeta {
-    justify-content: center;
-  }
-  
-  .metaGrid {
-    grid-template-columns: 1fr;
+  .metaContainer {
+    gap: var(--space-2);
   }
 
-  .footer {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-
-  .status {
-    justify-content: center;
+  .actionContainer {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-2);
   }
 }

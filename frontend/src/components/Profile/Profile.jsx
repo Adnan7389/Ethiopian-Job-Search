@@ -7,6 +7,7 @@ import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 import styles from "./Profile.module.css";
 import defaultProfileIcon from "../../assets/default-profile-icon.png";
 import { FiEdit, FiSave, FiTrash2, FiPlus, FiX, FiUpload, FiDownload, FiEye, FiUser, FiBriefcase, FiAward, FiMapPin, FiLink, FiMail } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ const Profile = () => {
   const maxRetries = 3;
   const [editMode, setEditMode] = useState(location.state?.editMode || false);
   const [initialLoadFailed, setInitialLoadFailed] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [jobSeekerForm, setJobSeekerForm] = useState({
     full_name: "",
@@ -87,6 +89,25 @@ const Profile = () => {
       }
     }
   }, [profile, userType]);
+
+  useEffect(() => {
+    if (status === "succeeded" && !error && isSaving) {
+      toast.success("Profile updated successfully!");
+      setEditMode(false);
+      setIsSaving(false);
+    } else if (status === "failed" && error && isSaving) {
+      toast.error(error?.message || error || "Failed to update profile");
+      setIsSaving(false);
+    }
+  }, [status, error, isSaving]);
+
+  useEffect(() => {
+    if (uploadStatus === "succeeded" && !uploadError) {
+      toast.success("File uploaded successfully!");
+    } else if (uploadStatus === "failed" && uploadError) {
+      toast.error(uploadError?.message || uploadError || "Failed to upload file");
+    }
+  }, [uploadStatus, uploadError]);
 
   const validateJobSeekerForm = () => {
     const errors = {};
@@ -214,11 +235,14 @@ const Profile = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     let errors = {};
+    setIsSaving(true);
 
     if (userType === "job_seeker") {
       errors = validateJobSeekerForm();
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
+        toast.error("Please fix the form errors before saving");
+        setIsSaving(false);
         return;
       }
       dispatch(updateProfile(jobSeekerForm));
@@ -226,6 +250,8 @@ const Profile = () => {
       errors = validateEmployerForm();
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
+        toast.error("Please fix the form errors before saving");
+        setIsSaving(false);
         return;
       }
       dispatch(updateProfile(employerForm));
@@ -255,18 +281,30 @@ const Profile = () => {
     const file = e.target.files[0];
     if (file) {
       const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
-      if (!allowedTypes.includes(file.type)) {
-        setFormErrors({ ...formErrors, profilePicture: "Only PNG, JPG, and JPEG files are allowed" });
+      const allowedExtensions = [".png", ".jpg", ".jpeg"];
+      
+      // Check file extension
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.substring(fileName.lastIndexOf("."));
+      const isExtensionValid = allowedExtensions.includes(fileExtension);
+      
+      if (!allowedTypes.includes(file.type) || !isExtensionValid) {
+        const errorMsg = `Invalid file type: ${file.name}. Only PNG, JPG, and JPEG files are allowed.`;
+        setFormErrors({ ...formErrors, profilePicture: errorMsg });
         setProfilePictureFile(null);
+        toast.error(errorMsg);
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
-        setFormErrors({ ...formErrors, profilePicture: "File size must be less than 2MB" });
+        const errorMsg = `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds the 2MB limit.`;
+        setFormErrors({ ...formErrors, profilePicture: errorMsg });
         setProfilePictureFile(null);
+        toast.error(errorMsg);
         return;
       }
       setProfilePictureFile(file);
       setFormErrors({ ...formErrors, profilePicture: null });
+      toast.success("File selected successfully. Click 'Upload' to complete.");
     }
   };
 

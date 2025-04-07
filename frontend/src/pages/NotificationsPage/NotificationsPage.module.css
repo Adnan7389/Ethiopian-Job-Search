@@ -326,3 +326,27 @@
   background-color: var(--primary);
   margin-right: var(--space-2);
 }
+
+.notificationLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin-top: var(--space-2);
+  transition: color 0.2s ease;
+}
+
+.notificationLink:hover {
+  color: var(--primary-dark);
+}
+
+.notificationLink svg {
+  transition: transform 0.2s ease;
+}
+
+.notificationLink:hover svg {
+  transform: translateX(4px);
+}

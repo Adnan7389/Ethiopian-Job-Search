@@ -223,6 +223,16 @@ const jobSlice = createSlice({
       state.applications = {};
       state.fetchingApplications = []; // Changed to array
     },
+    updateJobStatus: (state, action) => {
+      const { jobId, status } = action.payload;
+      const jobIndex = state.jobs.findIndex(job => job.job_id === jobId);
+      if (jobIndex !== -1) {
+        state.jobs[jobIndex].status = status;
+      }
+    },
+    refreshJobs: (state, action) => {
+      state.jobs = action.payload;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -423,5 +433,5 @@ const jobSlice = createSlice({
   },
 });
 
-export const { resetStatus, setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters, clearApplications } = jobSlice.actions;
+export const { resetStatus, setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters, clearApplications,updateJobStatus, refreshJobs } = jobSlice.actions;
 export default jobSlice.reducer;

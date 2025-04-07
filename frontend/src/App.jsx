@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { ToastContainer, toast } from 'react-toastify';
+import { Toaster } from 'react-hot-toast';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Navbar from "./components/Navbar/Navbar";
@@ -29,6 +30,8 @@ import { initializeAuth } from "./features/auth/authSlice";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import { SocketProvider, useSocket } from "./SocketContext";
 import { receiveNotification } from "./features/notification/notificationSlice";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 
 function PrivateRoute({ children, allowedRoles }) {
   const { token, userType, isVerified, status, hasInitialized } = useSelector((state) => state.auth);
@@ -151,8 +154,11 @@ function App() {
             <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/my-applications" element={<PrivateRoute allowedRoles={["job_seeker"]}><MyApplications /></PrivateRoute>} />
+            <Route path="/payment/:jobId" element={<PrivateRoute allowedRoles={["employer"]}><PaymentPage /></PrivateRoute>} />
+            <Route path="/payment-success" element={<PaymentSuccessPage />} />
           </Routes>
           <ToastContainer position="top-right" autoClose={3000} />
+          <Toaster position="top-right" />
         </div>
       </ErrorBoundary>
     </SocketProvider>

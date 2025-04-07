@@ -66,6 +66,13 @@
   color: var(--danger);
 }
 
+.passwordHint {
+  font-size: var(--font-size-xs);
+  color: var(--text-light);
+  margin-top: -8px;
+  margin-bottom: var(--space-2);
+}
+
 .formActions {
   margin-top: var(--space-4);
 }

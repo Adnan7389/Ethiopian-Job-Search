@@ -13,6 +13,7 @@ const applicantRoutes = require('./routes/applicantRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const notifications = require("./routes/notification");
+const paymentRoutes = require('./routes/paymentRoutes');
 
 dotenv.config();
 
@@ -92,6 +93,7 @@ app.use('/api/applicants', applicantRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/notifications", notifications);
+app.use('/api/payments', paymentRoutes);
 
 // Mock email sending function
 const mockSendEmail = ({ to, subject, text }) => {
@@ -168,4 +170,76 @@ server.on('connection', (socket) => {
   socket.on('close', () => {
     console.log(`[${new Date().toISOString()}] Socket closed`);
   });
+});
+
+// In your index.js file
+cron.schedule('*/20 * * * * *', async () => {
+  try {
+    // Find pending jobs with completed payment
+    const [pendingJobs] = await pool.query(`
+      SELECT job_id FROM jobs 
+      WHERE status = 'pending' 
+      AND payment_status = 'paid'
+      AND payment_date <= NOW() - INTERVAL 10 SECOND
+    `);
+
+    if (pendingJobs.length > 0) {
+      const jobIds = pendingJobs.map(job => job.job_id);
+      
+      // Update status in database
+      await pool.query(`
+        UPDATE jobs 
+        SET status = 'open' 
+        WHERE job_id IN (?)
+      `, [jobIds]);
+
+      console.log(`Updated ${pendingJobs.length} jobs to 'open' status`);
+      
+      // Emit Socket.IO event
+      io.emit('jobs-updated', { 
+        updatedJobIds: jobIds,
+        newStatus: 'open'
+      });
+    }
+  } catch (error) {
+    console.error('Failed to auto-update job statuses:', error);
+  }
+});
+
+// Auto-update payment_status from 'pending' to 'completed' after 10 seconds (Demo mode)
+cron.schedule('*/5 * * * * *', async () => {
+  try {
+    // Find jobs with pending payment_status that are at least 10 seconds old
+    const [pendingPaymentJobs] = await pool.query(`
+      SELECT job_id, slug FROM jobs 
+      WHERE payment_status = 'pending'
+      AND created_at <= NOW() - INTERVAL 10 SECOND
+    `);
+
+    if (pendingPaymentJobs.length > 0) {
+      console.log(`Found ${pendingPaymentJobs.length} jobs with pending payment_status`);
+      
+      for (const job of pendingPaymentJobs) {
+        // Update payment_status to 'paid' and set payment_date
+        await pool.query(`
+          UPDATE jobs 
+          SET payment_status = 'paid',
+              payment_date = NOW()
+          WHERE job_id = ?
+        `, [job.job_id]);
+        
+        console.log(`Updated payment_status to 'paid' for job ${job.job_id}`);
+      }
+      
+      // Get job IDs for socket notification
+      const jobIds = pendingPaymentJobs.map(job => job.job_id);
+      
+      // Emit Socket.IO event to notify clients
+      io.emit('payment-completed', { 
+        updatedJobIds: jobIds
+      });
+    }
+  } catch (error) {
+    console.error('Failed to auto-update payment_status:', error);
+  }
 });

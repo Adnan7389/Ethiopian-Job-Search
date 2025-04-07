@@ -45,7 +45,7 @@ for file in $FILES; do
   commit_date=$(date -d "@$(( current_day + RANDOM % 86400 ))" +"%Y-%m-%d %H:%M:%S")
 
   git add "$file"
-  git commit --date="$commit_date" -m "Add/update $file (archived work from 2024)"
+  git commit --date="$commit_date" -m "Add/update $file (archived work from 2025)"
 
   ((i++))
 done

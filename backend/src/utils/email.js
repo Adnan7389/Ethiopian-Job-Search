@@ -3,10 +3,24 @@ require('dotenv').config();
 
 // Create reusable transporter object using Gmail SMTP
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS // App Password
+  },
+  tls: {
+    rejectUnauthorized: false // Only use this in development
+  }
+});
+
+// Verify transporter configuration
+transporter.verify(function(error, success) {
+  if (error) {
+    console.error('SMTP Configuration Error:', error);
+  } else {
+    console.log('SMTP Server is ready to take our messages');
   }
 });
 
@@ -14,7 +28,7 @@ const sendVerificationEmail = async (toEmail, code) => {
   try {
     // Email options
     const mailOptions = {
-      from: process.env.GMAIL_USER,
+      from: `"Ethio Jobs" <${process.env.GMAIL_USER}>`,
       to: toEmail,
       subject: 'Verify your Email',
       text: `Your verification code is: ${code}`,
@@ -45,6 +59,9 @@ const sendVerificationEmail = async (toEmail, code) => {
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
+    if (error.code === 'EAUTH') {
+      console.error('Authentication failed. Please check your Gmail credentials and App Password.');
+    }
     throw new Error('Failed to send verification email');
   }
 };

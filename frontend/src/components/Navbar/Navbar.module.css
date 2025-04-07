@@ -24,6 +24,16 @@
   text-decoration: none;
 }
 
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoImage {
+  display: block;
+}
+
 .navLinks {
   list-style: none;
   display: none;
@@ -129,6 +139,15 @@
     font-size: var(--font-size-lg);
   }
 
+  .logoContainer {
+    gap: 6px;
+  }
+
+  .logoImage {
+    width: 30px;
+    height: 30px;
+  }
+
   .navLinks {
     padding: var(--space-1);
     gap: var(--space-1);
@@ -155,6 +174,11 @@
 
   .logo a {
     font-size: var(--font-size-xl);
+  }
+
+  .logoImage {
+    width: 35px;
+    height: 35px;
   }
 
   .link, .logoutButton {
@@ -188,6 +212,11 @@
     margin-left: 0;
   }
 
+  .logoImage {
+    width: 40px;
+    height: 40px;
+  }
+
   .navLinks {
     margin-right: 0;
   }
@@ -210,6 +239,11 @@
     font-size: var(--font-size-3xl);
   }
 
+  .logoImage {
+    width: 45px;
+    height: 45px;
+  }
+
   .navLinks {
     gap: var(--space-4);
   }
@@ -226,6 +260,11 @@
 
   .logo a {
     font-size: var(--font-size-4xl);
+  }
+
+  .logoImage {
+    width: 50px;
+    height: 50px;
   }
 
   .navLinks {

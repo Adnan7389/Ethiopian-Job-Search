@@ -80,7 +80,8 @@ router.get('/', (req, res, next) => {
           ep.description, 
           ep.contact_email, 
           ep.location, 
-          ep.profile_picture_url, 
+          ep.profile_picture_url,
+          ep.isApproved,
           u.email, 
           u.resume_url
         FROM employer_profiles ep

@@ -7,6 +7,7 @@ const initialState = {
   error: null,
   uploadStatus: 'idle',
   uploadError: null,
+  isApproved: null
 };
 
 export const fetchProfile = createAsyncThunk('profile/fetchProfile', async (_, { rejectWithValue }) => {
@@ -69,8 +70,10 @@ const profileSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
+        console.log("fetchProfile response:", action.payload);
         state.status = 'succeeded';
         state.profile = action.payload;
+        state.isApproved = action.payload.isApproved;
         state.error = null;
       })
       .addCase(fetchProfile.rejected, (state, action) => {

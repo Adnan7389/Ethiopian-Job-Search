@@ -21,9 +21,10 @@ function Register() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [passwordMatch, setPasswordMatch] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   // Filter out "Token not Found" errors
-  const filteredError = reduxError && !reduxError.includes("Token not Found") ? reduxError : null;
+  const filteredError = submitError || (reduxError && !reduxError.includes("Token not Found") ? reduxError : null);
 
   useEffect(() => {
     if (!userType) {
@@ -47,6 +48,9 @@ function Register() {
     if (formErrors[name]) {
       setFormErrors({ ...formErrors, [name]: "" });
     }
+    if (submitError) {
+      setSubmitError(null);
+    }
   };
 
   const validateForm = () => {
@@ -54,6 +58,7 @@ function Register() {
     if (!formData.username.trim()) errors.username = "Username is required";
     if (!formData.email.trim()) errors.email = "Email is required";
     if (!formData.password) errors.password = "Password is required";
+    else if (formData.password.length < 8) errors.password = "Password must be at least 8 characters";
     if (!formData.confirmPassword) errors.confirmPassword = "Please confirm your password";
     if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
       errors.confirmPassword = "Passwords do not match";
@@ -64,6 +69,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormErrors({});
+    setSubmitError(null);
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -76,6 +82,7 @@ function Register() {
       navigate("/enter-code", { state: { email: result.email } });
     } catch (err) {
       console.error("Registration error:", err);
+      setSubmitError(err);
     }
   };
 
@@ -144,6 +151,7 @@ function Register() {
             icon={<FiLock />}
             autoComplete="new-password"
           />
+          <div className={styles.passwordHint}>Password must be at least 8 characters long</div>
 
           <FormInput
             label="Confirm Password"

@@ -28,7 +28,9 @@ function ForgotPassword() {
         navigate("/enter-reset-code", { state: { email } });
       }, 2000);
     } catch (err) {
-      setError(err || "Failed to send reset code. Please try again.");
+      // Extract the error message from the API response
+      const errorMessage = err?.message || err || "Failed to send reset code. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

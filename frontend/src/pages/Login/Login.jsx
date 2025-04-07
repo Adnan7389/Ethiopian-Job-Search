@@ -25,8 +25,8 @@ function Login() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Clear error when user starts typing
-    if (formErrors[name]) {
+    // Only clear field-specific errors, not general errors
+    if (formErrors[name] && name !== 'general') {
       setFormErrors({ ...formErrors, [name]: '' });
     }
   };
@@ -51,15 +51,18 @@ function Login() {
   };
 
   useEffect(() => {
-    if (status === 'succeeded' && userType && token) {
+    if (status === 'succeeded') {
+      if (!token || !userType) return;
+  
       try {
         const decoded = jwtDecode(token);
         const currentTime = Date.now() / 1000;
+  
         if (decoded.exp < currentTime) {
           setFormErrors({ general: 'Your session has expired. Please login again.' });
           return;
         }
-
+  
         dispatch(initializeAuthSuccess({
           token,
           userType,
@@ -69,17 +72,18 @@ function Login() {
           resume_url: localStorage.getItem('resume_url') || '',
           isVerified: true,
         }));
-
+  
         navigate(userType === 'employer' ? '/dashboard' : '/job-search');
       } catch (err) {
         setFormErrors({ general: 'Invalid authentication token. Please try again.' });
       }
-    } else if (status === 'failed') {
+    }
+  
+    if (status === 'failed') {
       console.log('Login failed with error:', error);
       let errorMessage = 'An error occurred during login. Please try again.';
       let errorType = 'error';
-      
-      // Safely handle error message
+  
       if (error) {
         const errorLower = error.toLowerCase();
         if (errorLower.includes('suspended')) {
@@ -95,14 +99,14 @@ function Login() {
         } else if (errorLower.includes('network error')) {
           errorMessage = 'Network connection failed. Please check your internet.';
         } else {
-          // Use the original error message if it doesn't match any known patterns
           errorMessage = error;
         }
       }
-      
+  
       setFormErrors({ general: errorMessage, type: errorType });
     }
-  }, [status, userType, token, navigate, dispatch, error]);
+  }, [status, token, userType, error, dispatch, navigate]);
+  
 
   return (
     <div className={styles.container}>

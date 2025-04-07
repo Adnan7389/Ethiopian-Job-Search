@@ -16,6 +16,7 @@ import {
   clearFilters,
   fetchApplicationsByJobId,
   clearApplications,
+  updateJobStatus,
 } from "../../features/job/jobSlice";
 import NotificationPreview from '../../components/JobSeeker/NotificationPreview';
 import { logout } from "../../features/auth/authSlice";
@@ -35,6 +36,7 @@ import {
   FiEye,
   FiArchive
 } from "react-icons/fi";
+import { io } from "socket.io-client";
 
 function EmployerDashboard() {
   const location = useLocation();
@@ -86,6 +88,57 @@ function EmployerDashboard() {
     ]
   );
 
+  // Set up WebSocket connection for real-time updates
+  useEffect(() => {
+    // Get auth token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("Socket: No token found for socket connection");
+      return;
+    }
+
+    // Remove the /api part since Socket.IO should connect to the base URL not API path
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace('/api', '');
+    console.log('Connecting to Socket.IO at:', baseUrl);
+    
+    const socket = io(baseUrl, {
+      auth: { token },
+      withCredentials: true,
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      timeout: 20000,
+    });
+
+    socket.on('connect', () => {
+      console.log('Socket connected:', socket.id);
+    });
+
+    socket.on('jobs-updated', ({ updatedJobIds, newStatus }) => {
+      console.log('Socket received jobs-updated:', { updatedJobIds, newStatus });
+      updatedJobIds.forEach(jobId => {
+        dispatch(updateJobStatus({ jobId, status: newStatus }));
+      });
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [dispatch]);
+
+  // Polling fallback in case WebSocket fails
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(fetchEmployerJobs(fetchParams));
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [dispatch, fetchParams]);
+
+  // Existing data fetching logic
   useEffect(() => {
     if (authStatus !== "succeeded") {
       if (authStatus === "failed") {
@@ -127,6 +180,7 @@ function EmployerDashboard() {
     };
   }, [dispatch, userType, navigate, authStatus, authError, fetchParams]);
 
+  // Existing applications fetching logic
   useEffect(() => {
     if (authStatus !== "succeeded" || jobs.length === 0) return;
 
@@ -163,6 +217,7 @@ function EmployerDashboard() {
     };
   }, [dispatch, jobs, authStatus, applications, fetchingApplications]);
 
+  // All existing handler functions remain exactly the same
   const handleDelete = useCallback((jobId) => {
     setConfirmAction({ type: "delete", jobId });
   }, []);
@@ -425,6 +480,7 @@ function EmployerDashboard() {
                     <option value="open">Open</option>
                     <option value="closed">Closed</option>
                     <option value="paused">Paused</option>
+                    <option value="pending">Pending</option>
                   </select>
                 </div>
 

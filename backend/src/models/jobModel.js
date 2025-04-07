@@ -70,8 +70,9 @@ class Job {
     const [result] = await queryWithTimeout(
       `INSERT INTO jobs (
         employer_id, slug, title, description, location, salary_range, job_type, industry,
-        experience_level, expires_at, status, is_archived, created_at, updated_at, company_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        experience_level, expires_at, status, is_archived, created_at, updated_at, company_name,
+        payment_status, payment_id, payment_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         employer_id,
         slug,
@@ -87,7 +88,10 @@ class Job {
         is_archived || false,
         created_at || new Date(),
         updated_at || new Date(),
-        company_name
+        company_name,
+        'pending',
+        null,
+        null
       ],
       5000
     );
@@ -324,14 +328,17 @@ class Job {
       experience_level,
       expires_at,
       status,
+      payment_id,
+      payment_status,
+      payment_date
     } = data;
 
-    if (updates.employer_id) {
+    if (data.employer_id) {
       const [[{ company_name }]] = await queryWithTimeout(
         `SELECT company_name FROM employer_profiles WHERE user_id = ?`,
-        [updates.employer_id]
+        [data.employer_id]
       );
-      updates.company_name = company_name;
+      data.company_name = company_name;
     }
     // Update slug if title changes
     let newSlug = slug;
@@ -364,7 +371,10 @@ class Job {
         experience_level = COALESCE(?, experience_level),
         expires_at = COALESCE(?, expires_at),
         status = COALESCE(?, status),
-        company_name = COALESCE(?, company_name),   -- ← include here
+        company_name = COALESCE(?, company_name),
+        payment_id = COALESCE(?, payment_id),
+        payment_status = COALESCE(?, payment_status),
+        payment_date = COALESCE(?, payment_date),
         updated_at = ?
       WHERE slug = ?`,
       [
@@ -378,7 +388,10 @@ class Job {
         experience_level || null,
         expires_at || null,
         status || null,
-        updates.company_name,
+        data.company_name || null,
+        payment_id || null,
+        payment_status || null,
+        payment_date || null,
         new Date(),
         slug,
       ],
@@ -453,6 +466,24 @@ class Job {
     `;
     const [rows] = await queryWithTimeout(query, [now, in24Hours], 5000);
     return rows;
+  }
+
+  /**
+   * Find jobs by payment reference
+   * @param {string} paymentId - Payment reference ID
+   * @returns {Promise<Array>} - Array of jobs with the specified payment reference
+   */
+  async findByPaymentReference(paymentId) {
+    try {
+      const [rows] = await pool.query(
+        'SELECT * FROM jobs WHERE payment_id = ?',
+        [paymentId]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error finding job by payment reference:', error);
+      throw error;
+    }
   }
 }
 

@@ -60,16 +60,16 @@ const JobCard = ({ job, showMatchScore = false }) => {
   const getDaysAgo = (dateString) => {
     if (!dateString) return 'Date not available';
     try {
-    const postedDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - postedDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "1 day ago";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays/7)} weeks ago`;
-    return new Date(dateString).toLocaleDateString();
+      const postedDate = new Date(dateString);
+      const today = new Date();
+      const diffTime = Math.abs(today - postedDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "1 day ago";
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays/7)} weeks ago`;
+      return new Date(dateString).toLocaleDateString();
     } catch (error) {
       console.error('Error calculating days ago:', error);
       return 'Date not available';
@@ -87,82 +87,58 @@ const JobCard = ({ job, showMatchScore = false }) => {
 
   return (
     <div className={`${styles.card} ${isExpired ? styles.expiredCard : ''} ${isClosed ? styles.closedCard : ''}`}>
-      {/* Company Profile Section */}
-      <div className={styles.companyProfile}>
-        <div className={styles.companyHeader}>
-            <img
+      <div className={styles.cardContent}>
+        {/* Company Logo */}
+        <div className={styles.companyLogoContainer}>
+          <img
             src={profile_picture_url || DEFAULT_LOGO}
             alt={company_name || 'Company Logo'}
             className={styles.companyLogo}
-            />
-          <div className={styles.companyInfo}>
+          />
+        </div>
+
+        {/* Job Details */}
+        <div className={styles.jobDetails}>
+          <div className={styles.jobHeader}>
             <h3 className={styles.companyName}>{company_name || 'Company Not Specified'}</h3>
-            <div className={styles.companyMeta}>
-              {website && (
-                <a href={website} target="_blank" rel="noopener noreferrer" className={styles.companyLink}>
-                  <FiGlobe /> Website
-                </a>
-              )}
+            <h2 className={styles.title}>{title}</h2>
+          </div>
+
+          <div className={styles.metaContainer}>
+            <div className={styles.metaItem}>
+              <FiMapPin className={styles.icon} />
+              <span>{location || 'Location not specified'}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <FiBriefcase className={styles.icon} />
+              <span>{job_type}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <FiDollarSign className={styles.icon} />
+              <span>{formatSalary(salary_range)}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <FiClock className={styles.icon} />
+              <span>{getDaysAgo(created_at)}</span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Job Title and Details */}
-      <div className={styles.content}>
-        <h2 className={styles.title}>{title}</h2>
-        
-        <div className={styles.metaGrid}>
-          <div className={styles.metaItem}>
-            <FiMapPin className={styles.icon} />
-            <span>{location || 'Location not specified'}</span>
+        {/* Status and Action */}
+        <div className={styles.actionContainer}>
+          <div className={styles.status}>
+            {isExpired ? (
+              <span className={styles.expiredBadge}>Expired</span>
+            ) : isClosed ? (
+              <span className={styles.closedBadge}>Closed</span>
+            ) : (
+              <span className={styles.openBadge}>Open</span>
+            )}
           </div>
-          <div className={styles.metaItem}>
-            <FiBriefcase className={styles.icon} />
-            <span>{job_type}</span>
-          </div>
-          <div className={styles.metaItem}>
-            <FiDollarSign className={styles.icon} />
-            <span>{formatSalary(salary_range)}</span>
+          <Link to={`/jobs/${job.slug}`} className={styles.detailsLink}>
+            View Details <FiArrowRight />
+          </Link>
         </div>
-          <div className={styles.metaItem}>
-            <FiBarChart2 className={styles.icon} />
-            <span>{industry}</span>
-          </div>
-          <div className={styles.metaItem}>
-            <FiHome className={styles.icon} />
-            <span>{experience_level}</span>
-        </div>
-          <div className={styles.metaItem}>
-            <FiClock className={styles.icon} />
-            <span>{getDaysAgo(created_at)}</span>
-        </div>
-        </div>
-        
-        {showMatchScore && match_score !== undefined && (
-          <div className={styles.matchScore}>
-            <span className={styles.scoreLabel}>Match Score:</span>
-            <span className={`${styles.scoreBadge} ${getScoreClass(match_score)}`}>
-              {match_score}%
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Status and Action */}
-      <div className={styles.footer}>
-        <div className={styles.status}>
-          {isExpired ? (
-            <span className={styles.expiredBadge}>Expired</span>
-          ) : isClosed ? (
-            <span className={styles.closedBadge}>Closed</span>
-          ) : (
-            <span className={styles.openBadge}>Open</span>
-          )}
-        </div>
-        <Link to={`/jobs/${job.slug}`} className={styles.detailsLink}>
-          View Details <FiArrowRight />
-        </Link>
       </div>
     </div>
   );
