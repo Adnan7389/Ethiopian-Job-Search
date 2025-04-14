@@ -2,11 +2,20 @@ const Job = require("../models/jobModel");
 const User = require("../models/userModel");
 
 const createJob = async (req, res) => {
-  const { title, description, location, salary, job_type, industry, experience_level, expires_at, status } = req.body;
+  const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
   const employerId = req.user.userId;
 
+  console.log("Received createJob request:", { employerId, ...req.body });
+
   if (req.user.user_type !== "employer") {
+    console.log("Authorization failed: User is not an employer");
     return res.status(403).json({ error: "Only employers can create jobs" });
+  }
+
+  // Validate required fields
+  if (!title || !description || !location || !job_type || !industry || !experience_level || !status) {
+    console.log("Validation failed: Missing required fields");
+    return res.status(400).json({ error: "All required fields must be provided" });
   }
 
   try {
@@ -15,21 +24,26 @@ const createJob = async (req, res) => {
       title,
       description,
       location,
-      salary,
+      salary_range,
       job_type,
       industry,
       experience_level,
-      expires_at: expires_at ? new Date(expires_at) : null,
+      expires_at: application_deadline ? new Date(application_deadline) : null,
       status,
+      is_archived: false,
+      created_at: new Date(),
+      updated_at: new Date(),
     };
-    const jobId = await Job.create(jobData);
-    res.status(201).json({ message: "Job created successfully", jobId });
+    console.log("Creating job with data:", jobData);
+    const job = await Job.create(jobData);
+    console.log("Job created successfully:", { jobId: job.job_id, slug: job.slug });
+    res.status(201).json({ message: "Job created successfully", jobId: job.job_id, slug: job.slug });
   } catch (error) {
+    console.error("Error creating job:", error.message);
     res.status(500).json({ error: "Failed to create job", details: error.message });
   }
 };
 
-// New method for job seekers to fetch available jobs
 const getJobs = async (req, res) => {
   const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived = "false" } = req.query;
 
@@ -41,7 +55,7 @@ const getJobs = async (req, res) => {
       job_type,
       industry,
       experience_level,
-      status: status || "open", // Default to open jobs
+      status: status || "open",
       date_posted,
       includeArchived: includeArchived === "true",
     });
@@ -105,7 +119,7 @@ const getJobBySlug = async (req, res) => {
 
 const updateJob = async (req, res) => {
   const { slug } = req.params;
-  const { title, description, location, salary, job_type, industry, experience_level, expires_at, status } = req.body;
+  const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
   const employerId = req.user.userId;
 
   if (req.user.user_type !== "employer") {
@@ -125,15 +139,15 @@ const updateJob = async (req, res) => {
       title: title || job.title,
       description: description || job.description,
       location: location || job.location,
-      salary: salary !== undefined ? salary : job.salary,
+      salary_range: salary_range !== undefined ? salary_range : job.salary_range,
       job_type: job_type || job.job_type,
       industry: industry || job.industry,
       experience_level: experience_level || job.experience_level,
-      expires_at: expires_at ? new Date(expires_at) : job.expires_at,
+      expires_at: application_deadline ? new Date(application_deadline) : job.expires_at,
       status: status || job.status,
     };
-    await Job.update(slug, updates);
-    res.json({ message: "Job updated successfully" });
+    const updatedJob = await Job.update(slug, updates);
+    res.json({ message: "Job updated successfully", slug: updatedJob.slug });
   } catch (error) {
     res.status(500).json({ error: "Failed to update job", details: error.message });
   }
@@ -204,11 +218,11 @@ const duplicateJob = async (req, res) => {
     if (job.employer_id !== employerId) {
       return res.status(403).json({ error: "You can only duplicate your own jobs" });
     }
-    const newJobId = await Job.duplicate(jobId);
-    if (!newJobId) {
+    const newJob = await Job.duplicate(jobId);
+    if (!newJob) {
       return res.status(404).json({ error: "Job not found" });
     }
-    res.json({ message: "Job duplicated successfully", newJobId });
+    res.json({ message: "Job duplicated successfully", newJobId: newJob.job_id, slug: newJob.slug });
   } catch (error) {
     res.status(500).json({ error: "Failed to duplicate job", details: error.message });
   }
