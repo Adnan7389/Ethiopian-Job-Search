@@ -31,9 +31,12 @@ export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { reje
 
 export const createJob = createAsyncThunk('job/createJob', async (jobData, { rejectWithValue }) => {
   try {
+    console.log("Sending createJob request with data:", jobData); // Debug log
     const response = await api.post('/jobs', jobData);
+    console.log("createJob response:", response.data); // Debug log
     return response.data;
   } catch (error) {
+    console.error("createJob failed:", error.response?.data || error.message); // Debug log
     return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
@@ -96,6 +99,10 @@ const jobSlice = createSlice({
   name: 'job',
   initialState,
   reducers: {
+    resetStatus: (state) => {
+      state.status = 'idle';
+      state.error = null;
+    },
     setPage: (state, action) => {
       state.currentPage = action.payload;
     },
@@ -139,13 +146,16 @@ const jobSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createJob.pending, (state) => {
+        console.log("createJob pending"); // Debug log
         state.status = 'loading';
         state.error = null;
       })
       .addCase(createJob.fulfilled, (state) => {
+        console.log("createJob fulfilled:", action.payload); // Debug log
         state.status = 'succeeded';
       })
       .addCase(createJob.rejected, (state, action) => {
+        console.log("createJob rejected:", action.payload); // Debug log
         state.status = 'failed';
         state.error = action.payload;
       })
@@ -223,5 +233,5 @@ const jobSlice = createSlice({
   },
 });
 
-export const { setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters } = jobSlice.actions;
+export const { resetStatus, setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters } = jobSlice.actions;
 export default jobSlice.reducer;

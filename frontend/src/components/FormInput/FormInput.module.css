@@ -1,4 +1,4 @@
-.inputGroup {
+.formGroup {
   margin-bottom: 1rem;
   width: 100%;
 }
@@ -6,6 +6,7 @@
 .label {
   display: block;
   font-size: 1rem;
+  font-weight: bold;
   margin-bottom: 0.5rem;
   color: #2c3e50;
 }
@@ -24,8 +25,14 @@
   border-color: #3498db;
 }
 
+.errorInput {
+  border-color: red;
+}
+
 .error {
-  border-color: #e74c3c;
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 .errorMessage {
