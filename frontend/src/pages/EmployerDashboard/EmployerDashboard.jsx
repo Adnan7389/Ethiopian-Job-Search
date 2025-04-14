@@ -28,7 +28,7 @@ function EmployerDashboard() {
     totalPages,
     pageSize,
     search,
-    filters,
+    filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' }, // Added default value
     includeArchived,
     status,
     error,
@@ -37,8 +37,14 @@ function EmployerDashboard() {
 
   const [confirmAction, setConfirmAction] = useState(null);
 
-  // Extract individual filter values to avoid reference changes
-  const { job_type, industry, experience_level, status: filterStatus, date_posted } = filters;
+  // Extract individual filter values with defaults to avoid undefined errors
+  const {
+    job_type = '',
+    industry = '',
+    experience_level = '',
+    status: filterStatus = '',
+    date_posted = '',
+  } = filters;
 
   // Memoize the params to avoid unnecessary re-renders
   const fetchParams = useMemo(
@@ -84,7 +90,7 @@ function EmployerDashboard() {
         }
       });
     }
-  }, [dispatch, userType, navigate, fetchParams]); // Use fetchParams as a dependency
+  }, [dispatch, userType, navigate, fetchParams]);
 
   const handleDelete = (jobId) => {
     setConfirmAction({ type: "delete", jobId });
@@ -157,13 +163,13 @@ function EmployerDashboard() {
               onChange={handleSearchChange}
               className={styles.searchInput}
             />
-            <select name="job_type" value={filters.job_type} onChange={handleFilterChange}>
+            <select name="job_type" value={job_type} onChange={handleFilterChange}>
               <option value="">All Job Types</option>
               <option value="full-time">Full-Time</option>
               <option value="part-time">Part-Time</option>
               <option value="contract">Contract</option>
             </select>
-            <select name="industry" value={filters.industry} onChange={handleFilterChange}>
+            <select name="industry" value={industry} onChange={handleFilterChange}>
               <option value="">All Industries</option>
               <option value="IT">IT</option>
               <option value="Finance">Finance</option>
@@ -177,19 +183,19 @@ function EmployerDashboard() {
               <option value="Construction">Construction</option>
               <option value="Other">Other</option>
             </select>
-            <select name="experience_level" value={filters.experience_level} onChange={handleFilterChange}>
+            <select name="experience_level" value={experience_level} onChange={handleFilterChange}>
               <option value="">All Experience Levels</option>
               <option value="entry-level">Entry-Level</option>
               <option value="mid-level">Mid-Level</option>
               <option value="senior">Senior</option>
             </select>
-            <select name="status" value={filters.status} onChange={handleFilterChange}>
+            <select name="status" value={filterStatus} onChange={handleFilterChange}>
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="closed">Closed</option>
               <option value="paused">Paused</option>
             </select>
-            <select name="date_posted" value={filters.date_posted} onChange={handleFilterChange}>
+            <select name="date_posted" value={date_posted} onChange={handleFilterChange}>
               <option value="">All Dates</option>
               <option value="last_24_hours">Last 24 Hours</option>
               <option value="last_7_days">Last 7 Days</option>
