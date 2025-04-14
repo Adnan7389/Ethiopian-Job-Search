@@ -1,20 +1,16 @@
 import React from 'react';
 import styles from './FormInput.module.css';
 
-function FormInput({ label, name, type = "text", value, onChange, required, maxLength, placeholder }) {
+function FormInput({ label, type = "text", error, ...inputProps }) {
   return (
     <div className={styles.formGroup}>
       <label className={styles.label}>{label}</label>
       <input
         type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        required={required}
-        maxLength={maxLength}
-        placeholder={placeholder}
-        className={styles.input}
+        {...inputProps} // Spread all props from register (name, onChange, onBlur, ref)
+        className={`${styles.input} ${error ? styles.errorInput : ''}`} // Add error styling
       />
+      {error && <p className={styles.error}>{error}</p>} {/* Display error message */}
     </div>
   );
 }

@@ -73,6 +73,17 @@
     text-align: center;
   }
   
+  .errorContainer {
+    margin-top: 10px;
+    color: red;
+  }
+  
+  .error {
+    color: red;
+    font-size: 14px;
+    margin: 5px 0;
+  }
+  
   @media (min-width: 768px) {
     .container {
       padding: 2rem;
