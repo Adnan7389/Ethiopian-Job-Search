@@ -7,11 +7,12 @@ import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { createJob, resetStatus } from "../../features/job/jobSlice";
 import styles from "./PostJob.module.css";
+import { useEffect } from "react"; // Added useEffect import
 
 function PostJob() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error } = useSelector((state) => state.job);
+  const { status, error, job } = useSelector((state) => state.job); // Added job to access created job data
   const { register, handleSubmit, formState: { errors }, watch } = useForm({
     defaultValues: {
       title: "",
@@ -31,26 +32,24 @@ function PostJob() {
   const onSubmit = async (data) => {
     console.log("Form submitted with data:", data);
     try {
-      // Debug log to confirm resetStatus import
       console.log("resetStatus function:", resetStatus);
-      // Reset status if resetStatus is available
-      if (typeof resetStatus === "function") {
-        dispatch(resetStatus());
-        console.log("Status reset, dispatching createJob");
-      } else {
-        console.warn("resetStatus is not available, proceeding without reset");
-      }
-      const action = await dispatch(createJob(data));
-      if (createJob.fulfilled.match(action)) {
-        console.log("Job posted successfully, result:", action.payload);
-        navigate("/dashboard");
-      } else {
-        throw new Error(action.payload || "Failed to create job");
-      }
+      dispatch(resetStatus());
+      console.log("Status reset, dispatching createJob");
+      await dispatch(createJob(data)); // Dispatch createJob and wait for result
     } catch (err) {
       console.error("Failed to create job:", err.message || err);
     }
   };
+
+  // Added useEffect to handle navigation and error logging
+  useEffect(() => {
+    if (status === "succeeded") {
+      console.log("Job posted successfully, result:", job);
+      navigate("/dashboard");
+    } else if (status === "failed") {
+      console.log("Failed to create job:", error);
+    }
+  }, [status, job, error, navigate]); // Dependencies include status, job, error, and navigate
 
   console.log("PostJob state:", { status, error });
   console.log("Form errors:", errors);

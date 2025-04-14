@@ -18,6 +18,7 @@ const initialState = {
   includeArchived: false,
   status: 'idle',
   error: null,
+  job: null, // For createJob response
 };
 
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
@@ -31,12 +32,12 @@ export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { reje
 
 export const createJob = createAsyncThunk('job/createJob', async (jobData, { rejectWithValue }) => {
   try {
-    console.log("Sending createJob request with data:", jobData); // Debug log
+    console.log("Sending createJob request with data:", jobData);
     const response = await api.post('/jobs', jobData);
-    console.log("createJob response:", response.data); // Debug log
+    console.log("createJob response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("createJob failed:", error.response?.data || error.message); // Debug log
+    console.error("createJob failed:", error.response?.data || error.message);
     return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
@@ -70,7 +71,7 @@ export const updateJob = createAsyncThunk('job/updateJob', async ({ jobId, jobDa
 
 export const deleteJob = createAsyncThunk('job/deleteJob', async (jobId, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/jobs/${jobId}/archive`); // Changed to PUT /jobs/:jobId/archive
+    const response = await api.put(`/jobs/${jobId}/archive`);
     return { jobId, message: response.data.message };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
@@ -79,7 +80,7 @@ export const deleteJob = createAsyncThunk('job/deleteJob', async (jobId, { rejec
 
 export const restoreJob = createAsyncThunk('job/restoreJob', async (jobId, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/jobs/${jobId}/restore`); // Changed to PUT /jobs/:jobId/restore
+    const response = await api.put(`/jobs/${jobId}/restore`);
     return { jobId, message: response.data.message };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
@@ -102,6 +103,7 @@ const jobSlice = createSlice({
     resetStatus: (state) => {
       state.status = 'idle';
       state.error = null;
+      state.job = null;
     },
     setPage: (state, action) => {
       state.currentPage = action.payload;
@@ -146,18 +148,19 @@ const jobSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createJob.pending, (state) => {
-        console.log("createJob pending"); // Debug log
+        console.log("createJob pending");
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(createJob.fulfilled, (state) => {
-        console.log("createJob fulfilled:", action.payload); // Debug log
+      .addCase(createJob.fulfilled, (state, action) => {
+        console.log('createJob fulfilled:', action.payload);
         state.status = 'succeeded';
+        state.job = action.payload;
       })
       .addCase(createJob.rejected, (state, action) => {
-        console.log("createJob rejected:", action.payload); // Debug log
+        console.log('createJob rejected:', action.payload);
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = action.payload?.error || 'Failed to create job';
       })
       .addCase(fetchEmployerJobs.pending, (state) => {
         state.status = 'loading';
