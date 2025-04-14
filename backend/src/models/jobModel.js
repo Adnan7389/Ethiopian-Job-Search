@@ -1,22 +1,35 @@
 const pool = require("../config/db");
 
 class Job {
+  // Mapping function for job_type
+  mapJobType(jobType) {
+    const jobTypeMap = {
+      'full-time': 'full_time',
+      'part-time': 'part_time',
+      'contract': 'contract',
+    };
+    return jobTypeMap[jobType] || 'full_time'; // Default to 'full_time' if invalid
+  }
+
   async create(data) {
     const {
       employer_id,
       title,
       description,
       location,
-      salary,
+      salary_range,
       job_type,
       industry,
       experience_level,
       expires_at,
       status,
+      is_archived,
+      created_at,
+      updated_at,
     } = data;
 
-    // Generate slug
-    const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    // Generate a unique slug based on title and location
+    const baseSlug = `${title}-${location}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").trim();
     let slug = baseSlug;
     let counter = 1;
     while (true) {
@@ -26,23 +39,28 @@ class Job {
       counter++;
     }
 
+    const mappedJobType = this.mapJobType(job_type); // Map the job_type value
+
     const [result] = await pool.query(
       `INSERT INTO jobs (
-        employer_id, title, slug, description, location, salary, job_type, industry,
-        experience_level, expires_at, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        employer_id, slug, title, description, location, salary_range, job_type, industry,
+        experience_level, expires_at, status, is_archived, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         employer_id,
-        title,
         slug,
+        title,
         description,
         location || null,
-        salary || null,
-        job_type || "full-time",
+        salary_range || null,
+        mappedJobType || "full_time", // Use mapped value
         industry || "Other",
         experience_level || "entry-level",
         expires_at || null,
         status || "open",
+        is_archived || false,
+        created_at || new Date(),
+        updated_at || new Date(),
       ]
     );
     return this.findById(result.insertId);
@@ -54,11 +72,13 @@ class Job {
   }
 
   async findBySlug(slug) {
-    const [rows] = await pool.query("SELECT * FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())", [slug]);
+    const [rows] = await pool.query(
+      "SELECT * FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())",
+      [slug]
+    );
     return rows[0];
   }
 
-  // New method to fetch all available jobs for job seekers
   async findAll({ page, limit, search, job_type, industry, experience_level, status, date_posted, includeArchived }) {
     let query = "SELECT * FROM jobs WHERE is_archived = 0 AND status = ? AND (expires_at IS NULL OR expires_at > NOW())";
     let countQuery = "SELECT COUNT(*) as total FROM jobs WHERE is_archived = 0 AND status = ? AND (expires_at IS NULL OR expires_at > NOW())";
@@ -74,10 +94,11 @@ class Job {
     }
 
     if (job_type) {
+      const mappedJobType = this.mapJobType(job_type); // Map the job_type value
       query += " AND job_type = ?";
       countQuery += " AND job_type = ?";
-      params.push(job_type);
-      countParams.push(job_type);
+      params.push(mappedJobType);
+      countParams.push(mappedJobType);
     }
     if (industry) {
       query += " AND industry = ?";
@@ -130,10 +151,11 @@ class Job {
     }
 
     if (job_type) {
+      const mappedJobType = this.mapJobType(job_type); // Map the job_type value
       query += " AND job_type = ?";
       countQuery += " AND job_type = ?";
-      params.push(job_type);
-      countParams.push(job_type);
+      params.push(mappedJobType);
+      countParams.push(mappedJobType);
     }
     if (industry) {
       query += " AND industry = ?";
@@ -157,7 +179,7 @@ class Job {
       let dateFilter;
       if (date_posted === "last_24_hours") dateFilter = "DATE_SUB(NOW(), INTERVAL 1 DAY)";
       else if (date_posted === "last_7_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
-      else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 30 DAY)";
+      else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
       if (dateFilter) {
         query += ` AND created_at >= ${dateFilter}`;
         countQuery += ` AND created_at >= ${dateFilter}`;
@@ -178,7 +200,7 @@ class Job {
       title,
       description,
       location,
-      salary,
+      salary_range,
       job_type,
       industry,
       experience_level,
@@ -187,47 +209,49 @@ class Job {
     } = data;
 
     // Update slug if title changes
-    let newSlug = undefined;
+    let newSlug = slug;
     if (title) {
-      const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      let slug = baseSlug;
+      const baseSlug = `${title}-${data.location || location}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").trim();
       let counter = 1;
       while (true) {
         const [existing] = await pool.query(
           "SELECT job_id FROM jobs WHERE slug = ? AND slug != ?",
-          [slug, slug]
+          [newSlug, slug]
         );
         if (existing.length === 0) break;
-        slug = `${baseSlug}-${counter}`;
+        newSlug = `${baseSlug}-${counter}`;
         counter++;
       }
-      newSlug = slug;
     }
+
+    const mappedJobType = job_type ? this.mapJobType(job_type) : null; // Map the job_type value
 
     const [result] = await pool.query(
       `UPDATE jobs SET
         title = COALESCE(?, title),
         slug = COALESCE(?, slug),
         description = COALESCE(?, description),
-        location = ?,
-        salary = ?,
+        location = COALESCE(?, location),
+        salary_range = COALESCE(?, salary_range),
         job_type = COALESCE(?, job_type),
         industry = COALESCE(?, industry),
         experience_level = COALESCE(?, experience_level),
-        expires_at = ?,
-        status = COALESCE(?, status)
+        expires_at = COALESCE(?, expires_at),
+        status = COALESCE(?, status),
+        updated_at = ?
       WHERE slug = ?`,
       [
         title || null,
         newSlug || null,
         description || null,
         location || null,
-        salary || null,
-        job_type || null,
+        salary_range || null,
+        mappedJobType || null, // Use mapped value
         industry || null,
         experience_level || null,
         expires_at || null,
         status || null,
+        new Date(),
         slug,
       ]
     );
@@ -264,18 +288,21 @@ class Job {
       throw new Error("Job not found");
     }
 
-    const { employer_id, title, description, location, salary, job_type, industry, experience_level } = job;
+    const { employer_id, title, description, location, salary_range, job_type, industry, experience_level } = job;
     const newTitle = `${title} (Copy)`;
     const newJobData = {
       employer_id,
       title: newTitle,
       description,
       location,
-      salary,
+      salary_range,
       job_type,
       industry,
       experience_level,
       status: "open",
+      is_archived: false,
+      created_at: new Date(),
+      updated_at: new Date(),
     };
     return this.create(newJobData);
   }
