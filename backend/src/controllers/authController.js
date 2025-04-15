@@ -1,57 +1,41 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
-const nodemailer = require("nodemailer");
-
-// Mock email transporter for development
-const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  auth: {
-    user: "your-ethereal-email", // Replace with your Ethereal email for testing
-    pass: "your-ethereal-password", // Replace with your Ethereal password
-  },
-});
 
 // Generate a 6-digit code
 const generateCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send email with the code (mocked for development)
+// Mock email sending function
+const mockSendEmail = ({ to, subject, text }) => {
+  console.log(`Mock Email Sent to ${to}:`, { subject, text });
+};
+
+// Send verification email (mocked)
 const sendVerificationEmail = async (email, code) => {
   try {
-    const mailOptions = {
-      from: "no-reply@ethiojobs.com",
+    mockSendEmail({
       to: email,
       subject: "Verify Your Email - Ethio Jobs",
       text: `Your verification code is: ${code}. It expires in 10 minutes.`,
-    };
-
-    console.log("Mock Email Sent:", mailOptions);
-    // Uncomment the following line to actually send emails in production
-    // await transporter.sendMail(mailOptions);
+    });
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending verification email:", error.message);
     throw new Error("Failed to send verification email");
   }
 };
 
-// Send reset code email (mocked for development)
+// Send reset code email (mocked)
 const sendResetCodeEmail = async (email, code) => {
   try {
-    const mailOptions = {
-      from: "no-reply@ethiojobs.com",
+    mockSendEmail({
       to: email,
       subject: "Password Reset Code - Ethio Jobs",
       text: `Your password reset code is: ${code}. It expires in 10 minutes.`,
-    };
-
-    console.log("Mock Reset Code Email Sent:", mailOptions);
-    // Uncomment the following line to actually send emails in production
-    // await transporter.sendMail(mailOptions);
+    });
   } catch (error) {
-    console.error("Error sending reset code email:", error);
+    console.error("Error sending reset code email:", error.message);
     throw new Error("Failed to send reset code email");
   }
 };
@@ -192,14 +176,9 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ error: "Email not found" });
     }
 
-    // Generate a 6-digit code
     const code = generateCode();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Expires in 10 minutes
-
-    // Store the code in the database
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await User.storeResetCode(email, code, expiresAt);
-
-    // Send the code via email
     await sendResetCodeEmail(email, code);
 
     res.json({ message: "Reset code sent to your email." });
