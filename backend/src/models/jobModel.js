@@ -39,7 +39,7 @@ class Job {
       counter++;
     }
 
-    const mappedJobType = this.mapJobType(job_type); // Map the job_type value
+    const mappedJobType = this.mapJobType(job_type);
 
     const [result] = await pool.query(
       `INSERT INTO jobs (
@@ -53,7 +53,7 @@ class Job {
         description,
         location || null,
         salary_range || null,
-        mappedJobType || "full_time", // Use mapped value
+        mappedJobType || "full_time",
         industry || "Other",
         experience_level || "entry-level",
         expires_at || null,
@@ -94,7 +94,7 @@ class Job {
     }
 
     if (job_type) {
-      const mappedJobType = this.mapJobType(job_type); // Map the job_type value
+      const mappedJobType = this.mapJobType(job_type);
       query += " AND job_type = ?";
       countQuery += " AND job_type = ?";
       params.push(mappedJobType);
@@ -151,7 +151,7 @@ class Job {
     }
 
     if (job_type) {
-      const mappedJobType = this.mapJobType(job_type); // Map the job_type value
+      const mappedJobType = this.mapJobType(job_type);
       query += " AND job_type = ?";
       countQuery += " AND job_type = ?";
       params.push(mappedJobType);
@@ -224,7 +224,7 @@ class Job {
       }
     }
 
-    const mappedJobType = job_type ? this.mapJobType(job_type) : null; // Map the job_type value
+    const mappedJobType = job_type ? this.mapJobType(job_type) : null;
 
     const [result] = await pool.query(
       `UPDATE jobs SET
@@ -246,7 +246,7 @@ class Job {
         description || null,
         location || null,
         salary_range || null,
-        mappedJobType || null, // Use mapped value
+        mappedJobType || null,
         industry || null,
         experience_level || null,
         expires_at || null,
@@ -305,6 +305,24 @@ class Job {
       updated_at: new Date(),
     };
     return this.create(newJobData);
+  }
+
+  // New method to find jobs expiring soon
+  async findExpiringJobs() {
+    const now = new Date();
+    const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+    const query = `
+      SELECT j.*, u.email
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.user_id
+      WHERE j.expires_at IS NOT NULL
+        AND j.expires_at >= ?
+        AND j.expires_at <= ?
+        AND j.status = 'open'
+        AND j.is_archived = 0
+    `;
+    const [rows] = await pool.query(query, [now, in24Hours]);
+    return rows;
   }
 }
 
