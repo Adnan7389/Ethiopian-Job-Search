@@ -28,7 +28,7 @@ function EmployerDashboard() {
     totalPages,
     pageSize,
     search,
-    filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' }, // Added default value
+    filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' },
     includeArchived,
     status,
     error,
@@ -37,7 +37,6 @@ function EmployerDashboard() {
 
   const [confirmAction, setConfirmAction] = useState(null);
 
-  // Extract individual filter values with defaults to avoid undefined errors
   const {
     job_type = '',
     industry = '',
@@ -46,7 +45,6 @@ function EmployerDashboard() {
     date_posted = '',
   } = filters;
 
-  // Memoize the params to avoid unnecessary re-renders
   const fetchParams = useMemo(
     () => ({
       page: currentPage,
@@ -140,6 +138,11 @@ function EmployerDashboard() {
     dispatch(clearFilters());
   };
 
+  const handlePostNewJob = (e) => {
+    console.log("Post New Job button clicked"); // Debug log
+    navigate("post-job");
+  };
+
   if (status === "loading" && !jobs.length) return <LoadingSpinner />;
 
   return (
@@ -149,7 +152,7 @@ function EmployerDashboard() {
       {window.location.pathname === "/dashboard" && (
         <>
           <Button
-            onClick={() => navigate("post-job")}
+            onClick={handlePostNewJob} // Updated to named handler for debugging
             variant="primary"
             className={styles.postButton}
           >
