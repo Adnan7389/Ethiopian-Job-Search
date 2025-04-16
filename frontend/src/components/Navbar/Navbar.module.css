@@ -1,79 +1,197 @@
 .navbar {
+  background-color: var(--text);
+  color: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbarContainer {
   display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  background-color: #2c3e50;
-  color: white;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .logo a {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--white);
 }
 
 .navLinks {
-  display: flex;
-  flex-direction: column;
   list-style: none;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--text);
+  padding: var(--space-2);
+  gap: var(--space-2);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
-.link {
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
+.navLinksOpen {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.link:hover {
-  color: #3498db;
+.link, .logoutButton {
+  color: var(--white);
+  font-size: var(--font-size-base);
+  transition: color 0.2s ease;
+  padding: var(--space-1) 0;
+}
+
+.link:hover, .logoutButton:hover {
+  color: var(--primary);
 }
 
 .logoutButton {
   background: none;
   border: none;
-  color: white;
-  font-size: 1rem;
   cursor: pointer;
+  padding: 0;
 }
 
-.logoutButton:hover {
-  color: #e74c3c;
+.menuToggle {
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1);
 }
 
-@media (min-width: 768px) {
-  .navbar {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
+.hamburger {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background-color: var(--white);
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 3px;
+  background-color: var(--white);
+  left: 0;
+  transition: transform 0.3s ease;
+}
+
+.hamburger::before {
+  top: -8px;
+}
+
+.hamburger::after {
+  top: 8px;
+}
+
+.menuToggle[aria-expanded="true"] .hamburger {
+  background-color: transparent;
+}
+
+.menuToggle[aria-expanded="true"] .hamburger::before {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.menuToggle[aria-expanded="true"] .hamburger::after {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .navbarContainer {
+    padding: var(--space-1) var(--space-2);
   }
-  .navLinks {
-    flex-direction: row;
-    gap: 1.5rem;
-    margin-top: 0;
-  }
+
   .logo a {
-    font-size: 1.75rem;
+    font-size: var(--font-size-lg);
   }
+
+  .navLinks {
+    padding: var(--space-1);
+    gap: var(--space-1);
+  }
+
   .link, .logoutButton {
-    font-size: 1.125rem;
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .menuToggle {
+    display: block;
+  }
+
+  .navLinks {
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .navbarContainer {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .logo a {
+    font-size: var(--font-size-xl);
+  }
+
+  .link, .logoutButton {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (min-width: 769px) {
+  .menuToggle {
+    display: none;
+  }
+
+  .navLinks {
+    display: flex;
+    flex-direction: row;
+    position: static;
+    background-color: transparent;
+    padding: 0;
+    gap: var(--space-3);
+    opacity: 1;
+    transform: none;
+  }
+
+  .navbarContainer {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .logo a {
+    font-size: var(--font-size-2xl);
+  }
+
+  .link, .logoutButton {
+    font-size: var(--font-size-lg);
   }
 }
 
 @media (min-width: 1025px) {
-  .navbar {
-    padding: 1rem 3rem;
+  .navbarContainer {
+    padding: var(--space-2) var(--space-5);
   }
-  .navLinks {
-    gap: 2rem;
-  }
+
   .logo a {
-    font-size: 2rem;
+    font-size: var(--font-size-3xl);
   }
-  .link, .logoutButton {
-    font-size: 1.25rem;
+
+  .navLinks {
+    gap: var(--space-4);
   }
 }

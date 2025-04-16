@@ -1,46 +1,96 @@
 .button {
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-2) var(--space-3);
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 500;
   cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  margin: var(--space-1); /* Add default margin */
+}
+
+.button.no-margin {
+  margin: 0; /* Utility class to remove margin when needed */
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
 }
 
 .primary {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--primary);
+  color: var(--white);
 }
 
 .primary:hover:not(.disabled) {
-  background-color: #2980b9;
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
 }
 
 .secondary {
-  background-color: #7f8c8d;
-  color: white;
+  background-color: var(--secondary);
+  color: var(--white);
 }
 
 .secondary:hover:not(.disabled) {
-  background-color: #95a5a6;
+  background-color: var(--secondary-light);
+  transform: translateY(-2px);
+}
+
+.danger {
+  background-color: var(--danger);
+  color: var(--white);
+}
+
+.danger:hover:not(.disabled) {
+  background-color: #c0392b;
+  transform: translateY(-2px);
 }
 
 .disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
+  transform: none !important;
 }
 
-@media (min-width: 768px) {
+/* Responsive Design */
+@media (max-width: 576px) {
   .button {
-    padding: 0.875rem 2rem;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--font-size-sm);
+    width: 100%;
+    margin: var(--space-1) 0; /* Adjust margin for mobile */
+  }
+
+  .button.no-margin {
+    margin: 0;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .button {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-base);
+    width: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  .button {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-base);
     width: auto;
   }
 }
 
 @media (min-width: 1025px) {
   .button {
-    padding: 1rem 2.5rem;
-    font-size: 1.125rem;
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-lg);
   }
 }

@@ -1,68 +1,139 @@
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Define CSS Variables for Design System */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Color Palette */
+  --primary: #3498db; /* Main brand color */
+  --primary-dark: #2980b9;
+  --secondary: #7f8c8d;
+  --secondary-light: #95a5a6;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --background: #f4f7fa;
+  --text: #2c3e50;
+  --text-light: #7f8c8d;
+  --white: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Typography */
+  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+
+  /* Line Heights */
+  --line-height-base: 1.5;
+  --line-height-heading: 1.2;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px var(--shadow);
+  --shadow-md: 0 4px 8px var(--shadow);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Global Styles */
+html {
+  font-size: 16px;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  font-family: var(--font-family);
+  line-height: var(--line-height-base);
+  font-weight: 400;
+  color: var(--text);
+  background-color: var(--background);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--line-height-heading);
+  margin-bottom: var(--space-2);
+  color: var(--text);
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: var(--font-size-3xl);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+h2 {
+  font-size: var(--font-size-2xl);
 }
 
-@media (prefers-color-scheme: light) {
+h3 {
+  font-size: var(--font-size-xl);
+}
+
+p {
+  margin-bottom: var(--space-2);
+}
+
+/* Utility Classes */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  html {
+    font-size: 14px;
+  }
+
+  .container {
+    padding: 0 var(--space-2);
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background: #242424;
+    --text: rgba(255, 255, 255, 0.87);
+    --text-light: #bdc3c7;
   }
+
   a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+    color: #535bf2;
   }
 }
