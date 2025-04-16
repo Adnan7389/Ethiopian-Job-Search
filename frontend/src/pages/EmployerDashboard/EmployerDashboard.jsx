@@ -139,7 +139,7 @@ function EmployerDashboard() {
   };
 
   const handlePostNewJob = (e) => {
-    console.log("Post New Job button clicked"); // Debug log
+    console.log("Post New Job button clicked");
     navigate("post-job");
   };
 
@@ -152,7 +152,7 @@ function EmployerDashboard() {
       {window.location.pathname === "/dashboard" && (
         <>
           <Button
-            onClick={handlePostNewJob} // Updated to named handler for debugging
+            onClick={handlePostNewJob}
             variant="primary"
             className={styles.postButton}
           >
@@ -234,13 +234,13 @@ function EmployerDashboard() {
                 <tbody>
                   {jobs.map((job) => (
                     <tr key={job.job_id}>
-                      <td>{job.title}</td>
-                      <td>{job.status}</td>
-                      <td>{job.job_type}</td>
-                      <td>{job.industry}</td>
-                      <td>{job.experience_level}</td>
-                      <td>{new Date(job.created_at).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label="Title">{job.title}</td>
+                      <td data-label="Status">{job.status}</td>
+                      <td data-label="Job Type">{job.job_type}</td>
+                      <td data-label="Industry">{job.industry}</td>
+                      <td data-label="Experience Level">{job.experience_level}</td>
+                      <td data-label="Created At">{new Date(job.created_at).toLocaleDateString()}</td>
+                      <td data-label="Actions">
                         <Button
                           onClick={() => navigate(`edit-job/${job.slug}`)}
                           variant="primary"

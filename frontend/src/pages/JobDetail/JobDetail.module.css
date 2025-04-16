@@ -1,25 +1,113 @@
 .container {
-    padding: 1rem;
-    max-width: 800px;
-    margin: 0 auto;
+  padding: var(--space-3);
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  color: var(--text);
+  flex: 1;
+}
+
+.details {
+  margin-bottom: var(--space-3);
+}
+
+.details p {
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-base);
+  color: var(--text);
+}
+
+.details strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.description h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-2);
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.error {
+  color: var(--danger);
+  font-size: var(--font-size-base);
+  text-align: center;
+  margin: var(--space-3) 0;
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .container {
+    padding: var(--space-2);
   }
-  
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
   .title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
+    font-size: var(--font-size-xl);
   }
-  
-  p {
-    margin-bottom: 0.5rem;
+
+  .details p {
+    font-size: var(--font-size-sm);
   }
-  
-  @media (min-width: 768px) {
-    .container {
-      padding: 2rem;
-    }
-  
-    .title {
-      font-size: 2rem;
-    }
+
+  .description h2 {
+    font-size: var(--font-size-lg);
   }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .container {
+    padding: var(--space-3);
+  }
+
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .description h2 {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (min-width: 769px) {
+  .container {
+    padding: var(--space-4);
+  }
+
+  .title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .description h2 {
+    font-size: var(--font-size-2xl);
+  }
+}

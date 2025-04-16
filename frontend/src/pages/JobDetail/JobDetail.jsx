@@ -18,8 +18,11 @@ function JobDetail() {
   }, [dispatch, slug]);
 
   const handleApply = () => {
-    // Placeholder for apply functionality
     alert("Apply functionality coming soon!");
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to the previous page
   };
 
   if (status === "loading") return <LoadingSpinner />;
@@ -28,10 +31,15 @@ function JobDetail() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>{job.title}</h1>
+      <div className={styles.header}>
+        <Button variant="secondary" onClick={handleBack}>
+          Back
+        </Button>
+        <h1 className={styles.title}>{job.title}</h1>
+      </div>
       <div className={styles.details}>
         <p><strong>Location:</strong> {job.location || "Not specified"}</p>
-        <p><strong>Salary:</strong> {job.salary ? `$${job.salary}` : "Not specified"}</p>
+        <p><strong>Salary:</strong> {job.salary_range ? job.salary_range : "Not specified"}</p>
         <p><strong>Job Type:</strong> {job.job_type}</p>
         <p><strong>Industry:</strong> {job.industry}</p>
         <p><strong>Experience Level:</strong> {job.experience_level}</p>
@@ -51,7 +59,7 @@ function JobDetail() {
         )}
         {userType === "employer" && job.employer_id === useSelector((state) => state.auth.userId) && (
           <Button
-            onClick={() => navigate(`/dashboard/edit-job/${slug}`)} // Updated to nested path
+            onClick={() => navigate(`/dashboard/edit-job/${slug}`)}
             variant="secondary"
           >
             Edit Job

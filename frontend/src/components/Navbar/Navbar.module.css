@@ -12,7 +12,8 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--space-2) var(--space-3);
-  max-width: 1200px;
+  max-width: 1400px; /* Increased max-width for big screens */
+  width: 100%; /* Ensure it stretches to full width within max-width */
   margin: 0 auto;
 }
 
@@ -20,6 +21,7 @@
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--white);
+  text-decoration: none;
 }
 
 .navLinks {
@@ -49,10 +51,16 @@
   font-size: var(--font-size-base);
   transition: color 0.2s ease;
   padding: var(--space-1) 0;
+  text-decoration: none;
 }
 
 .link:hover, .logoutButton:hover {
   color: var(--primary);
+}
+
+.activeLink {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .logoutButton {
@@ -60,6 +68,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  font-size: var(--font-size-base);
 }
 
 .menuToggle {
@@ -167,10 +176,19 @@
     gap: var(--space-3);
     opacity: 1;
     transform: none;
+    margin-left: auto; /* Push nav links to the far right */
   }
 
   .navbarContainer {
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-2) 0; /* Remove horizontal padding to stretch to edges */
+  }
+
+  .logo {
+    margin-left: var(--space-4); /* Add small margin for visual balance */
+  }
+
+  .navLinks {
+    margin-right: var(--space-4); /* Add small margin for visual balance */
   }
 
   .logo a {
@@ -184,14 +202,19 @@
 
 @media (min-width: 1025px) {
   .navbarContainer {
-    padding: var(--space-2) var(--space-5);
+    padding: var(--space-2) 0;
+  }
+
+  .logo {
+    margin-left: var(--space-5);
+  }
+
+  .navLinks {
+    margin-right: var(--space-5);
+    gap: var(--space-4);
   }
 
   .logo a {
     font-size: var(--font-size-3xl);
-  }
-
-  .navLinks {
-    gap: var(--space-4);
   }
 }

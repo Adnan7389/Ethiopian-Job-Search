@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchJobs } from "../../features/job/jobSlice"; // Import fetchJobs instead
+import { fetchJobs } from "../../features/job/jobSlice";
 import JobCard from "../../components/JobCard/JobCard";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
@@ -22,7 +22,6 @@ const JobSearch = () => {
   });
 
   useEffect(() => {
-    // Fetch only open, non-archived, non-expired jobs for job seekers
     dispatch(
       fetchJobs({
         page: 1,
@@ -32,8 +31,8 @@ const JobSearch = () => {
         location: filters.location,
         job_type: filters.job_type,
         experience_level: filters.experience_level,
-        status: "open", // Only show open jobs
-        includeArchived: false, // Exclude archived jobs
+        status: "open",
+        includeArchived: false,
       })
     );
   }, [dispatch, filters]);
@@ -43,9 +42,18 @@ const JobSearch = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleResetFilters = () => {
+    setFilters({
+      search: "",
+      industry: "",
+      location: "",
+      job_type: "",
+      experience_level: "",
+    });
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    // Filters are already applied via useEffect
   };
 
   const handleJobClick = (slug) => {
@@ -133,8 +141,11 @@ const JobSearch = () => {
               <option value="senior">Senior</option>
             </select>
           </div>
-          <div className={styles.formGroup}>
+          <div className={styles.formActions}>
             <Button type="submit" variant="primary">Search</Button>
+            <Button type="button" variant="secondary" onClick={handleResetFilters}>
+              Reset Filters
+            </Button>
           </div>
         </div>
       </form>
