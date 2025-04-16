@@ -35,7 +35,7 @@ function PostJob() {
 
   // Navigate only after a successful job creation
   useEffect(() => {
-    if (status === "succeeded" && job) { // Check for job to ensure a new job was created
+    if (status === "succeeded" && job) {
       console.log("Job posted successfully, result:", job);
       navigate("/dashboard");
     } else if (status === "failed") {
@@ -46,10 +46,14 @@ function PostJob() {
   const onSubmit = async (data) => {
     console.log("Form submitted with data:", data);
     try {
-      await dispatch(createJob(data)).unwrap(); // Dispatch createJob and wait for result
+      await dispatch(createJob(data)).unwrap();
     } catch (err) {
       console.error("Failed to create job:", err.message || err);
     }
+  };
+
+  const handleCancel = () => {
+    navigate("/dashboard");
   };
 
   console.log("PostJob state:", { status, error });
@@ -147,9 +151,14 @@ function PostJob() {
             </ul>
           </div>
         )}
-        <Button type="submit" variant="primary" disabled={status === "loading"}>
-          {status === "loading" ? <LoadingSpinner /> : "Post Job"}
-        </Button>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="primary" disabled={status === "loading"}>
+            {status === "loading" ? <LoadingSpinner /> : "Post Job"}
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </div>
       </form>
     </div>
   );
