@@ -39,6 +39,10 @@ function Login() {
     }
   };
 
+  const handleCancel = () => {
+    navigate(-1); // Go back to the previous page
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Login</h1>
@@ -60,9 +64,14 @@ function Login() {
           required
         />
         {error && <p className={styles.error}>{error}</p>}
-        <Button type="submit" variant="primary" disabled={loading}>
-          {loading ? <LoadingSpinner /> : "Login"}
-        </Button>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? <LoadingSpinner /> : "Login"}
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </div>
       </form>
       <p className={styles.link}>
         Forgot your password? <Link to="/forgot-password">Reset it</Link>
