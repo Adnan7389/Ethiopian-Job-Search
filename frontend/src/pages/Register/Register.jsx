@@ -10,13 +10,13 @@ import styles from "./Register.module.css";
 function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userType, status, error: reduxError } = useSelector((state) => state.auth); // Retrieve userType from Redux
+  const { userType, status, error: reduxError } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    user_type: userType || "job_seeker", // Fallback to job_seeker if userType is not set
+    user_type: userType || "job_seeker",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,10 @@ function Register() {
     }
   };
 
-  // If userType is not set, redirect to role selection
+  const handleCancel = () => {
+    navigate("/role-selection");
+  };
+
   if (!userType) {
     navigate('/role-selection');
     return null;
@@ -89,9 +92,14 @@ function Register() {
         />
         {error && <p className={styles.error}>{error}</p>}
         {reduxError && <p className={styles.error}>{reduxError}</p>}
-        <Button type="submit" variant="primary" disabled={loading}>
-          {loading ? <LoadingSpinner /> : "Register"}
-        </Button>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? <LoadingSpinner /> : "Register"}
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </div>
       </form>
       <p className={styles.link}>
         Already have an account? <Link to="/login">Login</Link>
