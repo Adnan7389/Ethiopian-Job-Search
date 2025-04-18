@@ -1,90 +1,144 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: #f9f9f9;
-    padding: 1rem;
+  padding: var(--space-3);
+  background-color: var(--background);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-3);
+}
+
+.form {
+  background-color: var(--white);
+  padding: var(--space-3);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.textareaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.textareaContainer label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.textareaContainer textarea {
+  padding: var(--space-2);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--text-light);
+  border-radius: 4px;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.errorInput {
+  border-color: var(--danger);
+}
+
+.error {
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
+}
+
+.selectContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.selectContainer label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.selectContainer select {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--text-light);
+  border-radius: 4px;
+  color: var(--text);
+  background-color: var(--white);
+}
+
+.selectContainer select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .container {
+    padding: var(--space-2);
   }
-  
+
   .title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
+    font-size: var(--font-size-lg);
   }
-  
+
   .form {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: var(--space-2);
+  }
+
+  .formActions {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .formActions button {
     width: 100%;
-    max-width: 500px;
   }
-  
-  .textareaContainer {
-    margin-bottom: 1rem;
+}
+
+@media (min-width: 769px) {
+  .container {
+    padding: var(--space-4);
   }
-  
-  .textareaContainer label {
-    display: block;
-    font-size: 0.875rem;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
+
+  .title {
+    font-size: var(--font-size-2xl);
   }
-  
-  .textareaContainer textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    min-height: 100px;
+
+  .form {
+    padding: var(--space-4);
+    max-width: 800px;
   }
-  
-  .selectContainer {
-    margin-bottom: 1rem;
+}
+
+@media (min-width: 1025px) {
+  .container {
+    padding: var(--space-5);
   }
-  
-  .selectContainer label {
-    display: block;
-    font-size: 0.875rem;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
+
+  .title {
+    font-size: var(--font-size-3xl);
   }
-  
-  .selectContainer select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
+
+  .form {
+    max-width: 1000px;
   }
-  
-  .errorInput {
-    border-color: #e74c3c;
-  }
-  
-  .error {
-    color: #e74c3c;
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  
-  @media (min-width: 768px) {
-    .container {
-      padding: 2rem;
-    }
-  
-    .title {
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
-    }
-  
-    .form {
-      padding: 2rem;
-      max-width: 600px;
-    }
-  }
+}
