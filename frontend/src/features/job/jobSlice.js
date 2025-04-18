@@ -60,9 +60,9 @@ export const fetchJobBySlug = createAsyncThunk('job/fetchJobBySlug', async (slug
   }
 });
 
-export const updateJob = createAsyncThunk('job/updateJob', async ({ jobId, jobData }, { rejectWithValue }) => {
+export const updateJob = createAsyncThunk('job/updateJob', async ({ slug, jobData }, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/jobs/${jobId}`, jobData);
+    const response = await api.put(`/jobs/${slug}`, jobData);
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);

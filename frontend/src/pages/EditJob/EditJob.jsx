@@ -24,11 +24,11 @@ function EditJob() {
         title: job.title,
         description: job.description,
         location: job.location || "",
-        salary: job.salary || "",
+        salary_range: job.salary || "", // Changed from salary
         job_type: job.job_type,
         industry: job.industry,
         experience_level: job.experience_level,
-        expires_at: job.expires_at ? new Date(job.expires_at).toISOString().split("T")[0] : "",
+        application_deadline: job.expires_at ? new Date(job.expires_at).toISOString().split("T")[0] : "", // Changed from expires_at
         status: job.status,
       });
     }
@@ -36,10 +36,11 @@ function EditJob() {
 
   const onSubmit = async (data) => {
     try {
-      await dispatch(updateJob({ jobId: job.job_id, jobData: data })).unwrap();
+      await dispatch(updateJob({ slug: job.slug, jobData: data })).unwrap();
       navigate("/dashboard");
     } catch (err) {
       console.error("Failed to update job:", err);
+      alert(`Failed to update job: ${err.message || "Please try again"}`);
     }
   };
 
@@ -70,9 +71,9 @@ function EditJob() {
           {...register("location")}
         />
         <FormInput
-          label="Salary (optional)"
-          type="text"
-          {...register("salary")}
+         label="Salary (optional)"
+         type="text"
+          {...register("salary_range")} // Changed from salary
         />
         <div className={styles.selectContainer}>
           <label>Job Type</label>
@@ -109,7 +110,7 @@ function EditJob() {
         <FormInput
           label="Expiry Date (optional)"
           type="date"
-          {...register("expires_at")}
+          {...register("application_deadline")} // Changed from expires_at
         />
         <div className={styles.selectContainer}>
           <label>Status</label>
