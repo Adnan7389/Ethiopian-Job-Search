@@ -28,15 +28,20 @@
   --space-3: 16px;
   --space-4: 24px;
   --space-5: 32px;
+  --space-6: 40px;
+  --space-7: 48px;
 
   /* Typography */
   --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-size-5xl: 3rem;
 
   /* Line Heights */
   --line-height-base: 1.5;
@@ -45,6 +50,8 @@
   /* Shadows */
   --shadow-sm: 0 2px 4px var(--shadow);
   --shadow-md: 0 4px 8px var(--shadow);
+  --shadow-lg: 0 6px 12px var(--shadow);
+  --shadow-xl: 0 8px 16px var(--shadow);
 }
 
 /* Global Styles */
@@ -123,6 +130,30 @@ p {
 @media (min-width: 768px) {
   html {
     font-size: 16px;
+  }
+
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 18px;
+  }
+
+  .container {
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1440px) {
+  html {
+    font-size: 20px;
+  }
+
+  .container {
+    max-width: 1600px;
   }
 }
 
