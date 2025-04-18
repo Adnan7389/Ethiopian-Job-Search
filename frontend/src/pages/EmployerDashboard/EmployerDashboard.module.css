@@ -137,74 +137,33 @@
     padding: var(--space-2);
   }
 
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
   .title {
-    font-size: var(--font-size-xl);
-    margin-bottom: var(--space-2);
+    font-size: var(--font-size-lg);
   }
 
-  .filters {
-    flex-direction: column;
-    gap: var(--space-1);
+  .jobList {
+    padding: var(--space-2);
+  }
+
+  .jobTable th,
+  .jobTable td {
     padding: var(--space-1);
-  }
-
-  .searchInput, .filters select {
-    font-size: var(--font-size-sm);
-    min-width: 100%;
-  }
-
-  .filters label {
     font-size: var(--font-size-sm);
   }
 
-  .table {
+  .jobTable button {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1);
+  }
+
+  .emptyMessage {
     font-size: var(--font-size-sm);
-  }
-
-  .table th, .table td {
-    padding: var(--space-1);
-    display: block;
-    text-align: left;
-    border: none;
-    border-bottom: 1px solid var(--text-light);
-  }
-
-  .table th {
-    display: none;
-  }
-
-  .table tr {
-    display: block;
-    margin-bottom: var(--space-2);
-    border: 1px solid var(--text-light);
-    border-radius: 4px;
-    padding: var(--space-1);
-  }
-
-  .table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    display: block;
-    margin-bottom: var(--space-1);
-    color: var(--text);
-  }
-
-  .table td:last-child {
-    border-bottom: none;
-  }
-
-  .actionButton {
-    width: 100%;
-    margin: var(--space-1) 0;
-  }
-
-  .actionButton.no-margin {
-    margin: var(--space-1) 0;
-  }
-
-  .pagination {
-    flex-direction: column;
-    gap: var(--space-1);
   }
 }
 
@@ -214,15 +173,11 @@
   }
 
   .title {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
   }
 
-  .filters {
-    gap: var(--space-2);
-  }
-
-  .table th, .table td {
-    padding: var(--space-2);
+  .jobList {
+    padding: var(--space-3);
   }
 }
 
@@ -231,7 +186,102 @@
     padding: var(--space-4);
   }
 
+  .header {
+    margin-bottom: var(--space-4);
+  }
+
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .jobList {
+    padding: var(--space-4);
+  }
+
+  .jobTable th {
+    font-size: var(--font-size-lg);
+  }
+
+  .jobTable td {
+    font-size: var(--font-size-base);
+  }
+
+  .jobTable button {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-base);
+  }
+
+  .emptyMessage {
+    font-size: var(--font-size-lg);
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    padding: var(--space-5);
+  }
+
+  .header {
+    margin-bottom: var(--space-5);
+  }
+
   .title {
     font-size: var(--font-size-3xl);
+  }
+
+  .jobList {
+    padding: var(--space-5);
+  }
+
+  .jobTable th {
+    font-size: var(--font-size-xl);
+  }
+
+  .jobTable td {
+    font-size: var(--font-size-lg);
+  }
+
+  .jobTable button {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-lg);
+  }
+
+  .emptyMessage {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (min-width: 1440px) {
+  .container {
+    padding: var(--space-6);
+  }
+
+  .header {
+    margin-bottom: var(--space-6);
+  }
+
+  .title {
+    font-size: var(--font-size-4xl);
+  }
+
+  .jobList {
+    padding: var(--space-6);
+  }
+
+  .jobTable th {
+    font-size: var(--font-size-2xl);
+  }
+
+  .jobTable td {
+    font-size: var(--font-size-xl);
+  }
+
+  .jobTable button {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-xl);
+  }
+
+  .emptyMessage {
+    font-size: var(--font-size-2xl);
   }
 }

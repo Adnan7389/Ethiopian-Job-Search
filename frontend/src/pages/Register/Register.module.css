@@ -107,6 +107,11 @@
 
   .form {
     max-width: 500px;
+    padding: var(--space-4);
+  }
+
+  .formActions {
+    gap: var(--space-3);
   }
 }
 
@@ -121,5 +126,37 @@
 
   .form {
     max-width: 600px;
+    padding: var(--space-5);
+  }
+
+  .error, .link {
+    font-size: var(--font-size-base);
+  }
+
+  .formActions {
+    gap: var(--space-4);
+  }
+}
+
+@media (min-width: 1440px) {
+  .container {
+    padding: var(--space-6);
+  }
+
+  .title {
+    font-size: var(--font-size-4xl);
+  }
+
+  .form {
+    max-width: 700px;
+    padding: var(--space-6);
+  }
+
+  .error, .link {
+    font-size: var(--font-size-lg);
+  }
+
+  .formActions {
+    gap: var(--space-5);
   }
 }

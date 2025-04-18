@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchJobs } from "../../features/job/jobSlice";
 import JobCard from "../../components/JobCard/JobCard";
+import FormInput from "../../components/FormInput/FormInput";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import styles from "./JobSearch.module.css";
@@ -62,23 +63,22 @@ const JobSearch = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Job Search</h1>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Job Search</h1>
+      </header>
 
       {/* Search Form */}
       <form className={styles.searchForm} onSubmit={handleSearch}>
         <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label htmlFor="search">Search</label>
-            <input
-              type="text"
-              id="search"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              placeholder="e.g., Software Engineer"
-            />
-          </div>
-          <div className={styles.formGroup}>
+          <FormInput
+            label="Search"
+            name="search"
+            type="text"
+            value={filters.search}
+            onChange={handleFilterChange}
+            placeholder="e.g., Software Engineer"
+          />
+          <div className={styles.selectContainer}>
             <label htmlFor="industry">Industry</label>
             <select
               id="industry"
@@ -102,18 +102,15 @@ const JobSearch = () => {
           </div>
         </div>
         <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label htmlFor="location">Location</label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              value={filters.location}
-              onChange={handleFilterChange}
-              placeholder="e.g., Addis Ababa"
-            />
-          </div>
-          <div className={styles.formGroup}>
+          <FormInput
+            label="Location"
+            name="location"
+            type="text"
+            value={filters.location}
+            onChange={handleFilterChange}
+            placeholder="e.g., Addis Ababa"
+          />
+          <div className={styles.selectContainer}>
             <label htmlFor="job_type">Job Type</label>
             <select
               id="job_type"
@@ -127,7 +124,7 @@ const JobSearch = () => {
               <option value="contract">Contract</option>
             </select>
           </div>
-          <div className={styles.formGroup}>
+          <div className={styles.selectContainer}>
             <label htmlFor="experience_level">Experience Level</label>
             <select
               id="experience_level"
@@ -141,12 +138,12 @@ const JobSearch = () => {
               <option value="senior">Senior</option>
             </select>
           </div>
-          <div className={styles.formActions}>
-            <Button type="submit" variant="primary">Search</Button>
-            <Button type="button" variant="secondary" onClick={handleResetFilters}>
-              Reset Filters
-            </Button>
-          </div>
+        </div>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="primary">Search</Button>
+          <Button type="button" variant="secondary" onClick={handleResetFilters}>
+            Reset Filters
+          </Button>
         </div>
       </form>
 
@@ -154,7 +151,7 @@ const JobSearch = () => {
       {status === "loading" && <LoadingSpinner />}
       {status === "failed" && <p className={styles.error}>{error}</p>}
       {status === "succeeded" && jobs.length === 0 && (
-        <p className={styles.message}>No jobs found.</p>
+        <p className={styles.noResults}>No jobs found.</p>
       )}
       {status === "succeeded" && jobs.length > 0 && (
         <div className={styles.jobList}>
