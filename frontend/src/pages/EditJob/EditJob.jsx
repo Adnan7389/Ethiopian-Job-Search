@@ -24,11 +24,11 @@ function EditJob() {
         title: job.title,
         description: job.description,
         location: job.location || "",
-        salary_range: job.salary || "", // Changed from salary
+        salary_range: job.salary || "",
         job_type: job.job_type,
         industry: job.industry,
         experience_level: job.experience_level,
-        application_deadline: job.expires_at ? new Date(job.expires_at).toISOString().split("T")[0] : "", // Changed from expires_at
+        application_deadline: job.expires_at ? new Date(job.expires_at).toISOString().split("T")[0] : "",
         status: job.status,
       });
     }
@@ -42,6 +42,10 @@ function EditJob() {
       console.error("Failed to update job:", err);
       alert(`Failed to update job: ${err.message || "Please try again"}`);
     }
+  };
+
+  const handleCancel = () => {
+    navigate("/dashboard");
   };
 
   if (!job && status === "loading") return <LoadingSpinner />;
@@ -71,9 +75,9 @@ function EditJob() {
           {...register("location")}
         />
         <FormInput
-         label="Salary (optional)"
-         type="text"
-          {...register("salary_range")} // Changed from salary
+          label="Salary (optional)"
+          type="text"
+          {...register("salary_range")}
         />
         <div className={styles.selectContainer}>
           <label>Job Type</label>
@@ -110,7 +114,7 @@ function EditJob() {
         <FormInput
           label="Expiry Date (optional)"
           type="date"
-          {...register("application_deadline")} // Changed from expires_at
+          {...register("application_deadline")}
         />
         <div className={styles.selectContainer}>
           <label>Status</label>
@@ -121,9 +125,14 @@ function EditJob() {
           </select>
         </div>
         {error && <p className={styles.error}>{error}</p>}
-        <Button type="submit" variant="primary" disabled={status === "loading"}>
-          {status === "loading" ? <LoadingSpinner /> : "Update Job"}
-        </Button>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="primary" disabled={status === "loading"}>
+            {status === "loading" ? <LoadingSpinner /> : "Update Job"}
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </div>
       </form>
     </div>
   );
