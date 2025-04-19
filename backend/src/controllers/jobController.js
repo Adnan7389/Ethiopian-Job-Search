@@ -1,5 +1,7 @@
 const Job = require("../models/jobModel");
 const User = require("../models/userModel");
+const Applicant = require("../models/Applicant");
+const Notification = require("../models/Notification");
 
 const createJob = async (req, res) => {
   const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
@@ -102,21 +104,69 @@ const getEmployerJobs = async (req, res) => {
 };
 
 const getJobBySlug = async (req, res) => {
-  const { slug } = req.params;
   try {
+    const { slug } = req.params;
     const job = await Job.findBySlug(slug);
-    if (!job || job.is_archived) {
-      return res.status(404).json({ error: "Job not found" });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
     }
-    if (job.status !== "open" || (job.expires_at && new Date(job.expires_at) < new Date())) {
-      return res.status(403).json({ error: "Job is not available" });
-    }
-    res.json(job);
+    res.status(200).json(job);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch job", details: error.message });
+    console.error("Get job error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
+const applyForJob = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const job = await Job.findBySlug(slug);
+    if (!job || job.status !== "open") {
+      return res.status(404).json({ message: "Job not found or closed" });
+    }
+    if (job.expires_at && new Date(job.expires_at) < new Date()) {
+      return res.status(400).json({ message: "Application deadline passed" });
+    }
+    if (!req.user || req.user.user_type !== "job_seeker") {
+      return res.status(403).json({ message: "Only job seekers can apply" });
+    }
+    const existingApplication = await Applicant.findByJobSeekerAndJob(req.user.id, job.job_id);
+    if (existingApplication) {
+      return res.status(400).json({ message: "You have already applied for this job" });
+    }
+    const applicantId = await Applicant.create({
+      job_id: job.job_id,
+      job_seeker_id: req.user.id,
+      resume_url: req.user.resume_url || null,
+    });
+    await Notification.create({
+      user_id: job.employer_id,
+      message: `New application for ${job.title} from ${req.user.username}`,
+    });
+    res.status(201).json({ message: "Application submitted", applicantId });
+  } catch (error) {
+    console.error("Apply error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getApplicationsByJobId = async (req, res) => {
+  try {
+    if (!req.user || req.user.user_type !== "employer") {
+      return res.status(403).json({ message: "Only employers can view applications" });
+    }
+    const { jobId } = req.params;
+    const job = await Job.findById(jobId);
+    if (!job || job.employer_id !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized to view applications for this job" });
+    }
+    const applications = await Applicant.findByJobId(jobId);
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error("Get applications error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 const updateJob = async (req, res) => {
   const { slug } = req.params;
   const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
@@ -228,4 +278,4 @@ const duplicateJob = async (req, res) => {
   }
 };
 
-module.exports = { createJob, getJobs, getEmployerJobs, getJobBySlug, updateJob, archiveJob, restoreJob, duplicateJob };
+module.exports = { createJob, getJobs, getEmployerJobs, getJobBySlug, updateJob, archiveJob, restoreJob, duplicateJob, applyForJob, getApplicationsByJobId };

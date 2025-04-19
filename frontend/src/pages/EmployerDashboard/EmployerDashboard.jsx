@@ -14,7 +14,9 @@ import {
   setFilters,
   setIncludeArchived,
   clearFilters,
+  fetchApplicationsByJobId,
 } from "../../features/job/jobSlice";
+import { fetchNotifications } from "../../features/notification/notificationSlice";
 import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
 
@@ -30,9 +32,11 @@ function EmployerDashboard() {
     search,
     filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' },
     includeArchived,
+    applications,
     status,
     error,
   } = useSelector((state) => state.job);
+  const { notifications, notificationStatus, notificationError } = useSelector((state) => state.notification);
   const { userType } = useSelector((state) => state.auth) || { userType: null };
 
   const [confirmAction, setConfirmAction] = useState(null);
@@ -70,25 +74,27 @@ function EmployerDashboard() {
     ]
   );
 
-  console.log("EmployerDashboard state:", { jobs, status, error, userType });
-
   useEffect(() => {
     if (!userType) {
-      console.log("No userType, redirecting to login...");
       navigate("/login");
     } else if (userType !== "employer") {
-      console.log("User is not an employer, redirecting to home...");
       navigate("/");
     } else {
-      console.log("Fetching employer jobs...");
       dispatch(fetchEmployerJobs(fetchParams)).catch((err) => {
         if (err.message === "No token provided" || err.message === "Invalid token") {
           dispatch(logout());
           navigate("/login");
         }
       });
+      dispatch(fetchNotifications());
+      // Fetch applications for each job
+      jobs.forEach((job) => {
+        if (!applications[job.job_id]) {
+          dispatch(fetchApplicationsByJobId(job.job_id));
+        }
+      });
     }
-  }, [dispatch, userType, navigate, fetchParams]);
+  }, [dispatch, userType, navigate, fetchParams, jobs, applications]);
 
   const handleDelete = (jobId) => {
     setConfirmAction({ type: "delete", jobId });
@@ -138,9 +144,12 @@ function EmployerDashboard() {
     dispatch(clearFilters());
   };
 
-  const handlePostNewJob = (e) => {
-    console.log("Post New Job button clicked");
+  const handlePostNewJob = () => {
     navigate("post-job");
+  };
+
+  const handleViewApplications = (jobId) => {
+    navigate(`/dashboard/job/${jobId}/applicants`);
   };
 
   if (status === "loading" && !jobs.length) return <LoadingSpinner />;
@@ -148,6 +157,22 @@ function EmployerDashboard() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Employer Dashboard</h1>
+      <div className={styles.notifications}>
+        <h2>Notifications</h2>
+        {notificationStatus === "loading" && <LoadingSpinner />}
+        {notificationError && <p className={styles.error}>{notificationError}</p>}
+        {notifications.length === 0 ? (
+          <p>No new notifications.</p>
+        ) : (
+          <ul>
+            {notifications.map((notification) => (
+              <li key={notification.id} className={styles.notificationItem}>
+                {notification.message}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <Outlet />
       {window.location.pathname === "/dashboard" && (
         <>
@@ -228,6 +253,7 @@ function EmployerDashboard() {
                     <th>Industry</th>
                     <th>Experience Level</th>
                     <th>Created At</th>
+                    <th>Applications</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -240,6 +266,16 @@ function EmployerDashboard() {
                       <td data-label="Industry">{job.industry}</td>
                       <td data-label="Experience Level">{job.experience_level}</td>
                       <td data-label="Created At">{new Date(job.created_at).toLocaleDateString()}</td>
+                      <td data-label="Applications">
+                        {(applications[job.job_id] || []).length}
+                        <Button
+                          onClick={() => handleViewApplications(job.job_id)}
+                          variant="secondary"
+                          className={styles.actionButton}
+                        >
+                          View Applicants
+                        </Button>
+                      </td>
                       <td data-label="Actions">
                         <Button
                           onClick={() => navigate(`edit-job/${job.slug}`)}

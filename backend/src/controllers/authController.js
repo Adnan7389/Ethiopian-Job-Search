@@ -162,12 +162,18 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.json({ token, user_type: user.user_type, userId: user.user_id });
+    res.json({
+      token,
+      user_type: user.user_type,
+      userId: user.user_id,
+      username: user.username,
+      email: user.email,
+      resume_url: user.resume_url || null,
+    });
   } catch (error) {
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
-
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {

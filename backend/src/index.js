@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
 const Job = require('./models/jobModel');
+const notifications = require("./routes/notification")
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applicants', applicantRoutes);
+app.use("/api/notifications", notifications);
 
 // Mock email sending function
 const mockSendEmail = ({ to, subject, text }) => {

@@ -6,6 +6,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.get("/", jobController.getJobs); // New public route for job seekers
 router.get("/employer", authMiddleware, jobController.getEmployerJobs);
 router.get("/:slug", jobController.getJobBySlug);
+router.post("/:slug/apply", authMiddleware, jobController.applyForJob);
+router.get("/:jobId/applicants", authMiddleware, jobController.getApplicationsByJobId);
 router.post("/", authMiddleware, jobController.createJob);
 router.put("/:slug", authMiddleware, jobController.updateJob);
 router.put("/:jobId/archive", authMiddleware, jobController.archiveJob);

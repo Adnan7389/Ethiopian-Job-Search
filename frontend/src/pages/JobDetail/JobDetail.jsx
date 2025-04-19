@@ -11,14 +11,22 @@ function JobDetail() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { job, status, error } = useSelector((state) => state.job);
-  const { userType } = useSelector((state) => state.auth);
+  const { userType, userId } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchJobBySlug(slug));
   }, [dispatch, slug]);
 
   const handleApply = () => {
-    alert("Apply functionality coming soon!");
+    if (!userType) {
+      navigate("/login");
+      return;
+    }
+    if (userType !== "job_seeker") {
+      alert("Only job seekers can apply for jobs.");
+      return;
+    }
+    navigate(`/jobs/${slug}/apply`);
   };
 
   const handleBack = () => {
@@ -28,6 +36,8 @@ function JobDetail() {
   if (status === "loading") return <LoadingSpinner />;
   if (status === "failed") return <p className={styles.error}>{error}</p>;
   if (!job) return <p>Job not found.</p>;
+
+  const isJobOpen = job.status === "open" && (!job.expires_at || new Date(job.expires_at) > new Date());
 
   return (
     <div className={styles.container}>
@@ -53,11 +63,11 @@ function JobDetail() {
       </div>
       <div className={styles.actions}>
         {userType === "job_seeker" && (
-          <Button onClick={handleApply} variant="primary">
+          <Button onClick={handleApply} variant="primary" disabled={!isJobOpen}>
             Apply Now
           </Button>
         )}
-        {userType === "employer" && job.employer_id === useSelector((state) => state.auth.userId) && (
+        {userType === "employer" && job.employer_id === userId && (
           <Button
             onClick={() => navigate(`/dashboard/edit-job/${slug}`)}
             variant="secondary"

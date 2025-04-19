@@ -5,6 +5,9 @@ const initialState = {
   token: localStorage.getItem('token') || null,
   userType: localStorage.getItem('userType') || null,
   userId: localStorage.getItem('userId') || null,
+  username: localStorage.getItem('username') || null,
+  email: localStorage.getItem('email') || null,
+  resume_url: localStorage.getItem('resume_url') || null,
   isVerified: localStorage.getItem('isVerified') === 'true' || false,
   status: 'idle',
   error: null,
@@ -44,12 +47,15 @@ export const verifyCode = createAsyncThunk('auth/verifyCode', async ({ email, co
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
     const response = await api.post('/auth/login', credentials);
-    const { token, user_type, userId } = response.data;
+    const { token, user_type, userId, username, email, resume_url } = response.data;
     localStorage.setItem('token', token);
     localStorage.setItem('userType', user_type);
     localStorage.setItem('userId', userId);
+    localStorage.setItem('username', username);
+    localStorage.setItem('email', email);
+    localStorage.setItem('resume_url', resume_url || '');
     localStorage.setItem('isVerified', 'true');
-    return { token, userType: user_type, userId };
+    return { token, userType: user_type, userId, username, email, resume_url };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
   }
@@ -95,6 +101,9 @@ const authSlice = createSlice({
       state.token = null;
       state.userType = null;
       state.userId = null;
+      state.username = null;
+      state.email = null;
+      state.resume_url = null;
       state.isVerified = false;
       state.status = 'idle';
       state.error = null;
@@ -154,6 +163,9 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.userType = action.payload.userType;
         state.userId = action.payload.userId;
+        state.username = action.payload.username;
+        state.email = action.payload.email;
+        state.resume_url = action.payload.resume_url;
         state.isVerified = true;
       })
       .addCase(login.rejected, (state, action) => {
