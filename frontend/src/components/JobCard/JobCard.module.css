@@ -37,6 +37,16 @@
   line-height: var(--line-height-base);
 }
 
+.detailsLink {
+  display: inline-block;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: bold;
+}
+.detailsLink:hover {
+  text-decoration: underline;
+}
+
 /* Responsive Design */
 @media (max-width: 576px) {
   .card {

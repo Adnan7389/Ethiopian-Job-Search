@@ -1,4 +1,4 @@
-const Applicant = require('../models/applicantModel');
+const Applicant = require('../models/Applicant');
 const Job = require('../models/jobModel');
 
 const applyForJob = async (req, res) => {

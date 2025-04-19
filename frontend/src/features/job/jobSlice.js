@@ -18,7 +18,8 @@ const initialState = {
   includeArchived: false,
   status: 'idle',
   error: null,
-  job: null, // For createJob response
+  job: null, // For createJob response and fetchJobBySlug
+  applications: {}, // Store applications by jobId
 };
 
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
@@ -59,6 +60,30 @@ export const fetchJobBySlug = createAsyncThunk('job/fetchJobBySlug', async (slug
     return rejectWithValue(error.response?.data?.error || error.message);
   }
 });
+
+export const applyForJob = createAsyncThunk(
+  "job/applyForJob",
+  async ({ slug }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/jobs/${slug}/apply`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Application failed");
+    }
+  }
+);
+
+export const fetchApplicationsByJobId = createAsyncThunk(
+  "job/fetchApplicationsByJobId",
+  async (jobId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/jobs/${jobId}/applicants`);
+      return { jobId, applications: response.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch applications");
+    }
+  }
+);
 
 export const updateJob = createAsyncThunk('job/updateJob', async ({ slug, jobData }, { rejectWithValue }) => {
   try {
@@ -128,6 +153,7 @@ const jobSlice = createSlice({
       state.filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' };
       state.search = '';
       state.currentPage = 1;
+      state.includeArchived = false;
     },
   },
   extraReducers: (builder) => {
@@ -181,11 +207,35 @@ const jobSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(fetchJobBySlug.fulfilled, (state) => {
+      .addCase(fetchJobBySlug.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.job = action.payload;
       })
       .addCase(fetchJobBySlug.rejected, (state, action) => {
         state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(applyForJob.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(applyForJob.fulfilled, (state, action) => {
+        state.status = "succeeded";
+      })
+      .addCase(applyForJob.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(fetchApplicationsByJobId.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchApplicationsByJobId.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.applications[action.payload.jobId] = action.payload.applications;
+      })
+      .addCase(fetchApplicationsByJobId.rejected, (state, action) => {
+        state.status = "failed";
         state.error = action.payload;
       })
       .addCase(updateJob.pending, (state) => {

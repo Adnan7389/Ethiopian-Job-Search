@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styles from "./JobCard.module.css";
 
 const JobCard = ({ job }) => {
@@ -13,6 +14,9 @@ const JobCard = ({ job }) => {
         {job.salary_range && <p><span className={styles.label}>Salary:</span> {job.salary_range}</p>}
       </div>
       <p className={styles.description}>{job.description}</p>
+      <Link to={`/jobs/${job.slug}`} className={styles.detailsLink}>
+        View Details
+      </Link>
     </div>
   );
 };

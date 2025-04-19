@@ -12,7 +12,8 @@ import JobSearch from './pages/JobSearch/JobSearch';
 import PostJob from './pages/PostJob/PostJob';
 import EditJob from './pages/EditJob/EditJob';
 import EmployerDashboard from './pages/EmployerDashboard/EmployerDashboard';
-import JobDetail from './pages/JobDetail/JobDetail';
+import JobDetail from "./pages/JobDetail/JobDetail";
+import JobApplication from "./pages/JobApplication/JobApplication";
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 
 function PrivateRoute({ children, allowedRoles }) {
@@ -45,6 +46,14 @@ function App() {
             <Route
               path="/jobs/:slug"
               element={<PrivateRoute><JobDetail /></PrivateRoute>}
+            />
+            <Route
+              path="/jobs/:slug/apply"
+              element={
+                <PrivateRoute allowedRoles={["job_seeker"]}>
+                  <JobApplication />
+                </PrivateRoute>
+              }
             />
             {/* Nested routes under /dashboard */}
             <Route
