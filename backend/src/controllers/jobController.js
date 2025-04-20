@@ -176,32 +176,67 @@ const getJobBySlug = async (req, res) => {
 const applyForJob = async (req, res) => {
   try {
     const { slug } = req.params;
-    const job = await Job.findBySlug(slug);
-    if (!job || job.status !== "open") {
+
+    console.log("Entering applyForJob for slug:", slug);
+    console.log("req.user at start of applyForJob:", req.user);
+
+    // Validate user type
+    if (!req.user || !req.user.user_type) {
+      console.log("Missing user or user_type in req.user");
+      return res.status(401).json({ message: "User authentication failed: missing user type" });
+    }
+
+    if (req.user.user_type !== "job_seeker") {
+      console.log("User type is not job_seeker:", req.user.user_type);
+      return res.status(403).json({ message: "Only job seekers can apply for jobs" });
+    }
+
+    // Validate userId
+    if (!req.user.userId) {
+      console.log("User ID is missing from req.user:", req.user);
+      return res.status(400).json({ message: "User ID is missing from token" });
+    }
+
+    console.log("Applying for job with userId:", req.user.userId);
+
+    const [jobs] = await pool.query(
+      "SELECT * FROM jobs WHERE slug = ? AND status = 'open'",
+      [slug]
+    );
+    const job = jobs[0];
+    if (!job) {
+      console.log("Job not found or closed for slug:", slug);
       return res.status(404).json({ message: "Job not found or closed" });
     }
-    if (job.expires_at && new Date(job.expires_at) < new Date()) {
-      return res.status(400).json({ message: "Application deadline passed" });
-    }
-    if (!req.user || req.user.user_type !== "job_seeker") {
-      return res.status(403).json({ message: "Only job seekers can apply" });
-    }
-    const existingApplication = await Applicant.findByJobSeekerAndJob(req.user.id, job.job_id);
+
+    console.log("Found job:", job);
+
+    const existingApplication = await Applicant.findByJobSeekerAndJob(req.user.userId, job.job_id);
     if (existingApplication) {
+      console.log("User has already applied for job:", job.job_id);
       return res.status(400).json({ message: "You have already applied for this job" });
     }
+
+    console.log("Creating new application for job_id:", job.job_id, "with job_seeker_id:", req.user.userId);
+
     const applicantId = await Applicant.create({
       job_id: job.job_id,
-      job_seeker_id: req.user.id,
-      resume_url: req.user.resume_url || null,
+      job_seeker_id: req.user.userId,
+      resume_url: req.body.resume_url || null,
     });
+
+    console.log("Application created with applicantId:", applicantId);
+
     await Notification.create({
       user_id: job.employer_id,
-      message: `New application for ${job.title} from ${req.user.username}`,
+      message: `New application for ${job.title} from user ${req.user.userId}`,
     });
-    res.status(201).json({ message: "Application submitted", applicantId });
+
+    console.log("Notification created for employer:", job.employer_id);
+
+    res.status(201).json({ message: "Application submitted successfully", applicantId });
   } catch (error) {
-    console.error("Apply error:", error);
+    console.error("Apply for job error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

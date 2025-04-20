@@ -2,19 +2,39 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
 const initialState = {
-  token: localStorage.getItem('token') || null,
-  userType: localStorage.getItem('userType') || null,
-  userId: localStorage.getItem('userId') || null,
-  username: localStorage.getItem('username') || null,
-  email: localStorage.getItem('email') || null,
-  resume_url: localStorage.getItem('resume_url') || null,
-  isVerified: localStorage.getItem('isVerified') === 'true' || false,
+  token: null,
+  userType: null,
+  userId: null,
+  username: null,
+  email: null,
+  resume_url: null,
+  isVerified: false,
   status: 'idle',
   error: null,
   resendStatus: 'idle',
   resendError: null,
   resendMessage: null,
 };
+
+// Thunk to initialize auth state from localStorage (if token exists)
+export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { rejectWithValue }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return rejectWithValue('No token found');
+  }
+
+  try {
+    // Optionally validate the token with the backend
+    const response = await api.get('/auth/validate-token', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const { user_type, userId, username, email, resume_url } = response.data;
+    return { token, userType: user_type, userId, username, email, resume_url, isVerified: true };
+  } catch (error) {
+    localStorage.clear();
+    return rejectWithValue(error.response?.data?.error || error.message);
+  }
+});
 
 export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
   try {
@@ -118,6 +138,31 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initializeAuth.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.token = action.payload.token;
+        state.userType = action.payload.userType;
+        state.userId = action.payload.userId;
+        state.username = action.payload.username;
+        state.email = action.payload.email;
+        state.resume_url = action.payload.resume_url;
+        state.isVerified = action.payload.isVerified;
+      })
+      .addCase(initializeAuth.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.token = null;
+        state.userType = null;
+        state.userId = null;
+        state.username = null;
+        state.email = null;
+        state.resume_url = null;
+        state.isVerified = false;
+      })
       .addCase(register.pending, (state) => {
         state.status = 'loading';
         state.error = null;

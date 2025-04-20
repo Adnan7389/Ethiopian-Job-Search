@@ -33,6 +33,7 @@ function Login() {
       await dispatch(login(formData)).unwrap();
       navigate("/dashboard");
     } catch (err) {
+      console.error("Login failed:", err);
       setError(err || "Login failed. Please try again.");
     } finally {
       setLoading(false);
