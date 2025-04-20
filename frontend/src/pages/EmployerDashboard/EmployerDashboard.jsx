@@ -87,14 +87,18 @@ function EmployerDashboard() {
         }
       });
       dispatch(fetchNotifications());
-      // Fetch applications for each job
+    }
+  }, [dispatch, userType, navigate, fetchParams]);
+
+  useEffect(() => {
+    if (jobs.length > 0) {
       jobs.forEach((job) => {
-        if (!applications[job.job_id]) {
+        if (applications[job.job_id] === undefined) {
           dispatch(fetchApplicationsByJobId(job.job_id));
         }
       });
     }
-  }, [dispatch, userType, navigate, fetchParams, jobs, applications]);
+  }, [dispatch, jobs, applications]);
 
   const handleDelete = (jobId) => {
     setConfirmAction({ type: "delete", jobId });
@@ -267,7 +271,9 @@ function EmployerDashboard() {
                       <td data-label="Experience Level">{job.experience_level}</td>
                       <td data-label="Created At">{new Date(job.created_at).toLocaleDateString()}</td>
                       <td data-label="Applications">
-                        {(applications[job.job_id] || []).length}
+                        {applications[job.job_id] === undefined
+                          ? "Loading..."
+                          : applications[job.job_id].length || 0}
                         <Button
                           onClick={() => handleViewApplications(job.job_id)}
                           variant="secondary"
