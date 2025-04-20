@@ -80,6 +80,9 @@ export const fetchApplicationsByJobId = createAsyncThunk(
       const response = await api.get(`/jobs/${jobId}/applicants`);
       return { jobId, applications: response.data };
     } catch (error) {
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        return { jobId, applications: [] };
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to fetch applications");
     }
   }

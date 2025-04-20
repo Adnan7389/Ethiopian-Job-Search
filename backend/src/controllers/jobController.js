@@ -1,5 +1,6 @@
 const Job = require("../models/jobModel");
 const User = require("../models/userModel");
+const pool = require("../config/db"); 
 const Applicant = require("../models/Applicant");
 const Notification = require("../models/Notification");
 
@@ -72,34 +73,89 @@ const getJobs = async (req, res) => {
   }
 };
 
-const getEmployerJobs = async (req, res) => {
-  const employerId = req.user.userId;
-  const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived = "false" } = req.query;
-
-  if (req.user.user_type !== "employer") {
-    return res.status(403).json({ error: "Only employers can view their jobs" });
-  }
-
+const getJobsByEmployer = async (req, res) => {
   try {
-    const { jobs, total } = await Job.findByEmployer(employerId, {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      search,
-      job_type,
-      industry,
-      experience_level,
-      status,
-      date_posted,
-      includeArchived: includeArchived === "true",
-    });
-    res.json({
+    if (req.user.user_type !== "employer") {
+      return res.status(403).json({ message: "Only employers can view their jobs" });
+    }
+    const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived } = req.query;
+
+    let query = "SELECT * FROM jobs WHERE employer_id = ?";
+    let countQuery = "SELECT COUNT(*) as total FROM jobs WHERE employer_id = ?";
+    const queryParams = [req.user.userId];
+    const countParams = [req.user.userId];
+
+    if (search) {
+      query += " AND (title LIKE ? OR description LIKE ?)";
+      countQuery += " AND (title LIKE ? OR description LIKE ?)";
+      const searchParam = `%${search}%`;
+      queryParams.push(searchParam, searchParam);
+      countParams.push(searchParam, searchParam);
+    }
+
+    if (job_type) {
+      query += " AND job_type = ?";
+      countQuery += " AND job_type = ?";
+      queryParams.push(job_type);
+      countParams.push(job_type);
+    }
+
+    if (industry) {
+      query += " AND industry = ?";
+      countQuery += " AND industry = ?";
+      queryParams.push(industry);
+      countParams.push(industry);
+    }
+
+    if (experience_level) {
+      query += " AND experience_level = ?";
+      countQuery += " AND experience_level = ?";
+      queryParams.push(experience_level);
+      countParams.push(experience_level);
+    }
+
+    if (status) {
+      query += " AND status = ?";
+      countQuery += " AND status = ?";
+      queryParams.push(status);
+      countParams.push(status);
+    }
+
+    if (date_posted) {
+      let dateCondition;
+      if (date_posted === "last_24_hours") {
+        dateCondition = "created_at >= NOW() - INTERVAL 1 DAY";
+      } else if (date_posted === "last_7_days") {
+        dateCondition = "created_at >= NOW() - INTERVAL 7 DAY";
+      } else if (date_posted === "last_30_days") {
+        dateCondition = "created_at >= NOW() - INTERVAL 30 DAY";
+      }
+      if (dateCondition) {
+        query += ` AND ${dateCondition}`;
+        countQuery += ` AND ${dateCondition}`;
+      }
+    }
+
+    if (!includeArchived) {
+      query += " AND is_archived = 0";
+      countQuery += " AND is_archived = 0";
+    }
+
+    query += " LIMIT ? OFFSET ?";
+    queryParams.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+
+    const [jobs] = await pool.query(query, queryParams);
+    const [[{ total }]] = await pool.query(countQuery, countParams);
+
+    res.status(200).json({
       jobs,
       total,
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch jobs", details: error.message });
+    console.error("Get jobs by employer error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -278,4 +334,4 @@ const duplicateJob = async (req, res) => {
   }
 };
 
-module.exports = { createJob, getJobs, getEmployerJobs, getJobBySlug, updateJob, archiveJob, restoreJob, duplicateJob, applyForJob, getApplicationsByJobId };
+module.exports = { createJob, getJobs, getJobsByEmployer, getJobBySlug, updateJob, archiveJob, restoreJob, duplicateJob, applyForJob, getApplicationsByJobId };

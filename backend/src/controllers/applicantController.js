@@ -29,23 +29,25 @@ const applyForJob = async (req, res) => {
   }
 };
 
-const getJobApplications = async (req, res) => {
-  const { job_id } = req.params;
-
-  if (req.user.user_type !== 'employer') {
-    return res.status(403).json({ error: 'Only employers can view applications' });
-  }
-
+const getApplicationsByJobId = async (req, res) => {
   try {
-    const job = await Job.findById(job_id);
-    if (!job || job.employer_id !== req.user.userId) {
-      return res.status(403).json({ error: 'You are not authorized to view applications for this job' });
+    const { jobId } = req.params;
+
+    // Verify that the job exists and belongs to the authenticated employer
+    const [job] = await pool.query(
+      "SELECT * FROM jobs WHERE job_id = ? AND employer_id = ?",
+      [jobId, req.user.userId]
+    );
+
+    if (!job) {
+      return res.status(403).json({ message: "Job not found or you do not have permission to view its applicants" });
     }
 
-    const applications = await Applicant.findByJobId(job_id);
-    res.json(applications);
+    const applications = await Applicant.findByJobId(jobId);
+    res.status(200).json(applications);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch applications', details: error.message });
+    console.error("Get applications error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -106,4 +108,4 @@ const deleteApplication = async (req, res) => {
   }
 };
 
-module.exports = { applyForJob, getJobApplications, updateApplication, deleteApplication };
+module.exports = { applyForJob, getApplicationsByJobId, updateApplication, deleteApplication };
