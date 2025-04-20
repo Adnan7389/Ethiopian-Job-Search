@@ -17,7 +17,7 @@ import {
   fetchApplicationsByJobId,
 } from "../../features/job/jobSlice";
 import { fetchNotifications } from "../../features/notification/notificationSlice";
-import { logout } from "../../features/auth/authSlice";
+import { initializeAuth, logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
 
 function EmployerDashboard() {
@@ -30,23 +30,25 @@ function EmployerDashboard() {
     totalPages,
     pageSize,
     search,
-    filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' },
+    filters = { job_type: "", industry: "", experience_level: "", status: "", date_posted: "" },
     includeArchived,
     applications,
     status,
     error,
   } = useSelector((state) => state.job);
   const { notifications, notificationStatus, notificationError } = useSelector((state) => state.notification);
-  const { userType } = useSelector((state) => state.auth) || { userType: null };
+  const authState = useSelector((state) => state.auth);
+  const userType = authState ? authState.userType : null;
+  const token = authState ? authState.token : null;
 
   const [confirmAction, setConfirmAction] = useState(null);
 
   const {
-    job_type = '',
-    industry = '',
-    experience_level = '',
-    status: filterStatus = '',
-    date_posted = '',
+    job_type = "",
+    industry = "",
+    experience_level = "",
+    status: filterStatus = "",
+    date_posted = "",
   } = filters;
 
   const fetchParams = useMemo(
@@ -75,26 +77,62 @@ function EmployerDashboard() {
   );
 
   useEffect(() => {
-    if (!userType) {
-      navigate("/login");
-    } else if (userType !== "employer") {
-      navigate("/");
-    } else {
-      dispatch(fetchEmployerJobs(fetchParams)).catch((err) => {
-        if (err.message === "No token provided" || err.message === "Invalid token") {
-          dispatch(logout());
-          navigate("/login");
-        }
-      });
-      dispatch(fetchNotifications());
+    // Initialize auth state on mount
+    dispatch(initializeAuth());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (authState.status === "loading") {
+      console.log("Auth state is loading, waiting...");
+      return;
     }
-  }, [dispatch, userType, navigate, fetchParams]);
+
+    if (authState.status === "failed" || !token || !userType) {
+      console.log("Redirecting to login - auth failed or missing token/userType:", { token, userType, authState });
+      dispatch(logout());
+      navigate("/login");
+      return;
+    }
+
+    if (userType !== "employer") {
+      console.log("Redirecting to home - userType is not employer:", userType);
+      navigate("/");
+      return;
+    }
+
+    // Fetch employer jobs and notifications
+    dispatch(fetchEmployerJobs(fetchParams)).catch((err) => {
+      console.error("Error fetching employer jobs:", err);
+      if (
+        err.message === "No token provided" ||
+        err.message === "Invalid token" ||
+        err.message === "Token has expired"
+      ) {
+        dispatch(logout());
+        navigate("/login");
+      }
+    });
+    dispatch(fetchNotifications()).catch((err) => {
+      console.error("Error fetching notifications:", err);
+      if (
+        err.message === "No token provided" ||
+        err.message === "Invalid token" ||
+        err.message === "Token has expired"
+      ) {
+        dispatch(logout());
+        navigate("/login");
+      }
+    });
+  }, [dispatch, userType, navigate, fetchParams, token, authState]);
 
   useEffect(() => {
     if (jobs.length > 0) {
       jobs.forEach((job) => {
         if (applications[job.job_id] === undefined) {
-          dispatch(fetchApplicationsByJobId(job.job_id));
+          dispatch(fetchApplicationsByJobId(job.job_id)).catch((err) => {
+            console.error(`Error fetching applications for job ${job.job_id}:`, err);
+            // Errors are already handled by api.js interceptor for 401
+          });
         }
       });
     }
@@ -155,6 +193,14 @@ function EmployerDashboard() {
   const handleViewApplications = (jobId) => {
     navigate(`/dashboard/job/${jobId}/applicants`);
   };
+
+  if (authState.status === "loading") {
+    return <LoadingSpinner />;
+  }
+
+  if (authState.status === "failed" || !token) {
+    return null; // Redirect handled in useEffect
+  }
 
   if (status === "loading" && !jobs.length) return <LoadingSpinner />;
 

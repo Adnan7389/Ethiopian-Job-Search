@@ -4,7 +4,7 @@ const jobController = require("../controllers/jobController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 router.get("/", jobController.getJobs); // New public route for job seekers
-router.get("/employer", authMiddleware, jobController.getEmployerJobs);
+router.get("/employer", authMiddleware, jobController.getJobsByEmployer);
 router.get("/:slug", jobController.getJobBySlug);
 router.post("/:slug/apply", authMiddleware, jobController.applyForJob);
 router.get("/:jobId/applicants", authMiddleware, jobController.getApplicationsByJobId);

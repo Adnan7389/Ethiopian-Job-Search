@@ -18,8 +18,8 @@ const initialState = {
   includeArchived: false,
   status: 'idle',
   error: null,
-  job: null, // For createJob response and fetchJobBySlug
-  applications: {}, // Store applications by jobId
+  job: null,
+  applications: {},
 };
 
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
@@ -27,7 +27,7 @@ export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { reje
     const response = await api.get('/jobs', { params });
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -39,7 +39,7 @@ export const createJob = createAsyncThunk('job/createJob', async (jobData, { rej
     return response.data;
   } catch (error) {
     console.error("createJob failed:", error.response?.data || error.message);
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -48,7 +48,7 @@ export const fetchEmployerJobs = createAsyncThunk('job/fetchEmployerJobs', async
     const response = await api.get('/jobs/employer', { params });
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -57,7 +57,7 @@ export const fetchJobBySlug = createAsyncThunk('job/fetchJobBySlug', async (slug
     const response = await api.get(`/jobs/${slug}`);
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -68,7 +68,11 @@ export const applyForJob = createAsyncThunk(
       const response = await api.post(`/jobs/${slug}/apply`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Application failed");
+      if (error.response?.status === 401 && error.response?.data?.message === "Token has expired") {
+        return rejectWithValue("Your session has expired. Please log in again.");
+      }
+      const message = error.response?.data?.message || "Application failed. Please try again.";
+      return rejectWithValue(message);
     }
   }
 );
@@ -80,7 +84,10 @@ export const fetchApplicationsByJobId = createAsyncThunk(
       const response = await api.get(`/jobs/${jobId}/applicants`);
       return { jobId, applications: response.data };
     } catch (error) {
-      if (error.response?.status === 403 || error.response?.status === 401) {
+      if (error.response?.status === 401) {
+        return rejectWithValue("Your session has expired. Please log in again.");
+      }
+      if (error.response?.status === 403) {
         return { jobId, applications: [] };
       }
       return rejectWithValue(error.response?.data?.message || "Failed to fetch applications");
@@ -93,7 +100,7 @@ export const updateJob = createAsyncThunk('job/updateJob', async ({ slug, jobDat
     const response = await api.put(`/jobs/${slug}`, jobData);
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -102,7 +109,7 @@ export const deleteJob = createAsyncThunk('job/deleteJob', async (jobId, { rejec
     const response = await api.put(`/jobs/${jobId}/archive`);
     return { jobId, message: response.data.message };
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -111,7 +118,7 @@ export const restoreJob = createAsyncThunk('job/restoreJob', async (jobId, { rej
     const response = await api.put(`/jobs/${jobId}/restore`);
     return { jobId, message: response.data.message };
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -120,7 +127,7 @@ export const duplicateJob = createAsyncThunk('job/duplicateJob', async (jobId, {
     const response = await api.post(`/jobs/${jobId}/duplicate`);
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
 
@@ -138,19 +145,19 @@ const jobSlice = createSlice({
     },
     setPageSize: (state, action) => {
       state.pageSize = action.payload;
-      state.currentPage = 1; // Reset to first page
+      state.currentPage = 1;
     },
     setSearch: (state, action) => {
       state.search = action.payload;
-      state.currentPage = 1; // Reset to first page
+      state.currentPage = 1;
     },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
-      state.currentPage = 1; // Reset to first page
+      state.currentPage = 1;
     },
     setIncludeArchived: (state, action) => {
       state.includeArchived = action.payload;
-      state.currentPage = 1; // Reset to first page
+      state.currentPage = 1;
     },
     clearFilters: (state) => {
       state.filters = { job_type: '', industry: '', experience_level: '', status: '', date_posted: '' };
@@ -189,7 +196,7 @@ const jobSlice = createSlice({
       .addCase(createJob.rejected, (state, action) => {
         console.log('createJob rejected:', action.payload);
         state.status = 'failed';
-        state.error = action.payload?.error || 'Failed to create job';
+        state.error = action.payload?.message || 'Failed to create job';
       })
       .addCase(fetchEmployerJobs.pending, (state) => {
         state.status = 'loading';

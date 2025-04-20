@@ -1,7 +1,7 @@
 const express = require('express');
 const {
   applyForJob,
-  getJobApplications,
+  getApplicationsByJobId,
   updateApplication,
   deleteApplication
 } = require('../controllers/applicantController');
@@ -9,7 +9,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.post('/apply', authMiddleware, applyForJob); 
-router.get('/job/:job_id', authMiddleware, getJobApplications); 
+router.get('/job/:job_id', authMiddleware, getApplicationsByJobId); 
 router.put('/:applicant_id', authMiddleware, updateApplication); 
 router.delete('/:applicant_id', authMiddleware, deleteApplication);
 

@@ -17,10 +17,24 @@ api.interceptors.request.use(
 
     if (token && !isPublicEndpoint) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (!token && !isPublicEndpoint) {
+      console.log("No token found in localStorage for a protected endpoint");
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.log("401 Unauthorized detected:", error.response.data.message);
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
