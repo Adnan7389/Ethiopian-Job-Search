@@ -1,18 +1,24 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
+const mysql = require("mysql2/promise");
+require("dotenv").config();
 
-// Generate a 6-digit code
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+
 const generateCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Mock email sending function
 const mockSendEmail = ({ to, subject, text }) => {
   console.log(`Mock Email Sent to ${to}:`, { subject, text });
 };
 
-// Send verification email (mocked)
 const sendVerificationEmail = async (email, code) => {
   try {
     mockSendEmail({
@@ -26,7 +32,6 @@ const sendVerificationEmail = async (email, code) => {
   }
 };
 
-// Send reset code email (mocked)
 const sendResetCodeEmail = async (email, code) => {
   try {
     mockSendEmail({
@@ -38,6 +43,32 @@ const sendResetCodeEmail = async (email, code) => {
     console.error("Error sending reset code email:", error.message);
     throw new Error("Failed to send reset code email");
   }
+};
+
+const generateAccessToken = (user) => {
+  return jwt.sign(
+    { userId: user.user_id, user_type: user.user_type },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m" }
+  );
+};
+
+const generateRefreshToken = async (user) => {
+  const refreshToken = jwt.sign(
+    { userId: user.user_id, user_type: user.user_type },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d" }
+  );
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await db.execute(
+    "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+    [user.user_id, refreshToken, expiresAt]
+  );
+
+  return refreshToken;
 };
 
 const register = async (req, res) => {
@@ -157,13 +188,11 @@ const login = async (req, res) => {
     if (!user.is_verified) {
       return res.status(403).json({ error: "Please verify your email before logging in" });
     }
-    const token = jwt.sign(
-      { userId: user.user_id, user_type: user.user_type },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const accessToken = generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user);
     res.json({
-      token,
+      accessToken,
+      refreshToken,
       user_type: user.user_type,
       userId: user.user_id,
       username: user.username,
@@ -171,9 +200,11 @@ const login = async (req, res) => {
       resume_url: user.resume_url || null,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
+
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -234,4 +265,69 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, resendCode, verifyCode, login, forgotPassword, verifyResetCode, resetPassword };
+const validateToken = async (req, res) => {
+  try {
+    const { userId, user_type } = req.user;
+    console.log("validateToken: Validating user:", { userId, user_type });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({
+      userId,
+      user_type,
+      username: user.username,
+      email: user.email,
+      resume_url: user.resume_url || "",
+    });
+  } catch (error) {
+    console.error("Validate token error:", error.message);
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token is required" });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    console.log("refreshToken: Decoded refresh token:", decoded);
+    const [rows] = await db.execute(
+      "SELECT * FROM refresh_tokens WHERE token = ? AND revoked = FALSE AND expires_at > NOW()",
+      [refreshToken]
+    );
+
+    if (rows.length === 0) {
+      return res.status(403).json({ message: "Invalid or expired refresh token" });
+    }
+
+    await db.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE token = ?", [refreshToken]);
+    const user = { user_id: decoded.userId, user_type: decoded.user_type };
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = await generateRefreshToken(user);
+
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    console.error("refreshToken: Error:", error.message);
+    return res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+module.exports = {
+  register,
+  resendCode,
+  verifyCode,
+  login,
+  forgotPassword,
+  verifyResetCode,
+  resetPassword,
+  validateToken,
+  refreshToken,
+};

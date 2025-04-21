@@ -81,13 +81,17 @@ export const fetchApplicationsByJobId = createAsyncThunk(
   "job/fetchApplicationsByJobId",
   async (jobId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/jobs/${jobId}/applicants`);
+      console.log(`Fetching applicants for job ${jobId}`);
+      const response = await api.get(`/applicants/${jobId}/applicants`); // Updated route
+      console.log(`Applicants for job ${jobId}:`, response.data);
       return { jobId, applications: response.data };
     } catch (error) {
+      console.error(`Error fetching applicants for job ${jobId}:`, error.response?.data || error.message);
       if (error.response?.status === 401) {
         return rejectWithValue("Your session has expired. Please log in again.");
       }
       if (error.response?.status === 403) {
+        console.warn(`Access denied for job ${jobId}. Returning empty applications.`);
         return { jobId, applications: [] };
       }
       return rejectWithValue(error.response?.data?.message || "Failed to fetch applications");

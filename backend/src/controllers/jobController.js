@@ -244,20 +244,30 @@ const applyForJob = async (req, res) => {
 const getApplicationsByJobId = async (req, res) => {
   try {
     if (!req.user || req.user.user_type !== "employer") {
+      console.log("getApplicationsByJobId: User is not an employer", req.user);
       return res.status(403).json({ message: "Only employers can view applications" });
     }
     const { jobId } = req.params;
+    console.log(`getApplicationsByJobId: Fetching job ${jobId} for user ${req.user.userId}`);
     const job = await Job.findById(jobId);
-    if (!job || job.employer_id !== req.user.id) {
+    if (!job) {
+      console.log(`getApplicationsByJobId: Job ${jobId} not found`);
+      return res.status(404).json({ message: "Job not found" });
+    }
+    if (job.employer_id !== req.user.userId) {
+      console.log(`getApplicationsByJobId: Job ${jobId} does not belong to employer ${req.user.userId}`);
       return res.status(403).json({ message: "Unauthorized to view applications for this job" });
     }
+    console.log(`getApplicationsByJobId: Fetching applications for job ${jobId}`);
     const applications = await Applicant.findByJobId(jobId);
+    console.log(`getApplicationsByJobId: Found ${applications.length} applications for job ${jobId}`);
     res.status(200).json(applications);
   } catch (error) {
     console.error("Get applications error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 const updateJob = async (req, res) => {
   const { slug } = req.params;
   const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
@@ -369,4 +379,28 @@ const duplicateJob = async (req, res) => {
   }
 };
 
-module.exports = { createJob, getJobs, getJobsByEmployer, getJobBySlug, updateJob, archiveJob, restoreJob, duplicateJob, applyForJob, getApplicationsByJobId };
+console.log("Exporting from jobController:", { 
+  createJob, 
+  getJobs, 
+  getJobsByEmployer, 
+  getJobBySlug, 
+  updateJob, 
+  archiveJob, 
+  restoreJob, 
+  duplicateJob, 
+  applyForJob, 
+  getApplicationsByJobId 
+});
+
+module.exports = { 
+  createJob, 
+  getJobs, 
+  getJobsByEmployer, 
+  getJobBySlug, 
+  updateJob, 
+  archiveJob, 
+  restoreJob, 
+  duplicateJob, 
+  applyForJob, 
+  getApplicationsByJobId 
+};

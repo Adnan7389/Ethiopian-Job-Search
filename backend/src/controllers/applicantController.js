@@ -32,18 +32,21 @@ const applyForJob = async (req, res) => {
 const getApplicationsByJobId = async (req, res) => {
   try {
     const { jobId } = req.params;
+    console.log(`applicantController.getApplicationsByJobId: Fetching job ${jobId} for user ${req.user.userId}`);
 
     // Verify that the job exists and belongs to the authenticated employer
-    const [job] = await pool.query(
-      "SELECT * FROM jobs WHERE job_id = ? AND employer_id = ?",
-      [jobId, req.user.userId]
-    );
-
+    const job = await Job.findById(jobId);
     if (!job) {
+      console.log(`applicantController.getApplicationsByJobId: Job ${jobId} not found`);
+      return res.status(404).json({ message: "Job not found" });
+    }
+    if (job.employer_id !== req.user.userId) {
+      console.log(`applicantController.getApplicationsByJobId: Job ${jobId} does not belong to employer ${req.user.userId}`);
       return res.status(403).json({ message: "Job not found or you do not have permission to view its applicants" });
     }
 
     const applications = await Applicant.findByJobId(jobId);
+    console.log(`applicantController.getApplicationsByJobId: Found ${applications.length} applications for job ${jobId}`);
     res.status(200).json(applications);
   } catch (error) {
     console.error("Get applications error:", error);

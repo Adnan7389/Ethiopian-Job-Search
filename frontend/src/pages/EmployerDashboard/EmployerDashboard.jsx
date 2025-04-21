@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
 import Button from "../../components/Button/Button";
@@ -17,12 +17,15 @@ import {
   fetchApplicationsByJobId,
 } from "../../features/job/jobSlice";
 import { fetchNotifications } from "../../features/notification/notificationSlice";
-import { initializeAuth, logout } from "../../features/auth/authSlice";
+import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
+import { useLocation } from "react-router-dom";
 
 function EmployerDashboard() {
+  const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const {
     jobs,
     total,
@@ -37,11 +40,10 @@ function EmployerDashboard() {
     error,
   } = useSelector((state) => state.job);
   const { notifications, notificationStatus, notificationError } = useSelector((state) => state.notification);
-  const authState = useSelector((state) => state.auth);
-  const userType = authState ? authState.userType : null;
-  const token = authState ? authState.token : null;
+  const { userType, status: authStatus, error: authError } = useSelector((state) => state.auth);
 
   const [confirmAction, setConfirmAction] = useState(null);
+  const [fetchedJobIds, setFetchedJobIds] = useState(new Set());
 
   const {
     job_type = "",
@@ -77,139 +79,170 @@ function EmployerDashboard() {
   );
 
   useEffect(() => {
-    // Initialize auth state on mount
-    dispatch(initializeAuth());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (authState.status === "loading") {
-      console.log("Auth state is loading, waiting...");
+    if (authStatus !== "succeeded") {
+      if (authStatus === "failed") {
+        console.error("Auth failed:", authError);
+        dispatch(logout());
+        navigate("/login");
+      }
       return;
     }
-
-    if (authState.status === "failed" || !token || !userType) {
-      console.log("Redirecting to login - auth failed or missing token/userType:", { token, userType, authState });
-      dispatch(logout());
-      navigate("/login");
-      return;
-    }
-
     if (userType !== "employer") {
-      console.log("Redirecting to home - userType is not employer:", userType);
       navigate("/");
       return;
     }
 
-    // Fetch employer jobs and notifications
-    dispatch(fetchEmployerJobs(fetchParams)).catch((err) => {
-      console.error("Error fetching employer jobs:", err);
-      if (
-        err.message === "No token provided" ||
-        err.message === "Invalid token" ||
-        err.message === "Token has expired"
-      ) {
-        dispatch(logout());
-        navigate("/login");
+    let isCancelled = false;
+
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          dispatch(fetchEmployerJobs(fetchParams)).unwrap(),
+          dispatch(fetchNotifications()).unwrap(),
+        ]);
+      } catch (err) {
+        if (isCancelled) return;
+        console.error("Error fetching initial data:", err);
+        if (
+          err === "No token provided" ||
+          err === "Invalid token" ||
+          err === "Token has expired"
+        ) {
+          dispatch(logout());
+          navigate("/login");
+        }
       }
-    });
-    dispatch(fetchNotifications()).catch((err) => {
-      console.error("Error fetching notifications:", err);
-      if (
-        err.message === "No token provided" ||
-        err.message === "Invalid token" ||
-        err.message === "Token has expired"
-      ) {
-        dispatch(logout());
-        navigate("/login");
-      }
-    });
-  }, [dispatch, userType, navigate, fetchParams, token, authState]);
+    };
+
+    fetchData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [dispatch, userType, navigate, authStatus, authError, fetchParams]);
 
   useEffect(() => {
-    if (jobs.length > 0) {
-      jobs.forEach((job) => {
-        if (applications[job.job_id] === undefined) {
-          dispatch(fetchApplicationsByJobId(job.job_id)).catch((err) => {
-            console.error(`Error fetching applications for job ${job.job_id}:`, err);
-            // Errors are already handled by api.js interceptor for 401
-          });
-        }
-      });
-    }
-  }, [dispatch, jobs, applications]);
+    if (authStatus !== "succeeded" || jobs.length === 0) return;
 
-  const handleDelete = (jobId) => {
+    let isCancelled = false;
+
+    const fetchApplications = async () => {
+      const jobsToFetch = jobs
+        .filter((job) => !fetchedJobIds.has(job.job_id))
+        .filter((job) => applications[job.job_id] === undefined);
+
+      if (jobsToFetch.length === 0) return;
+
+      try {
+        await Promise.all(
+          jobsToFetch.map((job) =>
+            dispatch(fetchApplicationsByJobId(job.job_id)).unwrap().catch((err) => {
+              console.error(`Error fetching applications for job ${job.job_id}:`, err);
+              return [];
+            })
+          )
+        );
+        if (isCancelled) return;
+        setFetchedJobIds((prev) => {
+          const newSet = new Set(prev);
+          jobsToFetch.forEach((job) => newSet.add(job.job_id));
+          return newSet;
+        });
+      } catch (err) {
+        console.error("Error fetching applications:", err);
+      }
+    };
+
+    fetchApplications();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [dispatch, jobs, applications, authStatus, fetchedJobIds]);
+
+  const handleDelete = useCallback((jobId) => {
     setConfirmAction({ type: "delete", jobId });
-  };
+  }, []);
 
-  const handleRestore = (jobId) => {
+  const handleRestore = useCallback((jobId) => {
     setConfirmAction({ type: "restore", jobId });
-  };
+  }, []);
 
-  const confirmActionHandler = async () => {
-    if (confirmAction.type === "delete") {
-      await dispatch(deleteJob(confirmAction.jobId)).unwrap();
-    } else if (confirmAction.type === "restore") {
-      await dispatch(restoreJob(confirmAction.jobId)).unwrap();
-      dispatch(fetchEmployerJobs(fetchParams));
+  const handleDuplicate = useCallback(async (jobId) => {
+    try {
+      await dispatch(duplicateJob(jobId)).unwrap();
+      await dispatch(fetchEmployerJobs(fetchParams));
+    } catch (err) {
+      console.error("Error duplicating job:", err);
     }
+  }, [dispatch, fetchParams]);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!confirmAction) return;
+    try {
+      if (confirmAction.type === "delete") {
+        await dispatch(deleteJob(confirmAction.jobId)).unwrap();
+      } else if (confirmAction.type === "restore") {
+        await dispatch(restoreJob(confirmAction.jobId)).unwrap();
+        await dispatch(fetchEmployerJobs(fetchParams));
+      }
+    } catch (err) {
+      console.error(`Error performing ${confirmAction.type}:`, err);
+    } finally {
+      setConfirmAction(null);
+    }
+  }, [confirmAction, dispatch, fetchParams]);
+
+  const handleCancelAction = useCallback(() => {
     setConfirmAction(null);
-  };
+  }, []);
 
-  const handleDuplicate = async (jobId) => {
-    await dispatch(duplicateJob(jobId)).unwrap();
-    dispatch(fetchEmployerJobs(fetchParams));
-  };
-
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     dispatch(setPage(page));
-  };
+  }, [dispatch]);
 
-  const handlePageSizeChange = (e) => {
+  const handlePageSizeChange = useCallback((e) => {
     dispatch(setPageSize(parseInt(e.target.value)));
-  };
+  }, [dispatch]);
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     dispatch(setSearch(e.target.value));
-  };
+  }, [dispatch]);
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
     dispatch(setFilters({ [name]: value }));
-  };
+  }, [dispatch]);
 
-  const handleIncludeArchivedChange = (e) => {
+  const handleIncludeArchivedChange = useCallback((e) => {
     dispatch(setIncludeArchived(e.target.checked));
-  };
+  }, [dispatch]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     dispatch(clearFilters());
-  };
+  }, [dispatch]);
 
-  const handlePostNewJob = () => {
+  const handlePostNewJob = useCallback(() => {
     navigate("post-job");
-  };
+  }, [navigate]);
 
-  const handleViewApplications = (jobId) => {
+  const handleViewApplications = useCallback((jobId) => {
     navigate(`/dashboard/job/${jobId}/applicants`);
-  };
+  }, [navigate]);
 
-  if (authState.status === "loading") {
+  // Only show spinner during auth loading
+  if (authStatus === "loading") {
     return <LoadingSpinner />;
   }
-
-  if (authState.status === "failed" || !token) {
-    return null; // Redirect handled in useEffect
-  }
-
-  if (status === "loading" && !jobs.length) return <LoadingSpinner />;
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Employer Dashboard</h1>
+
+      {/* Notifications Section */}
       <div className={styles.notifications}>
         <h2>Notifications</h2>
-        {notificationStatus === "loading" && <LoadingSpinner />}
+        {notificationStatus === "loading" && <p>Loading notifications...</p>}
         {notificationError && <p className={styles.error}>{notificationError}</p>}
         {notifications.length === 0 ? (
           <p>No new notifications.</p>
@@ -223,8 +256,11 @@ function EmployerDashboard() {
           </ul>
         )}
       </div>
+
       <Outlet />
-      {window.location.pathname === "/dashboard" && (
+
+      {/* Main Dashboard Content */}
+      {location.pathname === "/dashboard" && (
         <>
           <Button
             onClick={handlePostNewJob}
@@ -233,6 +269,8 @@ function EmployerDashboard() {
           >
             Post New Job
           </Button>
+
+          {/* Filters Section */}
           <div className={styles.filters}>
             <input
               type="text"
@@ -289,8 +327,14 @@ function EmployerDashboard() {
             </label>
             <Button onClick={handleClearFilters} variant="secondary">Clear Filters</Button>
           </div>
+
+          {/* Error Message */}
           {error && <p className={styles.error}>{error}</p>}
-          {jobs.length === 0 ? (
+
+          {/* Jobs Table */}
+          {(status === "loading" && jobs.length === 0) ? (
+            <p>Loading jobs...</p>
+          ) : jobs.length === 0 ? (
             <p>No jobs found.</p>
           ) : (
             <>
@@ -317,16 +361,20 @@ function EmployerDashboard() {
                       <td data-label="Experience Level">{job.experience_level}</td>
                       <td data-label="Created At">{new Date(job.created_at).toLocaleDateString()}</td>
                       <td data-label="Applications">
-                        {applications[job.job_id] === undefined
-                          ? "Loading..."
-                          : applications[job.job_id].length || 0}
-                        <Button
-                          onClick={() => handleViewApplications(job.job_id)}
-                          variant="secondary"
-                          className={styles.actionButton}
-                        >
-                          View Applicants
-                        </Button>
+                        {applications[job.job_id] === undefined ? (
+                          "Loading..."
+                        ) : (
+                          <>
+                            {applications[job.job_id]?.length || 0}
+                            <Button
+                              onClick={() => handleViewApplications(job.job_id)}
+                              variant="secondary"
+                              className={styles.actionButton}
+                            >
+                              View Applicants
+                            </Button>
+                          </>
+                        )}
                       </td>
                       <td data-label="Actions">
                         <Button
@@ -367,6 +415,8 @@ function EmployerDashboard() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Pagination */}
               <div className={styles.pagination}>
                 <Button
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -392,12 +442,28 @@ function EmployerDashboard() {
               </div>
             </>
           )}
+
+          {/* Confirmation Modal */}
           {confirmAction && (
-            <div className={styles.modal}>
-              <div className={styles.modalContent}>
-                <p>Are you sure you want to {confirmAction.type} this job?</p>
-                <Button onClick={confirmActionHandler} variant="primary">Yes</Button>
-                <Button onClick={() => setConfirmAction(null)} variant="secondary">No</Button>
+            <div className={styles.modalOverlay}>
+              <div className={styles.modal}>
+                <div className={styles.modalContent}>
+                  <h3>Confirm Action</h3>
+                  <p>
+                    Are you sure you want to {confirmAction.type} this job?
+                    {confirmAction.type === "delete" && (
+                      <span> This action cannot be undone.</span>
+                    )}
+                  </p>
+                  <div className={styles.modalButtons}>
+                    <Button onClick={handleConfirmAction} variant="primary">
+                      Yes, {confirmAction.type}
+                    </Button>
+                    <Button onClick={handleCancelAction} variant="secondary">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
