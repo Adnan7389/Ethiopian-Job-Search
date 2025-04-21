@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar/Navbar';
 import RoleSelection from './pages/RoleSelection/RoleSelection';
 import Login from './pages/Login/Login';
@@ -15,12 +16,53 @@ import EmployerDashboard from './pages/EmployerDashboard/EmployerDashboard';
 import JobDetail from "./pages/JobDetail/JobDetail";
 import JobApplication from "./pages/JobApplication/JobApplication";
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import { initializeAuth } from './features/auth/authSlice';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 
 function PrivateRoute({ children, allowedRoles }) {
-  const { token, userType, isVerified } = useSelector((state) => state.auth);
-  if (!token) return <Navigate to="/login" />;
-  if (!isVerified) return <Navigate to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(userType)) return <Navigate to="/" />; // Redirect to home if role doesn't match
+  const dispatch = useDispatch();
+  const { token, userType, isVerified, status, error, hasInitialized } = useSelector((state) => state.auth);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+
+  useEffect(() => {
+    if (hasInitialized || hasCheckedAuth) {
+      setHasCheckedAuth(true);
+      return;
+    }
+
+    dispatch(initializeAuth()).then(() => {
+      setHasCheckedAuth(true);
+    }).catch(() => {
+      setHasCheckedAuth(true);
+    });
+  }, [dispatch, hasInitialized, hasCheckedAuth]);
+
+  if (!hasCheckedAuth || status === 'loading') {
+    return <LoadingSpinner />;
+  }
+
+  if (status === 'failed') {
+    return <Navigate to="/login" />;
+  }
+
+  const localToken = localStorage.getItem('token');
+  const localUserType = localStorage.getItem('userType');
+  const localIsVerified = localStorage.getItem('isVerified') === 'true';
+
+  const effectiveToken = token || localToken;
+  const effectiveUserType = userType || localUserType;
+  const effectiveIsVerified = isVerified || localIsVerified;
+
+  const isAuthenticated = effectiveToken && effectiveUserType && effectiveIsVerified;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(effectiveUserType)) {
+    return <Navigate to="/" />;
+  }
+
   return children;
 }
 
@@ -55,7 +97,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            {/* Nested routes under /dashboard */}
             <Route
               path="/dashboard"
               element={<PrivateRoute allowedRoles={["employer"]}><EmployerDashboard /></PrivateRoute>}

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 const initialState = {
   token: null,
@@ -14,23 +15,47 @@ const initialState = {
   resendStatus: 'idle',
   resendError: null,
   resendMessage: null,
+  hasInitialized: false,
 };
 
-// Thunk to initialize auth state from localStorage (if token exists)
-export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { rejectWithValue }) => {
+export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { rejectWithValue, getState }) => {
+  const { hasInitialized } = getState().auth;
+  if (hasInitialized) {
+    console.log("initializeAuth: Already initialized, skipping");
+    return; // Skip if already initialized
+  }
+
   const token = localStorage.getItem('token');
+  console.log("initializeAuth: Checking token in localStorage:", token);
   if (!token) {
+    console.log("initializeAuth: No token found, rejecting");
     return rejectWithValue('No token found');
   }
 
+  // Check token expiration client-side
   try {
-    // Optionally validate the token with the backend
-    const response = await api.get('/auth/validate-token', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const { user_type, userId, username, email, resume_url } = response.data;
+    const decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    console.log("initializeAuth: Token expiration:", new Date(decoded.exp * 1000).toISOString());
+    if (decoded.exp < currentTime) {
+      console.log("initializeAuth: Token expired, clearing localStorage");
+      localStorage.clear();
+      return rejectWithValue('Token has expired');
+    }
+  } catch (error) {
+    console.error("initializeAuth: Error decoding token:", error);
+    localStorage.clear();
+    return rejectWithValue('Invalid token');
+  }
+
+  try {
+    console.log("initializeAuth: Making request to /auth/validate-token");
+    const response = await api.get('/auth/validate-token');
+    console.log("initializeAuth: Response from /auth/validate-token:", response.data);
+    const { userId, user_type, username, email, resume_url } = response.data;
     return { token, userType: user_type, userId, username, email, resume_url, isVerified: true };
   } catch (error) {
+    console.error("initializeAuth: Error validating token:", error);
     localStorage.clear();
     return rejectWithValue(error.response?.data?.error || error.message);
   }
@@ -64,22 +89,45 @@ export const verifyCode = createAsyncThunk('auth/verifyCode', async ({ email, co
   }
 });
 
-export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
-  try {
-    const response = await api.post('/auth/login', credentials);
-    const { token, user_type, userId, username, email, resume_url } = response.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('userType', user_type);
-    localStorage.setItem('userId', userId);
-    localStorage.setItem('username', username);
-    localStorage.setItem('email', email);
-    localStorage.setItem('resume_url', resume_url || '');
-    localStorage.setItem('isVerified', 'true');
-    return { token, userType: user_type, userId, username, email, resume_url };
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+export const login = createAsyncThunk(
+  'auth/login',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      const {
+        accessToken,
+        refreshToken,
+        user_type,
+        userId,
+        username,
+        email,
+        resume_url,
+      } = response.data;
+
+      // Persist tokens and user info
+      localStorage.setItem('token', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('userType', user_type);
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('username', username);
+      localStorage.setItem('email', email);
+      localStorage.setItem('resume_url', resume_url || '');
+      localStorage.setItem('isVerified', 'true');
+
+      return {
+        token: accessToken,
+        refreshToken,
+        userType: user_type,
+        userId,
+        username,
+        email,
+        resume_url,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
   }
-});
+);
 
 export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (email, { rejectWithValue }) => {
   try {
@@ -130,10 +178,23 @@ const authSlice = createSlice({
       state.resendStatus = 'idle';
       state.resendError = null;
       state.resendMessage = null;
+      state.hasInitialized = false;
     },
     clearResendMessage: (state) => {
       state.resendMessage = null;
       state.resendError = null;
+    },
+    initializeAuthSuccess: (state, action) => {
+      state.status = 'succeeded';
+      state.token = action.payload.token;
+      state.userType = action.payload.userType;
+      state.userId = action.payload.userId;
+      state.username = action.payload.username;
+      state.email = action.payload.email;
+      state.resume_url = action.payload.resume_url;
+      state.isVerified = action.payload.isVerified;
+      state.hasInitialized = true;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -143,6 +204,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
+        if (!action.payload) return; // Skip state update if already initialized
         state.status = 'succeeded';
         state.token = action.payload.token;
         state.userType = action.payload.userType;
@@ -151,6 +213,7 @@ const authSlice = createSlice({
         state.email = action.payload.email;
         state.resume_url = action.payload.resume_url;
         state.isVerified = action.payload.isVerified;
+        state.hasInitialized = true;
       })
       .addCase(initializeAuth.rejected, (state, action) => {
         state.status = 'failed';
@@ -162,6 +225,7 @@ const authSlice = createSlice({
         state.email = null;
         state.resume_url = null;
         state.isVerified = false;
+        state.hasInitialized = true;
       })
       .addCase(register.pending, (state) => {
         state.status = 'loading';
@@ -212,6 +276,7 @@ const authSlice = createSlice({
         state.email = action.payload.email;
         state.resume_url = action.payload.resume_url;
         state.isVerified = true;
+        state.hasInitialized = false;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
@@ -253,5 +318,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setRole, logout, clearResendMessage } = authSlice.actions;
+export const { setRole, logout, clearResendMessage, initializeAuthSuccess } = authSlice.actions;
 export default authSlice.reducer;
