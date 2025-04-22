@@ -13,6 +13,7 @@ import JobSearch from './pages/JobSearch/JobSearch';
 import PostJob from './pages/PostJob/PostJob';
 import EditJob from './pages/EditJob/EditJob';
 import EmployerDashboard from './pages/EmployerDashboard/EmployerDashboard';
+import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
 import JobDetail from "./pages/JobDetail/JobDetail";
 import JobApplication from "./pages/JobApplication/JobApplication";
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
@@ -104,6 +105,10 @@ function App() {
               <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
               <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
             </Route>
+            <Route
+              path="/notifications"
+              element={<PrivateRoute><NotificationsPage /></PrivateRoute>}
+            />
           </Routes>
         </div>
       </ErrorBoundary>

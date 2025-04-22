@@ -16,7 +16,6 @@ import {
   clearFilters,
   fetchApplicationsByJobId,
 } from "../../features/job/jobSlice";
-import { fetchNotifications } from "../../features/notification/notificationSlice";
 import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
 import { useLocation } from "react-router-dom";
@@ -39,7 +38,6 @@ function EmployerDashboard() {
     status,
     error,
   } = useSelector((state) => state.job);
-  const { notifications, notificationStatus, notificationError } = useSelector((state) => state.notification);
   const { userType, status: authStatus, error: authError } = useSelector((state) => state.auth);
 
   const [confirmAction, setConfirmAction] = useState(null);
@@ -96,13 +94,10 @@ function EmployerDashboard() {
 
     const fetchData = async () => {
       try {
-        await Promise.all([
-          dispatch(fetchEmployerJobs(fetchParams)).unwrap(),
-          dispatch(fetchNotifications()).unwrap(),
-        ]);
+        await dispatch(fetchEmployerJobs(fetchParams)).unwrap();
       } catch (err) {
         if (isCancelled) return;
-        console.error("Error fetching initial data:", err);
+        console.error("Error fetching jobs:", err);
         if (
           err === "No token provided" ||
           err === "Invalid token" ||
@@ -238,24 +233,6 @@ function EmployerDashboard() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Employer Dashboard</h1>
-
-      {/* Notifications Section */}
-      <div className={styles.notifications}>
-        <h2>Notifications</h2>
-        {notificationStatus === "loading" && <p>Loading notifications...</p>}
-        {notificationError && <p className={styles.error}>{notificationError}</p>}
-        {notifications.length === 0 ? (
-          <p>No new notifications.</p>
-        ) : (
-          <ul>
-            {notifications.map((notification) => (
-              <li key={notification.id} className={styles.notificationItem}>
-                {notification.message}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
       <Outlet />
 
