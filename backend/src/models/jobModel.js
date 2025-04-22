@@ -1,5 +1,14 @@
 const pool = require("../config/db");
 
+// Import queryWithTimeout from app.js (or define here if not accessible)
+const queryWithTimeout = async (query, params, timeout = 10000) => {
+  const queryPromise = pool.query(query, params);
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Database query timed out')), timeout);
+  });
+  return Promise.race([queryPromise, timeoutPromise]);
+};
+
 class Job {
   // Mapping function for job_type
   mapJobType(jobType) {
@@ -33,7 +42,7 @@ class Job {
     let slug = baseSlug;
     let counter = 1;
     while (true) {
-      const [existing] = await pool.query("SELECT job_id FROM jobs WHERE slug = ?", [slug]);
+      const [existing] = await queryWithTimeout("SELECT job_id FROM jobs WHERE slug = ?", [slug], 5000);
       if (existing.length === 0) break;
       slug = `${baseSlug}-${counter}`;
       counter++;
@@ -41,7 +50,7 @@ class Job {
 
     const mappedJobType = this.mapJobType(job_type);
 
-    const [result] = await pool.query(
+    const [result] = await queryWithTimeout(
       `INSERT INTO jobs (
         employer_id, slug, title, description, location, salary_range, job_type, industry,
         experience_level, expires_at, status, is_archived, created_at, updated_at
@@ -61,20 +70,22 @@ class Job {
         is_archived || false,
         created_at || new Date(),
         updated_at || new Date(),
-      ]
+      ],
+      5000
     );
     return this.findById(result.insertId);
   }
 
   async findById(jobId) {
-    const [rows] = await pool.query("SELECT * FROM jobs WHERE job_id = ?", [jobId]);
+    const [rows] = await queryWithTimeout("SELECT * FROM jobs WHERE job_id = ?", [jobId], 5000);
     return rows[0];
   }
 
   async findBySlug(slug) {
-    const [rows] = await pool.query(
+    const [rows] = await queryWithTimeout(
       "SELECT * FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())",
-      [slug]
+      [slug],
+      5000
     );
     return rows[0];
   }
@@ -127,8 +138,8 @@ class Job {
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [jobs] = await pool.query(query, params);
-    const [[{ total }]] = await pool.query(countQuery, countParams);
+    const [jobs] = await queryWithTimeout(query, params, 10000);
+    const [[{ total }]] = await queryWithTimeout(countQuery, countParams, 5000);
     return { jobs, total };
   }
 
@@ -179,7 +190,7 @@ class Job {
       let dateFilter;
       if (date_posted === "last_24_hours") dateFilter = "DATE_SUB(NOW(), INTERVAL 1 DAY)";
       else if (date_posted === "last_7_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
-      else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
+      else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 30 DAY)";
       if (dateFilter) {
         query += ` AND created_at >= ${dateFilter}`;
         countQuery += ` AND created_at >= ${dateFilter}`;
@@ -190,8 +201,8 @@ class Job {
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [jobs] = await pool.query(query, params);
-    const [[{ total }]] = await pool.query(countQuery, countParams);
+    const [jobs] = await queryWithTimeout(query, params, 10000);
+    const [[{ total }]] = await queryWithTimeout(countQuery, countParams, 5000);
     return { jobs, total };
   }
 
@@ -214,9 +225,10 @@ class Job {
       const baseSlug = `${title}-${data.location || location}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").trim();
       let counter = 1;
       while (true) {
-        const [existing] = await pool.query(
+        const [existing] = await queryWithTimeout(
           "SELECT job_id FROM jobs WHERE slug = ? AND slug != ?",
-          [newSlug, slug]
+          [newSlug, slug],
+          5000
         );
         if (existing.length === 0) break;
         newSlug = `${baseSlug}-${counter}`;
@@ -226,7 +238,7 @@ class Job {
 
     const mappedJobType = job_type ? this.mapJobType(job_type) : null;
 
-    const [result] = await pool.query(
+    const [result] = await queryWithTimeout(
       `UPDATE jobs SET
         title = COALESCE(?, title),
         slug = COALESCE(?, slug),
@@ -253,7 +265,8 @@ class Job {
         status || null,
         new Date(),
         slug,
-      ]
+      ],
+      5000
     );
 
     if (result.affectedRows === 0) {
@@ -263,9 +276,10 @@ class Job {
   }
 
   async archive(jobId) {
-    const [result] = await pool.query(
+    const [result] = await queryWithTimeout(
       "UPDATE jobs SET is_archived = 1 WHERE job_id = ?",
-      [jobId]
+      [jobId],
+      5000
     );
     if (result.affectedRows === 0) {
       throw new Error("Job not found");
@@ -273,9 +287,10 @@ class Job {
   }
 
   async restore(jobId) {
-    const [result] = await pool.query(
+    const [result] = await queryWithTimeout(
       "UPDATE jobs SET is_archived = 0 WHERE job_id = ?",
-      [jobId]
+      [jobId],
+      5000
     );
     if (result.affectedRows === 0) {
       throw new Error("Job not found");
@@ -307,7 +322,6 @@ class Job {
     return this.create(newJobData);
   }
 
-  // New method to find jobs expiring soon
   async findExpiringJobs() {
     const now = new Date();
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
@@ -321,7 +335,7 @@ class Job {
         AND j.status = 'open'
         AND j.is_archived = 0
     `;
-    const [rows] = await pool.query(query, [now, in24Hours]);
+    const [rows] = await queryWithTimeout(query, [now, in24Hours], 5000);
     return rows;
   }
 }

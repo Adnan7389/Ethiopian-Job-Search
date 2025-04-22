@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import {
@@ -15,10 +15,10 @@ import {
   setIncludeArchived,
   clearFilters,
   fetchApplicationsByJobId,
+  clearApplications,
 } from "../../features/job/jobSlice";
 import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
-import { useLocation } from "react-router-dom";
 
 function EmployerDashboard() {
   const location = useLocation();
@@ -35,43 +35,36 @@ function EmployerDashboard() {
     filters = { job_type: "", industry: "", experience_level: "", status: "", date_posted: "" },
     includeArchived,
     applications,
+    fetchingApplications,
     status,
     error,
   } = useSelector((state) => state.job);
   const { userType, status: authStatus, error: authError } = useSelector((state) => state.auth);
 
   const [confirmAction, setConfirmAction] = useState(null);
-  const [fetchedJobIds, setFetchedJobIds] = useState(new Set());
-
-  const {
-    job_type = "",
-    industry = "",
-    experience_level = "",
-    status: filterStatus = "",
-    date_posted = "",
-  } = filters;
+  const [localSearch, setLocalSearch] = useState(search);
 
   const fetchParams = useMemo(
     () => ({
       page: currentPage,
       limit: pageSize,
       search,
-      job_type,
-      industry,
-      experience_level,
-      status: filterStatus,
-      date_posted,
+      job_type: filters.job_type,
+      industry: filters.industry,
+      experience_level: filters.experience_level,
+      status: filters.status,
+      date_posted: filters.date_posted,
       includeArchived,
     }),
     [
       currentPage,
       pageSize,
       search,
-      job_type,
-      industry,
-      experience_level,
-      filterStatus,
-      date_posted,
+      filters.job_type,
+      filters.industry,
+      filters.experience_level,
+      filters.status,
+      filters.date_posted,
       includeArchived,
     ]
   );
@@ -113,6 +106,7 @@ function EmployerDashboard() {
 
     return () => {
       isCancelled = true;
+      dispatch(clearApplications());
     };
   }, [dispatch, userType, navigate, authStatus, authError, fetchParams]);
 
@@ -122,28 +116,25 @@ function EmployerDashboard() {
     let isCancelled = false;
 
     const fetchApplications = async () => {
-      const jobsToFetch = jobs
-        .filter((job) => !fetchedJobIds.has(job.job_id))
-        .filter((job) => applications[job.job_id] === undefined);
+      const jobsToFetch = jobs.filter(
+        (job) =>
+          applications[String(job.job_id)] === undefined &&
+          !fetchingApplications.includes(String(job.job_id)) // Changed from .has to .includes
+      );
 
       if (jobsToFetch.length === 0) return;
 
       try {
         await Promise.all(
           jobsToFetch.map((job) =>
-            dispatch(fetchApplicationsByJobId(job.job_id)).unwrap().catch((err) => {
+            dispatch(fetchApplicationsByJobId(String(job.job_id))).unwrap().catch((err) => {
               console.error(`Error fetching applications for job ${job.job_id}:`, err);
               return [];
             })
           )
         );
-        if (isCancelled) return;
-        setFetchedJobIds((prev) => {
-          const newSet = new Set(prev);
-          jobsToFetch.forEach((job) => newSet.add(job.job_id));
-          return newSet;
-        });
       } catch (err) {
+        if (isCancelled) return;
         console.error("Error fetching applications:", err);
       }
     };
@@ -153,7 +144,7 @@ function EmployerDashboard() {
     return () => {
       isCancelled = true;
     };
-  }, [dispatch, jobs, applications, authStatus, fetchedJobIds]);
+  }, [dispatch, jobs, authStatus, applications, fetchingApplications]);
 
   const handleDelete = useCallback((jobId) => {
     setConfirmAction({ type: "delete", jobId });
@@ -161,22 +152,27 @@ function EmployerDashboard() {
 
   const handleRestore = useCallback((jobId) => {
     setConfirmAction({ type: "restore", jobId });
-  }, []);
+  }, [fetchParams]);
 
-  const handleDuplicate = useCallback(async (jobId) => {
-    try {
-      await dispatch(duplicateJob(jobId)).unwrap();
-      await dispatch(fetchEmployerJobs(fetchParams));
-    } catch (err) {
-      console.error("Error duplicating job:", err);
-    }
-  }, [dispatch, fetchParams]);
+  const handleDuplicate = useCallback(
+    async (jobId) => {
+      try {
+        await dispatch(duplicateJob(jobId)).unwrap();
+        await dispatch(fetchEmployerJobs(fetchParams));
+      } catch (err) {
+        console.error("Error duplicating job:", err);
+      }
+    },
+    [dispatch, fetchParams]
+  );
 
   const handleConfirmAction = useCallback(async () => {
     if (!confirmAction) return;
     try {
       if (confirmAction.type === "delete") {
         await dispatch(deleteJob(confirmAction.jobId)).unwrap();
+        const updatedApplications = { ...applications };
+        delete updatedApplications[String(confirmAction.jobId)];
       } else if (confirmAction.type === "restore") {
         await dispatch(restoreJob(confirmAction.jobId)).unwrap();
         await dispatch(fetchEmployerJobs(fetchParams));
@@ -186,46 +182,77 @@ function EmployerDashboard() {
     } finally {
       setConfirmAction(null);
     }
-  }, [confirmAction, dispatch, fetchParams]);
+  }, [confirmAction, dispatch, fetchParams, applications]);
 
   const handleCancelAction = useCallback(() => {
     setConfirmAction(null);
   }, []);
 
-  const handlePageChange = useCallback((page) => {
-    dispatch(setPage(page));
-  }, [dispatch]);
+  const handlePageChange = useCallback(
+    (page) => {
+      dispatch(setPage(page));
+    },
+    [dispatch]
+  );
 
-  const handlePageSizeChange = useCallback((e) => {
-    dispatch(setPageSize(parseInt(e.target.value)));
-  }, [dispatch]);
+  const handlePageSizeChange = useCallback(
+    (e) => {
+      dispatch(setPageSize(parseInt(e.target.value)));
+      dispatch(setPage(1));
+    },
+    [dispatch]
+  );
 
   const handleSearchChange = useCallback((e) => {
-    dispatch(setSearch(e.target.value));
-  }, [dispatch]);
+    setLocalSearch(e.target.value);
+  }, []);
 
-  const handleFilterChange = useCallback((e) => {
-    const { name, value } = e.target;
-    dispatch(setFilters({ [name]: value }));
-  }, [dispatch]);
+  const handleSearchSubmit = useCallback(() => {
+    dispatch(setSearch(localSearch));
+    dispatch(setPage(1));
+  }, [dispatch, localSearch]);
 
-  const handleIncludeArchivedChange = useCallback((e) => {
-    dispatch(setIncludeArchived(e.target.checked));
-  }, [dispatch]);
+  const handleFilterChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      dispatch(setFilters({ [name]: value }));
+      dispatch(setPage(1));
+    },
+    [dispatch]
+  );
+
+  const handleIncludeArchivedChange = useCallback(
+    (e) => {
+      dispatch(setIncludeArchived(e.target.checked));
+      dispatch(setPage(1));
+    },
+    [dispatch]
+  );
 
   const handleClearFilters = useCallback(() => {
+    setLocalSearch("");
     dispatch(clearFilters());
+    dispatch(setPage(1));
   }, [dispatch]);
 
   const handlePostNewJob = useCallback(() => {
     navigate("post-job");
   }, [navigate]);
 
-  const handleViewApplications = useCallback((jobId) => {
-    navigate(`/dashboard/job/${jobId}/applicants`);
-  }, [navigate]);
+  const handleViewApplications = useCallback(
+    (jobId) => {
+      navigate(`/dashboard/job/${jobId}/applicants`);
+    },
+    [navigate]
+  );
 
-  // Only show spinner during auth loading
+  const handleEditJob = useCallback(
+    (slug) => {
+      navigate(`edit-job/${slug}`);
+    },
+    [navigate]
+  );
+
   if (authStatus === "loading") {
     return <LoadingSpinner />;
   }
@@ -236,7 +263,6 @@ function EmployerDashboard() {
 
       <Outlet />
 
-      {/* Main Dashboard Content */}
       {location.pathname === "/dashboard" && (
         <>
           <Button
@@ -247,22 +273,33 @@ function EmployerDashboard() {
             Post New Job
           </Button>
 
-          {/* Filters Section */}
           <div className={styles.filters}>
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              value={search}
-              onChange={handleSearchChange}
-              className={styles.searchInput}
-            />
-            <select name="job_type" value={job_type} onChange={handleFilterChange}>
+            <div className={styles.searchBar}>
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={localSearch}
+                onChange={handleSearchChange}
+                onKeyPress={(e) => e.key === "Enter" && handleSearchSubmit()}
+                className={styles.searchInput}
+              />
+              <Button onClick={handleSearchSubmit}>Search</Button>
+            </div>
+            <select
+              name="job_type"
+              value={filters.job_type}
+              onChange={handleFilterChange}
+            >
               <option value="">All Job Types</option>
               <option value="full-time">Full-Time</option>
               <option value="part-time">Part-Time</option>
               <option value="contract">Contract</option>
             </select>
-            <select name="industry" value={industry} onChange={handleFilterChange}>
+            <select
+              name="industry"
+              value={filters.industry}
+              onChange={handleFilterChange}
+            >
               <option value="">All Industries</option>
               <option value="IT">IT</option>
               <option value="Finance">Finance</option>
@@ -276,19 +313,27 @@ function EmployerDashboard() {
               <option value="Construction">Construction</option>
               <option value="Other">Other</option>
             </select>
-            <select name="experience_level" value={experience_level} onChange={handleFilterChange}>
+            <select
+              name="experience_level"
+              value={filters.experience_level}
+              onChange={handleFilterChange}
+            >
               <option value="">All Experience Levels</option>
               <option value="entry-level">Entry-Level</option>
               <option value="mid-level">Mid-Level</option>
               <option value="senior">Senior</option>
             </select>
-            <select name="status" value={filterStatus} onChange={handleFilterChange}>
+            <select name="status" value={filters.status} on獻Change={handleFilterChange}>
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="closed">Closed</option>
               <option value="paused">Paused</option>
             </select>
-            <select name="date_posted" value={date_posted} onChange={handleFilterChange}>
+            <select
+              name="date_posted"
+              value={filters.date_posted}
+              onChange={handleFilterChange}
+            >
               <option value="">All Dates</option>
               <option value="last_24_hours">Last 24 Hours</option>
               <option value="last_7_days">Last 7 Days</option>
@@ -302,14 +347,14 @@ function EmployerDashboard() {
               />
               Show Archived Jobs
             </label>
-            <Button onClick={handleClearFilters} variant="secondary">Clear Filters</Button>
+            <Button onClick={handleClearFilters} variant="secondary">
+              Clear Filters
+            </Button>
           </div>
 
-          {/* Error Message */}
           {error && <p className={styles.error}>{error}</p>}
 
-          {/* Jobs Table */}
-          {(status === "loading" && jobs.length === 0) ? (
+          {status === "loading" && jobs.length === 0 ? (
             <p>Loading jobs...</p>
           ) : jobs.length === 0 ? (
             <p>No jobs found.</p>
@@ -329,71 +374,76 @@ function EmployerDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.map((job) => (
-                    <tr key={job.job_id}>
-                      <td data-label="Title">{job.title}</td>
-                      <td data-label="Status">{job.status}</td>
-                      <td data-label="Job Type">{job.job_type}</td>
-                      <td data-label="Industry">{job.industry}</td>
-                      <td data-label="Experience Level">{job.experience_level}</td>
-                      <td data-label="Created At">{new Date(job.created_at).toLocaleDateString()}</td>
-                      <td data-label="Applications">
-                        {applications[job.job_id] === undefined ? (
-                          "Loading..."
-                        ) : (
-                          <>
-                            {applications[job.job_id]?.length || 0}
-                            <Button
-                              onClick={() => handleViewApplications(job.job_id)}
-                              variant="secondary"
-                              className={styles.actionButton}
-                            >
-                              View Applicants
-                            </Button>
-                          </>
-                        )}
-                      </td>
-                      <td data-label="Actions">
-                        <Button
-                          onClick={() => navigate(`edit-job/${job.slug}`)}
-                          variant="primary"
-                          className={styles.actionButton}
-                        >
-                          Edit
-                        </Button>
-                        {job.is_archived ? (
+                  {jobs.map((job) => {
+                    const jobApplications = applications[String(job.job_id)];
+                    const isFetching = fetchingApplications.includes(String(job.job_id)); // Changed from .has to .includes
+                    return (
+                      <tr key={job.job_id}>
+                        <td data-label="Title">{job.title}</td>
+                        <td data-label="Status">{job.status}</td>
+                        <td data-label="Job Type">{job.job_type}</td>
+                        <td data-label="Industry">{job.industry}</td>
+                        <td data-label="Experience Level">{job.experience_level}</td>
+                        <td data-label="Created At">
+                          {new Date(job.created_at).toLocaleDateString()}
+                        </td>
+                        <td data-label="Applications">
+                          {isFetching || jobApplications === undefined ? (
+                            "Loading..."
+                          ) : (
+                            <>
+                              {jobApplications?.length || 0}
+                              <Button
+                                onClick={() => handleViewApplications(job.job_id)}
+                                variant="secondary"
+                                className={styles.actionButton}
+                              >
+                                View Applicants
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                        <td data-label="Actions">
                           <Button
-                            onClick={() => handleRestore(job.job_id)}
-                            variant="secondary"
+                            onClick={() => handleEditJob(job.slug)}
+                            variant="primary"
                             className={styles.actionButton}
                           >
-                            Restore
+                            Edit
                           </Button>
-                        ) : (
-                          <>
+                          {job.is_archived ? (
                             <Button
-                              onClick={() => handleDelete(job.job_id)}
-                              variant="danger"
-                              className={styles.actionButton}
-                            >
-                              Delete
-                            </Button>
-                            <Button
-                              onClick={() => handleDuplicate(job.job_id)}
+                              onClick={() => handleRestore(job.job_id)}
                               variant="secondary"
                               className={styles.actionButton}
                             >
-                              Duplicate
+                              Restore
                             </Button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                          ) : (
+                            <>
+                              <Button
+                                onClick={() => handleDelete(job.job_id)}
+                                variant="danger"
+                                className={styles.actionButton}
+                              >
+                                Delete
+                              </Button>
+                              <Button
+                                onClick={() => handleDuplicate(job.job_id)}
+                                variant="secondary"
+                                className={styles.actionButton}
+                              >
+                                Duplicate
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
-              {/* Pagination */}
               <div className={styles.pagination}>
                 <Button
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -402,7 +452,7 @@ function EmployerDashboard() {
                   Previous
                 </Button>
                 <span>
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage} of {totalPages} (Total: {total} jobs)
                 </span>
                 <Button
                   onClick={() => handlePageChange(currentPage + 1)}
@@ -420,7 +470,6 @@ function EmployerDashboard() {
             </>
           )}
 
-          {/* Confirmation Modal */}
           {confirmAction && (
             <div className={styles.modalOverlay}>
               <div className={styles.modal}>

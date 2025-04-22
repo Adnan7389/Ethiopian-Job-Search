@@ -20,6 +20,7 @@ const initialState = {
   error: null,
   job: null,
   applications: {},
+  fetchingApplications: [], // Changed from Set to Array
 };
 
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
@@ -78,23 +79,23 @@ export const applyForJob = createAsyncThunk(
 );
 
 export const fetchApplicationsByJobId = createAsyncThunk(
-  "job/fetchApplicationsByJobId",
+  'job/fetchApplicationsByJobId',
   async (jobId, { rejectWithValue }) => {
     try {
       console.log(`Fetching applicants for job ${jobId}`);
-      const response = await api.get(`/applicants/${jobId}/applicants`); // Updated route
+      const response = await api.get(`/applicants/${jobId}/applicants`);
       console.log(`Applicants for job ${jobId}:`, response.data);
-      return { jobId, applications: response.data };
+      return { jobId: String(jobId), applications: response.data };
     } catch (error) {
       console.error(`Error fetching applicants for job ${jobId}:`, error.response?.data || error.message);
       if (error.response?.status === 401) {
-        return rejectWithValue("Your session has expired. Please log in again.");
+        return rejectWithValue('Your session has expired. Please log in again.');
       }
       if (error.response?.status === 403) {
         console.warn(`Access denied for job ${jobId}. Returning empty applications.`);
-        return { jobId, applications: [] };
+        return { jobId: String(jobId), applications: [] };
       }
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch applications");
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch applications');
     }
   }
 );
@@ -169,9 +170,14 @@ const jobSlice = createSlice({
       state.currentPage = 1;
       state.includeArchived = false;
     },
+    clearApplications: (state) => {
+      state.applications = {};
+      state.fetchingApplications = []; // Changed to array
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Jobs (Public)
       .addCase(fetchJobs.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -182,11 +188,13 @@ const jobSlice = createSlice({
         state.total = action.payload.total;
         state.currentPage = action.payload.currentPage;
         state.totalPages = action.payload.totalPages;
+        state.error = null;
       })
       .addCase(fetchJobs.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Create Job
       .addCase(createJob.pending, (state) => {
         console.log("createJob pending");
         state.status = 'loading';
@@ -196,15 +204,20 @@ const jobSlice = createSlice({
         console.log('createJob fulfilled:', action.payload);
         state.status = 'succeeded';
         state.job = action.payload;
+        state.total += 1;
+        state.error = null;
       })
       .addCase(createJob.rejected, (state, action) => {
         console.log('createJob rejected:', action.payload);
         state.status = 'failed';
         state.error = action.payload?.message || 'Failed to create job';
       })
+      // Fetch Employer Jobs
       .addCase(fetchEmployerJobs.pending, (state) => {
         state.status = 'loading';
         state.error = null;
+        state.applications = {};
+        state.fetchingApplications = []; // Changed to array
       })
       .addCase(fetchEmployerJobs.fulfilled, (state, action) => {
         state.status = 'succeeded';
@@ -212,57 +225,78 @@ const jobSlice = createSlice({
         state.total = action.payload.total;
         state.currentPage = action.payload.currentPage;
         state.totalPages = action.payload.totalPages;
+        state.error = null;
       })
       .addCase(fetchEmployerJobs.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Fetch Job by Slug
       .addCase(fetchJobBySlug.pending, (state) => {
         state.status = 'loading';
         state.error = null;
+        state.job = null;
       })
       .addCase(fetchJobBySlug.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.job = action.payload;
+        state.error = null;
       })
       .addCase(fetchJobBySlug.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Apply for Job
       .addCase(applyForJob.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
       .addCase(applyForJob.fulfilled, (state, action) => {
         state.status = "succeeded";
+        state.error = null;
       })
       .addCase(applyForJob.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-      .addCase(fetchApplicationsByJobId.pending, (state) => {
-        state.status = "loading";
+      // Fetch Applications by Job ID
+      .addCase(fetchApplicationsByJobId.pending, (state, action) => {
+        state.status = 'loading';
+        state.fetchingApplications = [...state.fetchingApplications, String(action.meta.arg)]; // Add to array
         state.error = null;
       })
       .addCase(fetchApplicationsByJobId.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.applications[action.payload.jobId] = action.payload.applications;
+        state.status = 'succeeded';
+        state.applications[String(action.payload.jobId)] = action.payload.applications;
+        console.log(`Updated applications for job ${action.payload.jobId}:`, state.applications[action.payload.jobId]);
+        state.fetchingApplications = state.fetchingApplications.filter(id => id !== String(action.meta.arg)); // Remove from array
+        state.error = null;
       })
       .addCase(fetchApplicationsByJobId.rejected, (state, action) => {
-        state.status = "failed";
+        state.status = 'failed';
         state.error = action.payload;
+        state.fetchingApplications = state.fetchingApplications.filter(id => id !== String(action.meta.arg)); // Remove from array
       })
+      // Update Job
       .addCase(updateJob.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(updateJob.fulfilled, (state) => {
+      .addCase(updateJob.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        const updatedJob = action.payload.job || action.payload;
+        const index = state.jobs.findIndex((job) => job.slug === updatedJob.slug);
+        if (index !== -1) {
+          state.jobs[index] = updatedJob;
+        }
+        state.job = updatedJob;
+        state.error = null;
       })
       .addCase(updateJob.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Delete Job (Archive)
       .addCase(deleteJob.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -270,28 +304,40 @@ const jobSlice = createSlice({
       .addCase(deleteJob.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.jobs = state.jobs.filter((job) => job.job_id !== action.payload.jobId);
+        state.total -= 1;
+        delete state.applications[String(action.payload.jobId)];
+        state.fetchingApplications = state.fetchingApplications.filter(id => id !== String(action.payload.jobId)); // Remove from array
+        state.error = null;
       })
       .addCase(deleteJob.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Restore Job
       .addCase(restoreJob.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(restoreJob.fulfilled, (state) => {
+      .addCase(restoreJob.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.jobs = state.jobs.filter((job) => job.job_id !== action.payload.jobId);
+        state.total -= 1;
+        delete state.applications[String(action.payload.jobId)];
+        state.fetchingApplications = state.fetchingApplications.filter(id => id !== String(action.payload.jobId)); // Remove from array
+        state.error = null;
       })
       .addCase(restoreJob.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Duplicate Job
       .addCase(duplicateJob.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(duplicateJob.fulfilled, (state) => {
+      .addCase(duplicateJob.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.error = null;
       })
       .addCase(duplicateJob.rejected, (state, action) => {
         state.status = 'failed';
@@ -300,5 +346,5 @@ const jobSlice = createSlice({
   },
 });
 
-export const { resetStatus, setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters } = jobSlice.actions;
+export const { resetStatus, setPage, setPageSize, setSearch, setFilters, setIncludeArchived, clearFilters, clearApplications } = jobSlice.actions;
 export default jobSlice.reducer;
