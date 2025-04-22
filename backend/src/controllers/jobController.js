@@ -4,6 +4,15 @@ const pool = require("../config/db");
 const Applicant = require("../models/Applicant");
 const Notification = require("../models/Notification");
 
+// Import queryWithTimeout from app.js (or define here if not accessible)
+const queryWithTimeout = async (query, params, timeout = 10000) => {
+  const queryPromise = pool.query(query, params);
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Database query timed out')), timeout);
+  });
+  return Promise.race([queryPromise, timeoutPromise]);
+};
+
 const createJob = async (req, res) => {
   const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
   const employerId = req.user.userId;
@@ -78,19 +87,26 @@ const getJobsByEmployer = async (req, res) => {
     if (req.user.user_type !== "employer") {
       return res.status(403).json({ message: "Only employers can view their jobs" });
     }
-    const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived } = req.query;
+    const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived = "false" } = req.query;
 
     let query = "SELECT * FROM jobs WHERE employer_id = ?";
     let countQuery = "SELECT COUNT(*) as total FROM jobs WHERE employer_id = ?";
     const queryParams = [req.user.userId];
     const countParams = [req.user.userId];
 
+    query += " AND is_archived = ?";
+    countQuery += " AND is_archived = ?";
+    const isArchived = includeArchived === "true" ? 1 : 0;
+    queryParams.push(isArchived);
+    countParams.push(isArchived);
+
     if (search) {
-      query += " AND (title LIKE ? OR description LIKE ?)";
-      countQuery += " AND (title LIKE ? OR description LIKE ?)";
-      const searchParam = `%${search}%`;
-      queryParams.push(searchParam, searchParam);
-      countParams.push(searchParam, searchParam);
+      // Use MATCH ... AGAINST for full-text search
+      query += " AND MATCH(title, description) AGAINST (? IN BOOLEAN MODE)";
+      countQuery += " AND MATCH(title, description) AGAINST (? IN BOOLEAN MODE)";
+      const searchParam = `${search}*`; // Add wildcard for partial matches
+      queryParams.push(searchParam);
+      countParams.push(searchParam);
     }
 
     if (job_type) {
@@ -136,16 +152,11 @@ const getJobsByEmployer = async (req, res) => {
       }
     }
 
-    if (!includeArchived) {
-      query += " AND is_archived = 0";
-      countQuery += " AND is_archived = 0";
-    }
-
     query += " LIMIT ? OFFSET ?";
     queryParams.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
 
-    const [jobs] = await pool.query(query, queryParams);
-    const [[{ total }]] = await pool.query(countQuery, countParams);
+    const [jobs] = await queryWithTimeout(query, queryParams, 10000);
+    const [[{ total }]] = await queryWithTimeout(countQuery, countParams, 5000);
 
     res.status(200).json({
       jobs,
@@ -155,7 +166,7 @@ const getJobsByEmployer = async (req, res) => {
     });
   } catch (error) {
     console.error("Get jobs by employer error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", details: error.message });
   }
 };
 
@@ -199,9 +210,10 @@ const applyForJob = async (req, res) => {
 
     console.log("Applying for job with userId:", req.user.userId);
 
-    const [jobs] = await pool.query(
+    const [jobs] = await queryWithTimeout(
       "SELECT * FROM jobs WHERE slug = ? AND status = 'open'",
-      [slug]
+      [slug],
+      5000
     );
     const job = jobs[0];
     if (!job) {

@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchNotifications } from "../../features/notification/notificationSlice";
+import { fetchNotifications, resetNotificationStatus } from "../../features/notification/notificationSlice";
 import { logout } from "../../features/auth/authSlice";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
-import styles from "./NotificationsPage.module.css"; // Create this CSS module if needed
+import styles from "./NotificationsPage.module.css";
 
 function NotificationsPage() {
   const dispatch = useDispatch();
@@ -25,11 +25,13 @@ function NotificationsPage() {
     let isCancelled = false;
 
     const fetchData = async () => {
+      console.log("NotificationsPage: Dispatching fetchNotifications");
       try {
-        await dispatch(fetchNotifications()).unwrap();
+        const result = await dispatch(fetchNotifications()).unwrap();
+        console.log("NotificationsPage: fetchNotifications result:", result);
       } catch (err) {
         if (isCancelled) return;
-        console.error("Error fetching notifications:", err);
+        console.error("NotificationsPage: Error fetching notifications:", err);
         if (
           err === "No token provided" ||
           err === "Invalid token" ||
@@ -48,6 +50,8 @@ function NotificationsPage() {
     };
   }, [dispatch, authStatus, authError, navigate]);
 
+  console.log("NotificationsPage: Current state:", { notificationStatus, notifications, notificationError });
+
   if (authStatus === "loading") {
     return <LoadingSpinner />;
   }
@@ -58,9 +62,9 @@ function NotificationsPage() {
 
       {notificationStatus === "loading" && <p>Loading notifications...</p>}
       {notificationError && <p className={styles.error}>{notificationError}</p>}
-      {notifications.length === 0 ? (
+      {notificationStatus === "succeeded" && notifications.length === 0 ? (
         <p>No new notifications.</p>
-      ) : (
+      ) : notificationStatus === "succeeded" ? (
         <ul className={styles.notificationList}>
           {notifications.map((notification) => (
             <li key={notification.id} className={styles.notificationItem}>
@@ -68,7 +72,7 @@ function NotificationsPage() {
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }
