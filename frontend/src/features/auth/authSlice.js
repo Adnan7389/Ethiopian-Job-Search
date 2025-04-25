@@ -32,7 +32,6 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { re
     return rejectWithValue('No token found');
   }
 
-  // Check token expiration client-side
   try {
     const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000;
@@ -71,19 +70,66 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
 });
 
 export const resendCode = createAsyncThunk('auth/resendCode', async (email, { rejectWithValue }) => {
+  if (!email) {
+    return rejectWithValue('Email is required to resend code');
+  }
   try {
     const response = await api.post('/auth/resend-code', { email });
+    console.log('resendCode API response:', response.data);
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.error || error.message);
+    console.error('resendCode error:', error.response?.data || error.message);
+    return rejectWithValue(error.response?.data?.error || error.message || 'Failed to resend code');
   }
 });
 
 export const verifyCode = createAsyncThunk('auth/verifyCode', async ({ email, code }, { rejectWithValue }) => {
   try {
     const response = await api.post('/auth/verify-code', { email, code });
+    console.log('verifyCode API response:', response.data);
+
+    const { accessToken, refreshToken, user_type, userId, username, email: userEmail, resume_url } = response.data;
+
+    if (!accessToken || !refreshToken || !user_type || !userId || !username || !userEmail) {
+      return rejectWithValue('Missing authentication data in response');
+    }
+
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('userType', user_type);
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('username', username);
+    localStorage.setItem('email', userEmail);
+    localStorage.setItem('resume_url', resume_url || '');
     localStorage.setItem('isVerified', 'true');
-    return response.data;
+
+    return { 
+      token: accessToken, 
+      userType: user_type, 
+      userId, 
+      username, 
+      email: userEmail, 
+      resume_url: resume_url || '' 
+    };
+  } catch (error) {
+    console.error('verifyCode error:', error.response?.data || error.message);
+    return rejectWithValue(error.response?.data?.error || error.message || 'Verification failed');
+  }
+});
+
+export const verifyEmail = createAsyncThunk('auth/verifyEmail', async (token, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/auth/verify-email/${token}`);
+    const { accessToken, refreshToken, user_type, userId, username, email, resume_url } = response.data;
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('userType', user_type);
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('username', username);
+    localStorage.setItem('email', email);
+    localStorage.setItem('resume_url', resume_url || '');
+    localStorage.setItem('isVerified', 'true');
+    return { token: accessToken, userType: user_type, userId, username, email, resume_url };
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || error.message);
   }
@@ -104,7 +150,6 @@ export const login = createAsyncThunk(
         resume_url,
       } = response.data;
 
-      // Persist tokens and user info
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userType', user_type);
@@ -196,6 +241,10 @@ const authSlice = createSlice({
       state.hasInitialized = true;
       state.error = null;
     },
+    clearError: (state) => {
+      state.error = null;
+      state.status = 'idle';
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -204,7 +253,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
-        if (!action.payload) return; // Skip state update if already initialized
+        if (!action.payload) return;
         state.status = 'succeeded';
         state.token = action.payload.token;
         state.userType = action.payload.userType;
@@ -255,11 +304,35 @@ const authSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(verifyCode.fulfilled, (state) => {
+      .addCase(verifyCode.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.token = action.payload.token;
+        state.userType = action.payload.userType;
+        state.userId = action.payload.userId;
+        state.username = action.payload.username;
+        state.email = action.payload.email;
+        state.resume_url = action.payload.resume_url;
         state.isVerified = true;
       })
       .addCase(verifyCode.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(verifyEmail.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(verifyEmail.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.token = action.payload.token;
+        state.userType = action.payload.userType;
+        state.userId = action.payload.userId;
+        state.username = action.payload.username;
+        state.email = action.payload.email;
+        state.resume_url = action.payload.resume_url;
+        state.isVerified = true;
+      })
+      .addCase(verifyEmail.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })

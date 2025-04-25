@@ -83,9 +83,14 @@ const register = async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findByEmailOrUsername(email);
-    if (existingUser) {
-      return res.status(400).json({ error: "Email or username already exists" });
+    const existingEmail = await User.findByEmail(email);
+    if (existingEmail) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    const existingUsername = await User.findByUsername(username);
+    if (existingUsername) {
+      return res.status(400).json({ error: "Username already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -106,6 +111,10 @@ const register = async (req, res) => {
 
 const resendCode = async (req, res) => {
   const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
 
   try {
     const user = await User.findByEmail(email);
@@ -160,6 +169,14 @@ const resendCode = async (req, res) => {
 const verifyCode = async (req, res) => {
   const { email, code } = req.body;
 
+  if (!email || !code) {
+    return res.status(400).json({ error: "Email and code are required" });
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    return res.status(400).json({ error: "Code must be a 6-digit number" });
+  }
+
   try {
     const user = await User.verifyCode(email, code);
     if (!user) {
@@ -172,8 +189,21 @@ const verifyCode = async (req, res) => {
 
     await User.update(user.user_id, { is_verified: true });
     await User.clearVerificationCode(user.user_id);
-    res.json({ message: "Email verified successfully" });
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user);
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user_type: user.user_type,
+      userId: user.user_id,
+      username: user.username,
+      email: user.email,
+      resume_url: user.resume_url || null,
+    });
   } catch (error) {
+    console.error("Verify code error:", error.message);
     res.status(500).json({ error: "Verification failed", details: error.message });
   }
 };
@@ -268,7 +298,6 @@ const resetPassword = async (req, res) => {
 const validateToken = async (req, res) => {
   try {
     const { userId, user_type } = req.user;
-    console.log("validateToken: Validating user:", { userId, user_type });
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -295,7 +324,6 @@ const refreshToken = async (req, res) => {
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    console.log("refreshToken: Decoded refresh token:", decoded);
     const [rows] = await db.execute(
       "SELECT * FROM refresh_tokens WHERE token = ? AND revoked = FALSE AND expires_at > NOW()",
       [refreshToken]

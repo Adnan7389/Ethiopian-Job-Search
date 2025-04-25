@@ -50,6 +50,9 @@ const Navbar = () => {
                 <Link to="/notifications" className={styles.link} onClick={() => setIsMenuOpen(false)}>Notifications</Link>
               </li>
               <li>
+                <Link to="/profile" className={styles.link} onClick={() => setIsMenuOpen(false)}>Profile</Link>
+              </li>
+              <li>
                 <button
                   type="button"
                   onClick={handleLogout}

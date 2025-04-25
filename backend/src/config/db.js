@@ -7,7 +7,7 @@ const mysql = require('mysql2/promise');
      database: process.env.DB_NAME || 'ethiopian_job_search',
      waitForConnections: true,
      connectionLimit: 20,
-     queueLimit: 0,
+     queueLimit: 50,
    });
 
    // Log pool errors
