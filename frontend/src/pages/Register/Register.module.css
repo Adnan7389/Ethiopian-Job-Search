@@ -27,13 +27,18 @@
   box-shadow: var(--shadow-md);
 }
 
-.error {
+/* .error {
   color: var(--danger);
   font-size: var(--font-size-sm);
   text-align: center;
   margin-bottom: var(--space-1);
+} */
+.error {
+  color: red;
+  font-size: 0.9rem;
+  margin: 10px 0;
+  text-align: center;
 }
-
 .formActions {
   display: flex;
   justify-content: flex-end;

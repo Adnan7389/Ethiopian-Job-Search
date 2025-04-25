@@ -11,14 +11,15 @@ function EnterCode() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
   const email = location.state?.email || "";
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0); // Cooldown timer in seconds
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { resendStatus, resendError, resendMessage } = useSelector((state) => state.auth);
 
-  // Handle cooldown timer
   useEffect(() => {
     let timer;
     if (resendCooldown > 0) {
@@ -29,7 +30,6 @@ function EnterCode() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // Clear resend messages after 5 seconds
   useEffect(() => {
     if (resendMessage || resendError) {
       const timeout = setTimeout(() => {
@@ -58,21 +58,34 @@ function EnterCode() {
 
     try {
       await dispatch(verifyCode({ email, code })).unwrap();
-      navigate("/login", { state: { message: "Email verified successfully. Please log in." } });
+      navigate("/profile", { state: { editMode: true }, replace: true });
     } catch (err) {
-      setError(err || "Verification failed. Please try again.");
+      const errorMessage = typeof err === "string" ? err : err.message || "Verification failed. Please try again.";
+      setError(errorMessage);
+      setCode("");
       setLoading(false);
     }
   };
 
   const handleResendCode = async () => {
-    if (resendCooldown > 0) return; // Prevent resend during cooldown
+    if (resendCooldown > 0 || resendLoading) return;
+
+    if (!email) {
+      setError("Email not provided. Cannot resend code.");
+      return;
+    }
+
+    setResendLoading(true);
+    setError("");
 
     try {
       await dispatch(resendCode(email)).unwrap();
-      setResendCooldown(60); // Start 60-second cooldown
+      setResendCooldown(60);
     } catch (err) {
-      // Error is handled by Redux state (resendError)
+      const errorMessage = typeof err === "string" ? err : err.message || "Failed to resend code. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -80,14 +93,14 @@ function EnterCode() {
     <div className={styles.container}>
       <h1 className={styles.title}>Enter Verification Code</h1>
       <p className={styles.message}>
-        A 6-digit code has been sent to {email}. Please enter it below to verify your email.
+        A 6-digit code has been sent to {email || "your email"}. Please enter it below to verify your email.
       </p>
       <form onSubmit={handleSubmit} className={styles.form}>
         <FormInput
           label="Verification Code"
           type="text"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => setCode(e.target.value.trim())}
           required
           maxLength="6"
           placeholder="123456"
@@ -102,11 +115,11 @@ function EnterCode() {
         <Button
           onClick={handleResendCode}
           variant="secondary"
-          disabled={resendCooldown > 0 || resendStatus === "loading"}
+          disabled={resendCooldown > 0 || resendLoading || resendStatus === "loading"}
         >
           {resendCooldown > 0
             ? `Resend Code (${resendCooldown}s)`
-            : resendStatus === "loading"
+            : resendLoading || resendStatus === "loading"
             ? "Resending..."
             : "Resend Code"}
         </Button>

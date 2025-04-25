@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import FormInput from "../../components/FormInput/FormInput";
@@ -18,30 +18,51 @@ function Register() {
     confirmPassword: "",
     user_type: userType || "job_seeker",
   });
-  const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Debug: Log Redux state changes
+  useEffect(() => {
+    console.log("Register: Redux state - status:", status, "error:", reduxError);
+  }, [status, reduxError]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.username) errors.username = "Username is required";
+    if (!formData.email) errors.email = "Email is required";
+    if (!formData.password) errors.password = "Password is required";
+    if (!formData.confirmPassword) errors.confirmPassword = "Confirm Password is required";
+    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setFormErrors({});
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       setLoading(false);
       return;
     }
 
     try {
+      console.log("Register: Submitting registration request:", formData);
       const result = await dispatch(register(formData)).unwrap();
+      console.log("Register: Registration successful, navigating to /enter-code");
       navigate("/enter-code", { state: { email: result.email } });
     } catch (err) {
-      setError(err || "Registration failed. Please try again.");
+      console.log("Register: Registration failed, error:", err);
+    } finally {
       setLoading(false);
     }
   };
@@ -51,7 +72,7 @@ function Register() {
   };
 
   if (!userType) {
-    navigate('/role-selection');
+    navigate("/role-selection");
     return null;
   }
 
@@ -64,6 +85,7 @@ function Register() {
           name="username"
           value={formData.username}
           onChange={handleChange}
+          error={formErrors.username}
           required
         />
         <FormInput
@@ -72,6 +94,7 @@ function Register() {
           type="email"
           value={formData.email}
           onChange={handleChange}
+          error={formErrors.email}
           required
         />
         <FormInput
@@ -80,6 +103,7 @@ function Register() {
           type="password"
           value={formData.password}
           onChange={handleChange}
+          error={formErrors.password}
           required
         />
         <FormInput
@@ -88,13 +112,17 @@ function Register() {
           type="password"
           value={formData.confirmPassword}
           onChange={handleChange}
+          error={formErrors.confirmPassword}
           required
         />
-        {error && <p className={styles.error}>{error}</p>}
-        {reduxError && <p className={styles.error}>{reduxError}</p>}
+        {reduxError && (
+          <p className={styles.error} style={{ color: "red", margin: "10px 0" }}>
+            {reduxError}
+          </p>
+        )}
         <div className={styles.formActions}>
-          <Button type="submit" variant="primary" disabled={loading}>
-            {loading ? <LoadingSpinner /> : "Register"}
+          <Button type="submit" variant="primary" disabled={loading || status === "loading"}>
+            {loading || status === "loading" ? <LoadingSpinner /> : "Register"}
           </Button>
           <Button type="button" variant="secondary" onClick={handleCancel}>
             Cancel

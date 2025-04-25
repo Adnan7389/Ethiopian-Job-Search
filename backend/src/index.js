@@ -6,7 +6,7 @@ const cron = require("node-cron");
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
-const Job = require('./models/jobModel');
+const profileRoutes = require('./routes/profileRoutes');
 const notifications = require("./routes/notification");
 
 dotenv.config();
@@ -26,12 +26,44 @@ const queryWithTimeout = async (query, params, timeout = 10000) => {
   return Promise.race([queryPromise, timeoutPromise]);
 };
 
+// Handle OPTIONS requests explicitly
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    console.log(`[${new Date().toISOString()}] Handling OPTIONS request for ${req.url}`);
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Authorization,Content-Type');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(200).end();
+    console.log(`[${new Date().toISOString()}] OPTIONS ${req.url} - Status: 200`);
+    return;
+  }
+  console.log(`[${new Date().toISOString()}] Middleware: OPTIONS handler passed for ${req.url}`);
+  next();
+});
+
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
 }));
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Middleware: CORS passed for ${req.url}`);
+  next();
+});
+
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Middleware: express.json passed for ${req.url}`);
+  next();
+});
+
+// Serve static files for uploads
+app.use('/uploads', express.static('uploads'));
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Middleware: Static uploads passed for ${req.url}`);
+  next();
+});
 
 // Log all incoming requests
 app.use((req, res, next) => {
@@ -46,6 +78,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applicants', applicantRoutes);
+app.use('/api/profile', profileRoutes);
 app.use("/api/notifications", notifications);
 
 // Mock email sending function
@@ -107,7 +140,23 @@ const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Set server timeout (20 seconds)
-server.setTimeout(20000, () => {
-  console.log('Server timeout reached');
+// Set server timeout (60 seconds)
+server.setTimeout(60000, (socket) => {
+  const req = socket.parser?.incoming;
+  console.log(`[${new Date().toISOString()}] Server timeout reached for ${req?.method || 'unknown'} ${req?.url || 'unknown'} - Socket state: ${socket.readyState}`);
+});
+
+// Set keep-alive timeout to 10 seconds (default is 5 seconds in Node.js)
+server.keepAliveTimeout = 10000;
+
+// Optional: Disable keep-alive for testing
+// server.headersTimeout = 0; // Disable headers timeout
+// app.set('keepAlive', false); // Note: Express doesn't have a direct keepAlive setting; this would need to be handled via headers
+
+// Log when a socket is created or destroyed for debugging
+server.on('connection', (socket) => {
+  console.log(`[${new Date().toISOString()}] New socket connection`);
+  socket.on('close', () => {
+    console.log(`[${new Date().toISOString()}] Socket closed`);
+  });
 });

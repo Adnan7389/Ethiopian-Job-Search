@@ -6,7 +6,7 @@ const BACKEND_BASE_URL = "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,
-  timeout: 30000, // Ensure this is set
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -32,8 +32,8 @@ api.interceptors.request.use(
     const refreshToken = localStorage.getItem("refreshToken");
 
     const isPublicEndpoint =
-      (config.url === '/jobs' && config.method === 'get') ||
-      (config.url.match(/^\/jobs\/\d+$/) && config.method === 'get');
+      (config.url === "/jobs" && config.method === "get") ||
+      (config.url.match(/^\/jobs\/\d+$/) && config.method === "get");
 
     const isAuthEndpoint =
       config.url === "/auth/login" ||
@@ -93,7 +93,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const log = `API Response Error: ${error.response.status} for ${error.config.url}, Message: ${error.response.data.message}`;
+      const errorMessage =
+        error.response.data.error ||
+        error.response.data.message ||
+        `Error ${error.response.status}`;
+      const log = `API Response Error: ${error.response.status} for ${error.config.url}, Message: ${errorMessage}`;
       console.error(log);
       const existingLogs = localStorage.getItem("apiLogs")
         ? JSON.parse(localStorage.getItem("apiLogs"))
@@ -112,7 +116,9 @@ api.interceptors.response.use(
         ];
 
         const shouldSkipRedirect = skipRedirectPatterns.some((pattern) =>
-          typeof pattern === "string" ? pattern === requestUrl : pattern.test(requestUrl)
+          typeof pattern === "string"
+            ? pattern === requestUrl
+            : pattern.test(requestUrl)
         );
 
         if (!shouldSkipRedirect) {
@@ -122,8 +128,13 @@ api.interceptors.response.use(
           }
         }
       }
+      // Reject with a string message for the frontend to use directly
+      return Promise.reject(errorMessage);
     }
-    return Promise.reject(error);
+    // If there's no response (e.g., network error), reject with a generic message
+    const errorMessage = error.message || "An unexpected error occurred";
+    console.error(`API Error (No Response): ${errorMessage}`);
+    return Promise.reject(errorMessage);
   }
 );
 

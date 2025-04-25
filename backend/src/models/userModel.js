@@ -4,8 +4,8 @@ const bcrypt = require("bcryptjs");
 const User = {
   async create({ username, email, password, user_type }) {
     const [result] = await pool.query(
-      "INSERT INTO users (username, email, password, user_type) VALUES (?, ?, ?, ?)",
-      [username, email, password, user_type]
+      "INSERT INTO users (username, email, password, user_type, is_verified) VALUES (?, ?, ?, ?, ?)",
+      [username, email, password, user_type, false]
     );
     return result.insertId;
   },
@@ -15,6 +15,11 @@ const User = {
       "SELECT * FROM users WHERE email = ? OR username = ?",
       [identifier, identifier]
     );
+    return rows[0];
+  },
+  
+  async findByUsername(username) {
+    const [rows] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
     return rows[0];
   },
 

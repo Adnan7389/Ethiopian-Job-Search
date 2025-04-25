@@ -323,7 +323,7 @@ function EmployerDashboard() {
               <option value="mid-level">Mid-Level</option>
               <option value="senior">Senior</option>
             </select>
-            <select name="status" value={filters.status} on獻Change={handleFilterChange}>
+            <select name="status" value={filters.status} onChange={handleFilterChange}>
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="closed">Closed</option>

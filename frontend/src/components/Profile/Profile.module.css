@@ -1,0 +1,196 @@
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2rem;
+  }
+  
+  .profilePictureSection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .profilePicture {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+  }
+  
+  .fileInput {
+    margin-bottom: 0.5rem;
+  }
+  
+  .uploadButton {
+    margin-top: 0.5rem;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .formGroup label {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .input,
+  .textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+  
+  .input:focus,
+  .textarea:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+  
+  .textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .inputGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .inputGroup .input {
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .addButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+  }
+  
+  .listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .removeButton {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .resumeActions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .error {
+    color: #dc3545;
+    font-size: 0.875rem;
+  }
+  
+  .success {
+    color: #28a745;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+  
+  .submitButton {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .logoutButton {
+    margin-top: 2rem;
+    width: 100%;
+  }
+  
+  .lastUpdated {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    margin-top: 2rem;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .container {
+      margin: 1rem;
+      padding: 1rem;
+    }
+  
+    .profilePictureSection {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .profilePicture {
+      width: 80px;
+      height: 80px;
+    }
+  
+    .formGroup label {
+      font-size: 0.9rem;
+    }
+  
+    .input,
+    .textarea {
+      font-size: 0.9rem;
+      padding: 0.5rem;
+    }
+  
+    .inputGroup {
+      flex-direction: column;
+    }
+  
+    .inputGroup .input {
+      width: 100%;
+    }
+  
+    .addButton,
+    .removeButton {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+    }
+  
+    .submitButton,
+    .logoutButton {
+      font-size: 0.9rem;
+      padding: 0.5rem;
+    }
+  }
