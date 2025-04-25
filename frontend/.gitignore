@@ -22,5 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-backend/uploads/
+# Ignore everything in uploads folder
+backend/uploads/*
+# But not .gitkeep
+!backend/uploads/.gitkeep
 
