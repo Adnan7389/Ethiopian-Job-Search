@@ -6,6 +6,7 @@ const cron = require("node-cron");
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const notifications = require("./routes/notification");
 
@@ -78,6 +79,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applicants', applicantRoutes);
+app.use('/api/applications', applicationRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/notifications", notifications);
 
