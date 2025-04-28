@@ -16,6 +16,7 @@ import EmployerDashboard from "./pages/EmployerDashboard/EmployerDashboard";
 import NotificationsPage from "./pages/NotificationsPage/NotificationsPage";
 import JobDetail from "./pages/JobDetail/JobDetail";
 import JobApplication from "./pages/JobApplication/JobApplication";
+import MyApplications from './pages/MyApplications/MyApplications';
 import Profile from "./components/Profile/Profile";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { initializeAuth } from "./features/auth/authSlice";
@@ -114,6 +115,7 @@ function App() {
           </Route>
           <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/my-applications" element={<PrivateRoute allowedRoles={["job_seeker"]}><MyApplications /></PrivateRoute>} />
         </Routes>
       </div>
     </ErrorBoundary>
