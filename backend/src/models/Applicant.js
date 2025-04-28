@@ -33,6 +33,18 @@ const Applicant = {
     return rows[0];
   },
 
+  async findByJobSeekerId(job_seeker_id) {
+    const [rows] = await pool.query(
+      `SELECT a.*, j.title AS job_title, j.company_name 
+       FROM applicants a 
+       JOIN jobs j ON a.job_id = j.job_id 
+       WHERE a.job_seeker_id = ?
+       ORDER BY a.applied_at DESC`,
+      [job_seeker_id]
+    );
+    return rows;
+  },
+  
   async update(applicant_id, updates) {
     const [result] = await pool.query(
       'UPDATE applicants SET ? WHERE applicant_id = ?',
