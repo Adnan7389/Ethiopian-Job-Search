@@ -45,6 +45,24 @@ const Applicant = {
     return rows;
   },
   
+  async updateStatus(applicant_id, status) {
+    const [result] = await pool.query(
+      'UPDATE applicants SET status = ? WHERE applicant_id = ?',
+      [status, applicant_id]
+    );
+    return result.affectedRows;
+  },
+  
+  async scheduleInterview(applicant_id, { date, time, location }) {
+    const [result] = await pool.query(
+      `UPDATE applicants 
+       SET interview_date = ?, interview_time = ?, interview_location = ?, status = 'scheduled'
+       WHERE applicant_id = ?`,
+      [date, time, location, applicant_id]
+    );
+    return result.affectedRows;
+  },
+  
   async update(applicant_id, updates) {
     const [result] = await pool.query(
       'UPDATE applicants SET ? WHERE applicant_id = ?',
