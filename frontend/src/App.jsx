@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from "./components/Navbar/Navbar";
 import RoleSelection from "./pages/RoleSelection/RoleSelection";
 import Login from "./pages/Login/Login";
@@ -17,6 +19,7 @@ import NotificationsPage from "./pages/NotificationsPage/NotificationsPage";
 import JobDetail from "./pages/JobDetail/JobDetail";
 import JobApplication from "./pages/JobApplication/JobApplication";
 import MyApplications from './pages/MyApplications/MyApplications';
+import ApplicantsPage from "./pages/ApplicantsPage/ApplicantsPage";
 import Profile from "./components/Profile/Profile";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { initializeAuth } from "./features/auth/authSlice";
@@ -112,11 +115,13 @@ function App() {
           >
             <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
             <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
+            <Route path="/dashboard/job/:jobId/applicants" element={<ApplicantsPage />} />
           </Route>
           <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/my-applications" element={<PrivateRoute allowedRoles={["job_seeker"]}><MyApplications /></PrivateRoute>} />
         </Routes>
+        <ToastContainer position="top-right" autoClose={3000} />
       </div>
     </ErrorBoundary>
   );
