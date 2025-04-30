@@ -1,0 +1,46 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modalContent {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+  }
+  
+  .modalContent h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  .modalContent input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .cancel {
+    background-color: #ccc;
+  }
+  
+  .error {
+    color: red;
+    font-size: 0.9rem;
+  }
+  
