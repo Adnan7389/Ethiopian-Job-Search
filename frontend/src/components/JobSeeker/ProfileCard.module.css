@@ -1,0 +1,7 @@
+.card {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius:8px; padding:1rem;
+  }
+  .card a { color: var(--primary); text-decoration: none; }
+  

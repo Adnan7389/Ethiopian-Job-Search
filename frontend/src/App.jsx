@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar/Navbar";
 import RoleSelection from "./pages/RoleSelection/RoleSelection";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
+import JobSeekerDashboard from './pages/JobSeekerDashboard/JobSeekerDashboard';
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword/ResetPassword";
 import EnterCode from "./pages/EnterCode/EnterCode";
@@ -111,8 +112,12 @@ function App() {
           />
           <Route
             path="/dashboard"
-            element={<PrivateRoute allowedRoles={["employer"]}><EmployerDashboard /></PrivateRoute>}
-          >
+            element={
+              <PrivateRoute>
+                {userType === 'employer' ? <EmployerDashboard /> : <JobSeekerDashboard />}
+              </PrivateRoute>
+            }
+           >
             <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
             <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
             <Route path="/dashboard/job/:jobId/applicants" element={<ApplicantsPage />} />
