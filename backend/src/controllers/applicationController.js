@@ -2,15 +2,15 @@ const Applicant = require('../models/Applicant'); // Use your Applicant model!
 
 const getMyApplications = async (req, res) => {
   try {
-    const jobSeekerId = req.user.user_id; // Get logged-in user's ID
+    
+    const jobSeekerId = req.user.userId;
 
-    // Fetch all applications by job seeker using the model
     const applications = await Applicant.findByJobSeekerId(jobSeekerId);
 
-    res.status(200).json(applications);
+    return res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching my applications:', error);
-    res.status(500).json({ message: 'Server Error' });
+    return res.status(500).json({ message: 'Server Error' });
   }
 };
 
@@ -58,5 +58,35 @@ const scheduleInterview = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+const getApplicationsSummary = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // from authMiddleware
+    const rows = await Applicant.summaryByJobSeeker(userId);
 
-module.exports = { getMyApplications, scheduleInterview, updateApplicationStatus};
+    // initialize all statuses to zero
+    const summary = {
+      total: 0,
+      pending: 0,
+      shortlisted: 0,
+      scheduled: 0,
+      interviewed: 0,
+      accepted: 0,
+      rejected: 0
+    };
+
+    // accumulate counts
+    rows.forEach(({ status, count }) => {
+      if (status in summary) {
+        summary[status] = count;
+        summary.total += count;
+      }
+    });
+
+    res.json(summary);
+  } catch (error) {
+    console.error('Error fetching applications summary:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { getMyApplications, scheduleInterview, updateApplicationStatus, getApplicationsSummary};

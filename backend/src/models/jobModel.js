@@ -37,6 +37,10 @@ class Job {
       updated_at,
     } = data;
 
+    const [[{ company_name }]] = await queryWithTimeout(
+      `SELECT company_name FROM employer_profiles WHERE user_id = ?`,
+      [data.employer_id]
+    );
     // Generate a unique slug based on title and location
     const baseSlug = `${title}-${location}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").trim();
     let slug = baseSlug;
@@ -53,8 +57,8 @@ class Job {
     const [result] = await queryWithTimeout(
       `INSERT INTO jobs (
         employer_id, slug, title, description, location, salary_range, job_type, industry,
-        experience_level, expires_at, status, is_archived, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        experience_level, expires_at, status, is_archived, created_at, updated_at, company_name
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         employer_id,
         slug,
@@ -70,6 +74,7 @@ class Job {
         is_archived || false,
         created_at || new Date(),
         updated_at || new Date(),
+        company_name
       ],
       5000
     );
@@ -77,13 +82,13 @@ class Job {
   }
 
   async findById(jobId) {
-    const [rows] = await queryWithTimeout("SELECT * FROM jobs WHERE job_id = ?", [jobId], 5000);
+    const [rows] = await queryWithTimeout("SELECT *, company_name FROM jobs WHERE job_id = ?", [jobId], 5000);
     return rows[0];
   }
 
   async findBySlug(slug) {
     const [rows] = await queryWithTimeout(
-      "SELECT * FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())",
+      "SELECT *, company_name FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())",
       [slug],
       5000
     );
@@ -219,6 +224,13 @@ class Job {
       status,
     } = data;
 
+    if (updates.employer_id) {
+      const [[{ company_name }]] = await queryWithTimeout(
+        `SELECT company_name FROM employer_profiles WHERE user_id = ?`,
+        [updates.employer_id]
+      );
+      updates.company_name = company_name;
+    }
     // Update slug if title changes
     let newSlug = slug;
     if (title) {
@@ -250,6 +262,7 @@ class Job {
         experience_level = COALESCE(?, experience_level),
         expires_at = COALESCE(?, expires_at),
         status = COALESCE(?, status),
+        company_name = COALESCE(?, company_name),   -- ← include here
         updated_at = ?
       WHERE slug = ?`,
       [
@@ -263,6 +276,7 @@ class Job {
         experience_level || null,
         expires_at || null,
         status || null,
+        updates.company_name,
         new Date(),
         slug,
       ],

@@ -35,13 +35,16 @@ const Applicant = {
 
   async findByJobSeekerId(job_seeker_id) {
     const [rows] = await pool.query(
-      `SELECT a.*, j.title AS job_title, j.company_name 
-       FROM applicants a 
-       JOIN jobs j ON a.job_id = j.job_id 
-       WHERE a.job_seeker_id = ?
-       ORDER BY a.applied_at DESC`,
-      [job_seeker_id]
-    );
+         `SELECT 
+             a.*, 
+             j.title  AS job_title, 
+             j.company_name 
+          FROM applicants a 
+          JOIN jobs j ON a.job_id = j.job_id 
+          WHERE a.job_seeker_id = ?
+          ORDER BY a.applied_at DESC`,
+         [job_seeker_id]
+       );
     return rows;
   },
   
@@ -77,6 +80,18 @@ const Applicant = {
       [applicant_id]
     );
     return result.affectedRows;
+  },
+
+  // New: count applications per status for a given job seeker
+  async summaryByJobSeeker(job_seeker_id) {
+    const [rows] = await pool.query(
+      `SELECT status, COUNT(*) AS count
+       FROM applicants
+       WHERE job_seeker_id = ?
+       GROUP BY status`,
+      [job_seeker_id]
+    );
+    return rows; // e.g. [ { status: 'pending', count: 5 }, … ]
   }
 };
 

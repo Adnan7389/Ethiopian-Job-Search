@@ -35,6 +35,14 @@ const Notification = {
     } catch (error) {
       throw new Error(`Failed to fetch notifications: ${error.message}`);
     }
+  },
+
+  async markAllAsRead(userId) {
+    const [result] = await pool.query(
+      "UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0",
+      [userId]
+    );
+    return result.affectedRows; // number updated
   }
 };
 
