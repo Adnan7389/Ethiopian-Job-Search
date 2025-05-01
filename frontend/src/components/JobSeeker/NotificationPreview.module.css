@@ -1,0 +1,12 @@
+.container { position: relative; display: inline-block; }
+.icon { background:none; border:none; cursor:pointer; font-size:1.2rem; }
+.dropdown {
+  position: absolute; right:0; top:100%;
+  background: var(--white); border:1px solid var(--gray-light);
+  border-radius:4px; width:240px; padding:0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+.markAll { font-size:0.8rem; background:none; border:none; color:var(--primary); cursor:pointer; }
+.unread { background: var(--gray-lighter); padding:0.5rem; margin:0.25rem 0; }
+.read   { padding:0.5rem; margin:0.25rem 0; color: var(--gray); }
+.dropdown a { display:block; text-align:center; margin-top:0.5rem; }
