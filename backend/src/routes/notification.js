@@ -1,13 +1,13 @@
 const express = require("express");
-const router = express.Router();
-const notificationController = require("../controllers/notificationController");
+const { getNotifications, markAllAsRead } = require("../controllers/notificationController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-console.log("Setting up /api/notifications route");
-router.get("/", (req, res, next) => {
-  console.log("Reached /api/notifications route");
-  console.log("Headers:", req.headers);
-  next();
-}, authMiddleware(), notificationController.getNotifications);
+const router = express.Router();
+
+// now allows any authenticated user
+router.get("/", authMiddleware(), getNotifications);
+
+// new endpoint
+router.put("/mark-all-read", authMiddleware(), markAllAsRead);
 
 module.exports = router;

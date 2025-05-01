@@ -8,9 +8,8 @@ const router = express.Router();
 
 // Get logged-in job seeker's applications
 router.get('/my-applications', authMiddleware("job_seeker"), applicantController.getMyApplications);
-
 router.put('/:id/status', authMiddleware("employer"), applicantController.updateApplicationStatus);
-
 router.put('/:id/schedule', authMiddleware("employer"), applicantController.scheduleInterview);
+router.get('/summary', authMiddleware("job_seeker"), applicantController.getApplicationsSummary);
 
 module.exports = router;
