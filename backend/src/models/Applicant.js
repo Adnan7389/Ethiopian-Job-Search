@@ -85,13 +85,15 @@ const Applicant = {
   // New: count applications per status for a given job seeker
   async summaryByJobSeeker(job_seeker_id) {
     const [rows] = await pool.query(
-      `SELECT status, COUNT(*) AS count
+      `SELECT 
+          status AS status, 
+          COUNT(*) AS count
        FROM applicants
        WHERE job_seeker_id = ?
        GROUP BY status`,
       [job_seeker_id]
     );
-    return rows; // e.g. [ { status: 'pending', count: 5 }, … ]
+    return rows;
   }
 };
 

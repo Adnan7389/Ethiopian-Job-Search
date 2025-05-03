@@ -46,14 +46,15 @@ const MyApplications = () => {
     <div className={styles.container}>
       <h2>My Applications</h2>
       <div className={styles.list}>
-        {applications.map((app) => (
-          <div key={app.id} className={styles.card}>
-            <h3>{app.Job?.title}</h3>
-            <p><strong>Company:</strong> {app.Job?.companyName}</p>
-            <p><strong>Status:</strong> {app.status}</p>
-            <p><strong>Applied on:</strong> {new Date(app.createdAt).toLocaleDateString()}</p>
-          </div>
-        ))}
+      {applications.map((app) => (
+        <div key={app.applicant_id} className={styles.card}>
+          <h3>{app.job_title}</h3>
+          <p><strong>Company:</strong> {app.company_name}</p>
+          <p><strong>Status:</strong> {app.status}</p>
+          <p><strong>Applied on:</strong> {new Date(app.applied_at).toLocaleDateString()}</p>
+        </div>
+      ))}
+
       </div>
     </div>
   );

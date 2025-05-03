@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -31,7 +31,7 @@ const JobSeekerDashboard = () => {
 
         <nav className={styles.links}>
           <a href="/job-search">Search Jobs</a>
-          <a href="/profile">Edit Profile</a>
+          <Link to="/profile" className={styles.link} onClick={() => setIsMenuOpen(false)}>Profile</Link>
           <a href="/settings">Settings</a>
         </nav>
       </aside>

@@ -60,9 +60,10 @@ const scheduleInterview = async (req, res) => {
 };
 const getApplicationsSummary = async (req, res) => {
   try {
-    const userId = req.user.user_id; // from authMiddleware
+    const userId = req.user.userId; // from authMiddleware
     const rows = await Applicant.summaryByJobSeeker(userId);
 
+    console.log('📊 Raw summary rows from DB:', rows); 
     // initialize all statuses to zero
     const summary = {
       total: 0,
@@ -74,14 +75,16 @@ const getApplicationsSummary = async (req, res) => {
       rejected: 0
     };
 
-    // accumulate counts
+    // normalize and accumulate counts
     rows.forEach(({ status, count }) => {
-      if (status in summary) {
-        summary[status] = count;
+      const key = status?.toLowerCase(); // Normalize
+      if (key in summary) {
+        summary[key] = count;
         summary.total += count;
       }
     });
 
+    console.log('✅ Final summary object:', summary); 
     res.json(summary);
   } catch (error) {
     console.error('Error fetching applications summary:', error);
