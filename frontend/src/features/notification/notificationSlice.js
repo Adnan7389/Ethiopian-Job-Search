@@ -46,6 +46,10 @@ const notificationSlice = createSlice({
       state.notificationStatus = "idle";
       state.notificationError = null;
     },
+
+    receiveNotification: (state, action) => {
+    state.notifications.unshift(action.payload);
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -64,5 +68,5 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { resetNotificationStatus } = notificationSlice.actions;
+export const { resetNotificationStatus, receiveNotification } = notificationSlice.actions;
 export default notificationSlice.reducer;

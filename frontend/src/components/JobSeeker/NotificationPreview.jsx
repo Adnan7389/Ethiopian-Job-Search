@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchNotifications, /* already have receiveNotification from socket */ } from '../../features/notification/notificationSlice';
 import styles from './NotificationPreview.module.css';
 
 const NotificationPreview = () => {
-  const [notes, setNotes] = useState([]);
-  const [open, setOpen] = useState(false);
+   const dispatch = useDispatch();
+   const notes = useSelector(state => state.notification.notifications);
+   const [open, setOpen] = useState(false);
+  
+   const loadNotifications = () => {
+        dispatch(fetchNotifications());
+      };
 
-  const fetchNotifications = async () => {
-    const res = await api.get('/notifications?limit=3');
-    setNotes(res.data);
-  };
-
-  useEffect(() => { fetchNotifications(); }, []);
+  useEffect(() => { loadNotifications(); }, []);
 
   const markAllRead = async () => {
     await api.put('/notifications/mark-all-read');
-    fetchNotifications();
+    dispatch(fetchNotifications());
   };
 
   return (
@@ -30,10 +32,11 @@ const NotificationPreview = () => {
             <p>No notifications</p>
           ) : (
             notes.map(n => (
-              <div key={n.id} className={n.is_read ? styles.read : styles.unread}>
-                <small>{new Date(n.created_at).toLocaleString()}</small>
-                <p>{n.payload.message}</p>
-              </div>
+              <div key={n.id} className={n.is_read ? styles.read : styles.unread}>              
+              <small>{new Date(n.created_at).toLocaleString()}</small>
+              {/* use n.message, not n.payload.message */}
+               <p>{n.message}</p>
+             </div>
             ))
           )}
           <a href="/notifications">View all</a>

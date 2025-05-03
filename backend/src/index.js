@@ -1,8 +1,12 @@
 const express = require('express');
+const http = require('http');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
 const cors = require('cors');
 const cron = require("node-cron");
+const { initSocket } = require('./socket');
+const jwt = require('jsonwebtoken');
+const Job = require('./models/jobModel');
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
@@ -137,10 +141,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Server error', details: err.message });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const server = http.createServer(app);
+
+const io = initSocket(server);
+
+server.listen(PORT, () => {
+   console.log(`🚀 Server and Socket.IO running on port ${PORT}`);
+  });
 
 // Set server timeout (60 seconds)
 server.setTimeout(60000, (socket) => {
@@ -148,14 +155,8 @@ server.setTimeout(60000, (socket) => {
   console.log(`[${new Date().toISOString()}] Server timeout reached for ${req?.method || 'unknown'} ${req?.url || 'unknown'} - Socket state: ${socket.readyState}`);
 });
 
-// Set keep-alive timeout to 10 seconds (default is 5 seconds in Node.js)
 server.keepAliveTimeout = 10000;
 
-// Optional: Disable keep-alive for testing
-// server.headersTimeout = 0; // Disable headers timeout
-// app.set('keepAlive', false); // Note: Express doesn't have a direct keepAlive setting; this would need to be handled via headers
-
-// Log when a socket is created or destroyed for debugging
 server.on('connection', (socket) => {
   console.log(`[${new Date().toISOString()}] New socket connection`);
   socket.on('close', () => {

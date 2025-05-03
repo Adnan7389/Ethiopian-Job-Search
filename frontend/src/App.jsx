@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 import Navbar from "./components/Navbar/Navbar";
 import RoleSelection from "./pages/RoleSelection/RoleSelection";
 import Login from "./pages/Login/Login";
@@ -25,6 +26,11 @@ import Profile from "./components/Profile/Profile";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { initializeAuth } from "./features/auth/authSlice";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
+
+// 🧩 ADD THESE:
+import { initSocket } from "./services/socket";
+import { receiveNotification } from "./features/notification/notificationSlice";
+import { store } from "./store";
 
 function PrivateRoute({ children, allowedRoles }) {
   const { token, userType, isVerified, status, hasInitialized } = useSelector((state) => state.auth);
@@ -64,6 +70,7 @@ function App() {
   const location = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
 
+  // ✅ INIT AUTH ON LOAD
   useEffect(() => {
     if (hasInitialized || authChecked) {
       setAuthChecked(true);
@@ -78,6 +85,25 @@ function App() {
         setAuthChecked(true);
       });
   }, [dispatch, hasInitialized, authChecked]);
+
+  // ✅ INIT SOCKET.IO WHEN LOGGED IN
+  useEffect(() => {
+    if (token && userType && isVerified) {
+      const socket = initSocket();
+
+      if (!socket) return;
+
+      socket.on("notification", (notification) => {
+        store.dispatch(receiveNotification(notification));
+        toast.info(notification.message);
+      });
+
+      return () => {
+        socket.off("notification");
+        // socket.disconnect();
+      };
+    }
+  }, [token, userType, isVerified]);
 
   if (!authChecked || status === "loading") {
     return <LoadingSpinner />;
