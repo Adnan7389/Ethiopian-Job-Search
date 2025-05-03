@@ -5,7 +5,7 @@ const Notification = require("../models/Notification");
 exports.getNotifications = async (req, res) => {
   try {
     // req.user is guaranteed by authMiddleware
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
 
     // parse optional ?limit=3
     const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
@@ -27,7 +27,7 @@ exports.getNotifications = async (req, res) => {
 
 exports.markAllAsRead = async (req, res) => {
   try {
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
     const count = await Notification.markAllAsRead(userId);
     return res.json({ message: `Marked ${count} notifications as read` });
   } catch (error) {

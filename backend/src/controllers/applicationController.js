@@ -1,4 +1,6 @@
 const Applicant = require('../models/Applicant'); // Use your Applicant model!
+const Notification = require('../models/Notification');
+const { getIO } = require('../socket');
 
 const getMyApplications = async (req, res) => {
   try {
@@ -26,6 +28,23 @@ const updateApplicationStatus = async (req, res) => {
     }
 
     const affectedRows = await Applicant.updateStatus(id, status);
+    // Fetch applicant to get job_seeker_id
+      const application = await Applicant.findById(id);
+      if (application) {
+        const userId = application.job_seeker_id;
+        const message = `Your application status was updated to "${status}"`;
+
+        const saved = await Notification.create({ user_id: userId, message });
+        getIO().to(userId.toString()).emit('notification', {
+          id: saved.id,
+          message,
+          is_read: false,
+          created_at: new Date().toISOString(),
+          payload: { status },
+        });
+        console.log('📤 Emitting notification to:', userId.toString());
+      }
+
     if (affectedRows === 0) {
       return res.status(404).json({ message: 'Applicant not found' });
     }
@@ -51,13 +70,32 @@ const scheduleInterview = async (req, res) => {
     if (affectedRows === 0) {
       return res.status(404).json({ message: 'Applicant not found' });
     }
+    
+    // now fetch & notify
+    const application = await Applicant.findById(id);
+     if (application) {
+       const userId = application.job_seeker_id;
+       const note = `Your interview is scheduled on ${date} at ${time} (${location})`;
+       const saved = await Notification.create({ user_id: userId, message: note });
+       getIO().to(userId.toString()).emit('notification', {
+       id: saved.id,
+       message: note,
+       is_read: false,
+       created_at: new Date().toISOString(),
+       payload: { date, time, location },
+     });
+   }
 
-    res.json({ message: 'Interview scheduled successfully' });
+   return res.json({ message: 'Interview scheduled successfully' });
+
   } catch (error) {
     console.error('Error scheduling interview:', error);
-    res.status(500).json({ message: 'Server error' });
+    if (!res.headersSent) {
+      return res.status(500).json({ message: 'Server error' });
+    }
   }
 };
+
 const getApplicationsSummary = async (req, res) => {
   try {
     const userId = req.user.userId; // from authMiddleware
