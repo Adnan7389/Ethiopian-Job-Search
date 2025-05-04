@@ -17,6 +17,7 @@ import {
   fetchApplicationsByJobId,
   clearApplications,
 } from "../../features/job/jobSlice";
+import NotificationPreview from '../../components/JobSeeker/NotificationPreview';
 import { logout } from "../../features/auth/authSlice";
 import styles from "./EmployerDashboard.module.css";
 
@@ -119,7 +120,7 @@ function EmployerDashboard() {
       const jobsToFetch = jobs.filter(
         (job) =>
           applications[String(job.job_id)] === undefined &&
-          !fetchingApplications.includes(String(job.job_id)) // Changed from .has to .includes
+          !fetchingApplications.includes(String(job.job_id))
       );
 
       if (jobsToFetch.length === 0) return;
@@ -259,20 +260,33 @@ function EmployerDashboard() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Employer Dashboard</h1>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Employer Dashboard</h1>
+        <Button
+          onClick={handlePostNewJob}
+          variant="primary"
+          className={styles.postButton}
+          aria-label="Post a new job"
+        >
+          Post New Job
+        </Button>
+      </header>
+
+      <div className={styles.notificationWidget}>
+        <NotificationPreview />
+        <button
+          onClick={() => navigate('/notifications')}
+          className={styles.viewAllLink}
+          aria-label="View all notifications"
+        >
+          View all notifications →
+        </button>
+      </div>
 
       <Outlet />
 
       {location.pathname === "/dashboard" && (
         <>
-          <Button
-            onClick={handlePostNewJob}
-            variant="primary"
-            className={styles.postButton}
-          >
-            Post New Job
-          </Button>
-
           <div className={styles.filters}>
             <div className={styles.searchBar}>
               <input
@@ -282,23 +296,30 @@ function EmployerDashboard() {
                 onChange={handleSearchChange}
                 onKeyPress={(e) => e.key === "Enter" && handleSearchSubmit()}
                 className={styles.searchInput}
+                aria-label="Search jobs"
               />
-              <Button onClick={handleSearchSubmit}>Search</Button>
+              <Button onClick={handleSearchSubmit} aria-label="Submit search">
+                Search
+              </Button>
             </div>
+            
             <select
               name="job_type"
               value={filters.job_type}
               onChange={handleFilterChange}
+              aria-label="Filter by job type"
             >
               <option value="">All Job Types</option>
               <option value="full-time">Full-Time</option>
               <option value="part-time">Part-Time</option>
               <option value="contract">Contract</option>
             </select>
+            
             <select
               name="industry"
               value={filters.industry}
               onChange={handleFilterChange}
+              aria-label="Filter by industry"
             >
               <option value="">All Industries</option>
               <option value="IT">IT</option>
@@ -313,154 +334,194 @@ function EmployerDashboard() {
               <option value="Construction">Construction</option>
               <option value="Other">Other</option>
             </select>
+            
             <select
               name="experience_level"
               value={filters.experience_level}
               onChange={handleFilterChange}
+              aria-label="Filter by experience level"
             >
               <option value="">All Experience Levels</option>
               <option value="entry-level">Entry-Level</option>
               <option value="mid-level">Mid-Level</option>
               <option value="senior">Senior</option>
             </select>
-            <select name="status" value={filters.status} onChange={handleFilterChange}>
+            
+            <select 
+              name="status" 
+              value={filters.status} 
+              onChange={handleFilterChange}
+              aria-label="Filter by job status"
+            >
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="closed">Closed</option>
               <option value="paused">Paused</option>
             </select>
+            
             <select
               name="date_posted"
               value={filters.date_posted}
               onChange={handleFilterChange}
+              aria-label="Filter by date posted"
             >
               <option value="">All Dates</option>
               <option value="last_24_hours">Last 24 Hours</option>
               <option value="last_7_days">Last 7 Days</option>
               <option value="last_30_days">Last 30 Days</option>
             </select>
+            
             <label>
               <input
                 type="checkbox"
                 checked={includeArchived}
                 onChange={handleIncludeArchivedChange}
+                aria-label="Include archived jobs"
               />
               Show Archived Jobs
             </label>
-            <Button onClick={handleClearFilters} variant="secondary">
+            
+            <Button onClick={handleClearFilters} variant="secondary" aria-label="Clear all filters">
               Clear Filters
             </Button>
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && <p className={styles.error} role="alert">{error}</p>}
 
           {status === "loading" && jobs.length === 0 ? (
-            <p>Loading jobs...</p>
+            <div className={styles.flexCenter}>
+              <p>Loading jobs...</p>
+            </div>
           ) : jobs.length === 0 ? (
-            <p>No jobs found.</p>
+            <div className={styles.flexCenter}>
+              <p>No jobs found matching your criteria.</p>
+            </div>
           ) : (
             <>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Job Type</th>
-                    <th>Industry</th>
-                    <th>Experience Level</th>
-                    <th>Created At</th>
-                    <th>Applications</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {jobs.map((job) => {
-                    const jobApplications = applications[String(job.job_id)];
-                    const isFetching = fetchingApplications.includes(String(job.job_id)); // Changed from .has to .includes
-                    return (
-                      <tr key={job.job_id}>
-                        <td data-label="Title">{job.title}</td>
-                        <td data-label="Status">{job.status}</td>
-                        <td data-label="Job Type">{job.job_type}</td>
-                        <td data-label="Industry">{job.industry}</td>
-                        <td data-label="Experience Level">{job.experience_level}</td>
-                        <td data-label="Created At">
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </td>
-                        <td data-label="Applications">
-                          {isFetching || jobApplications === undefined ? (
-                            "Loading..."
-                          ) : (
-                            <>
-                              {jobApplications?.length || 0}
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Job Type</th>
+                      <th>Industry</th>
+                      <th>Experience</th>
+                      <th>Created At</th>
+                      <th>Applications</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {jobs.map((job) => {
+                      const jobApplications = applications[String(job.job_id)];
+                      const isFetching = fetchingApplications.includes(String(job.job_id));
+                      return (
+                        <tr key={job.job_id}>
+                          <td data-label="Title">{job.title}</td>
+                          <td data-label="Status">
+                            <span className={`${styles.statusBadge} ${styles[job.status]}`}>
+                              {job.status}
+                              {job.is_archived && " (Archived)"}
+                            </span>
+                          </td>
+                          <td data-label="Job Type">{job.job_type}</td>
+                          <td data-label="Industry">{job.industry}</td>
+                          <td data-label="Experience">{job.experience_level}</td>
+                          <td data-label="Created At">
+                            {new Date(job.created_at).toLocaleDateString()}
+                          </td>
+                          <td data-label="Applications">
+                            {isFetching || jobApplications === undefined ? (
+                              "Loading..."
+                            ) : (
+                              <>
+                                {jobApplications?.length || 0}
+                                <Button
+                                  onClick={() => handleViewApplications(job.job_id)}
+                                  variant="secondary"
+                                  className={styles.actionButton}
+                                  aria-label={`View applicants for ${job.title}`}
+                                >
+                                  View
+                                </Button>
+                              </>
+                            )}
+                          </td>
+                          <td data-label="Actions">
+                            <div className={styles.actionButtons}>
                               <Button
-                                onClick={() => handleViewApplications(job.job_id)}
-                                variant="secondary"
+                                onClick={() => handleEditJob(job.slug)}
+                                variant="primary"
                                 className={styles.actionButton}
+                                aria-label={`Edit ${job.title}`}
                               >
-                                View Applicants
+                                Edit
                               </Button>
-                            </>
-                          )}
-                        </td>
-                        <td data-label="Actions">
-                          <Button
-                            onClick={() => handleEditJob(job.slug)}
-                            variant="primary"
-                            className={styles.actionButton}
-                          >
-                            Edit
-                          </Button>
-                          {job.is_archived ? (
-                            <Button
-                              onClick={() => handleRestore(job.job_id)}
-                              variant="secondary"
-                              className={styles.actionButton}
-                            >
-                              Restore
-                            </Button>
-                          ) : (
-                            <>
-                              <Button
-                                onClick={() => handleDelete(job.job_id)}
-                                variant="danger"
-                                className={styles.actionButton}
-                              >
-                                Delete
-                              </Button>
-                              <Button
-                                onClick={() => handleDuplicate(job.job_id)}
-                                variant="secondary"
-                                className={styles.actionButton}
-                              >
-                                Duplicate
-                              </Button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                              {job.is_archived ? (
+                                <Button
+                                  onClick={() => handleRestore(job.job_id)}
+                                  variant="secondary"
+                                  className={styles.actionButton}
+                                  aria-label={`Restore ${job.title}`}
+                                >
+                                  Restore
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    onClick={() => handleDelete(job.job_id)}
+                                    variant="danger"
+                                    className={styles.actionButton}
+                                    aria-label={`Delete ${job.title}`}
+                                  >
+                                    Delete
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleDuplicate(job.job_id)}
+                                    variant="secondary"
+                                    className={styles.actionButton}
+                                    aria-label={`Duplicate ${job.title}`}
+                                  >
+                                    Duplicate
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
               <div className={styles.pagination}>
                 <Button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
+                  aria-label="Previous page"
                 >
                   Previous
                 </Button>
-                <span>
+                
+                <span className={styles.paginationInfo}>
                   Page {currentPage} of {totalPages} (Total: {total} jobs)
                 </span>
+                
                 <Button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
+                  aria-label="Next page"
                 >
                   Next
                 </Button>
-                <select value={pageSize} onChange={handlePageSizeChange}>
+                
+                <select 
+                  value={pageSize} 
+                  onChange={handlePageSizeChange}
+                  aria-label="Items per page"
+                >
                   <option value="5">5 per page</option>
                   <option value="10">10 per page</option>
                   <option value="20">20 per page</option>
@@ -482,10 +543,18 @@ function EmployerDashboard() {
                     )}
                   </p>
                   <div className={styles.modalButtons}>
-                    <Button onClick={handleConfirmAction} variant="primary">
+                    <Button 
+                      onClick={handleConfirmAction} 
+                      variant={confirmAction.type === "delete" ? "danger" : "primary"}
+                      aria-label={`Confirm ${confirmAction.type}`}
+                    >
                       Yes, {confirmAction.type}
                     </Button>
-                    <Button onClick={handleCancelAction} variant="secondary">
+                    <Button 
+                      onClick={handleCancelAction} 
+                      variant="secondary"
+                      aria-label="Cancel action"
+                    >
                       Cancel
                     </Button>
                   </div>
