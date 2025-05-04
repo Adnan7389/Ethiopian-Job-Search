@@ -19,9 +19,10 @@ const retry = async (fn, retries = 3, delay = 2000) => {
 
 export const fetchNotifications = createAsyncThunk(
   "notification/fetchNotifications",
-  async (_, { rejectWithValue }) => {
+  async (limit = null, { rejectWithValue }) => {
     try {
-      const response = await retry(() => api.get("/notifications"));
+      const url = limit ? `/notifications?limit=${limit}` : "/notifications";
+      const response = await retry(() => api.get(url));
       const notifications = Array.isArray(response.data) ? response.data : response.data?.notifications || [];
       return notifications;
     } catch (error) {

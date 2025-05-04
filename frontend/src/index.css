@@ -52,6 +52,21 @@
   --shadow-md: 0 4px 8px var(--shadow);
   --shadow-lg: 0 6px 12px var(--shadow);
   --shadow-xl: 0 8px 16px var(--shadow);
+
+  
+    /* Additional variables for the dashboard */
+    --card-bg: var(--white);
+    --card-shadow: var(--shadow-sm);
+    --border-radius: 8px;
+    --border-color: #e0e0e0;
+    --table-header-bg: #f8f9fa;
+    --table-row-hover: #f8f9fa;
+    
+    /* Status colors */
+    --status-open: #2ecc71;
+    --status-closed: #e74c3c;
+    --status-paused: #f39c12;
+    --status-archived: #95a5a6;
 }
 
 /* Global Styles */

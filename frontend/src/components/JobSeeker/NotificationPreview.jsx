@@ -10,7 +10,7 @@ const NotificationPreview = () => {
    const [open, setOpen] = useState(false);
   
    const loadNotifications = () => {
-        dispatch(fetchNotifications());
+        dispatch(fetchNotifications(3));
       };
 
   useEffect(() => { loadNotifications(); }, []);

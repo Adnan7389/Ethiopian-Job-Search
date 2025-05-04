@@ -47,9 +47,6 @@ const Navbar = () => {
                 <Link to="/dashboard" className={styles.link} onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               </li>
               <li>
-                <Link to="/notifications" className={styles.link} onClick={() => setIsMenuOpen(false)}>Notifications</Link>
-              </li>
-              <li>
                 <Link to="/profile" className={styles.link} onClick={() => setIsMenuOpen(false)}>Profile</Link>
               </li>
               <li>
