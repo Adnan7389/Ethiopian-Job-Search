@@ -150,3 +150,16 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# admin client
+/admin/client/node_modules/
+/admin/client/dist/
+/admin/client/.env
+
+# admin server
+/admin/server/node_modules/
+/admin/server/build/
+/admin/server/.env
+
+# logs
+*.log
