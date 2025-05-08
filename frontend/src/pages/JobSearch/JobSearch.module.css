@@ -1,432 +1,267 @@
+/* Main Container */
 .container {
-  padding: var(--space-3);
-  background-color: var(--background);
-  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
 }
 
+/* Header Styles */
 .header {
-  margin-bottom: var(--space-3);
   text-align: center;
+  margin-bottom: var(--space-6);
 }
 
 .title {
+  font-size: var(--font-size-3xl);
+  color: var(--text);
+  margin-bottom: var(--space-2);
+  line-height: var(--line-height-tight);
+}
+
+.subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-light);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Search Form Styles */
+.searchForm {
+  margin-bottom: var(--space-6);
+}
+
+.searchBar {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.searchInput {
+  flex-grow: 1;
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  z-index: 1;
+}
+
+.searchButton {
+  min-width: 160px;
+}
+
+/* Filter Section */
+.filterSection {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.filterTitle {
+  font-size: var(--font-size-lg);
+  color: var(--text);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filterIcon {
+  color: var(--primary);
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.filterGroup {
+  margin-bottom: var(--space-3);
+}
+
+.filterLabel {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.inputIcon {
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
+}
+
+.filterSelect {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  background-color: var(--white);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Job List Section */
+.jobListSection {
+  margin-top: var(--space-5);
+}
+
+.resultsHeader {
+  margin-bottom: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultsTitle {
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  color: var(--text);
+}
+
+.jobList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-4);
+}
+
+.jobCardWrapper {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.jobCardWrapper:hover {
+  transform: translateY(-2px);
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) 0;
+  gap: var(--space-3);
+}
+
+.loadingText {
+  color: var(--text-light);
+}
+
+/* Error State */
+.errorCard {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  margin: var(--space-5) auto;
+  max-width: 500px;
+}
+
+.errorTitle {
+  color: var(--danger);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-2);
+}
+
+.errorMessage {
+  color: var(--text);
+  margin-bottom: var(--space-4);
+}
+
+.retryButton {
+  min-width: 120px;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.emptyStateTitle {
+  font-size: var(--font-size-xl);
   color: var(--text);
   margin-bottom: var(--space-2);
 }
 
-.searchForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  background-color: var(--white);
-  padding: var(--space-3);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  max-width: 100%;
-  width: 100%;
-  transition: box-shadow 0.2s ease;
-}
-
-.searchForm:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.selectContainer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.selectContainer label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--text);
-}
-
-.selectContainer select {
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-sm);
-  border: 1px solid var(--text-light);
-  border-radius: 4px;
-  color: var(--text);
-  background-color: var(--white);
-  transition: border-color 0.2s ease;
-}
-
-.selectContainer select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.jobList {
-  margin-top: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.jobCard {
-  background-color: var(--white);
-  padding: var(--space-3);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease;
-}
-
-.jobCard:hover {
-  transform: translateY(-4px);
-}
-
-.jobCard h3 {
-  font-size: var(--font-size-base);
-  color: var(--text);
-  margin-bottom: var(--space-1);
-}
-
-.jobCard p {
-  font-size: var(--font-size-sm);
+.emptyStateText {
   color: var(--text-light);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-4);
 }
 
-.jobCard button {
-  margin-top: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-sm);
+.emptyStateButton {
+  min-width: 160px;
 }
 
-.error, .noResults {
-  font-size: var(--font-size-base);
-  color: var(--danger);
-  text-align: center;
-  margin-top: var(--space-3);
-}
-
-/* Responsive Design */
-@media (max-width: 576px) {
-  .container {
-    padding: var(--space-2);
-  }
-
-  .header {
-    margin-bottom: var(--space-2);
-  }
-
-  .title {
-    font-size: var(--font-size-lg);
-  }
-
-  .searchForm {
-    padding: var(--space-2);
-  }
-
-  .formRow {
-    gap: var(--space-1);
-  }
-
-  .formGroup, .selectContainer {
-    gap: var(--space-1);
-  }
-
-  .selectContainer label {
-    font-size: var(--font-size-xs);
-  }
-
-  .selectContainer select {
-    padding: var(--space-1);
-    font-size: var(--font-size-xs);
-  }
-
-  .formActions {
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .searchBar {
     flex-direction: column;
-    gap: var(--space-1);
+  }
+
+  .searchButton {
+    width: 100%;
+  }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
   }
 
   .jobList {
-    margin-top: var(--space-2);
-    gap: var(--space-1);
-  }
-
-  .jobCard {
-    padding: var(--space-2);
-  }
-
-  .jobCard h3 {
-    font-size: var(--font-size-sm);
-  }
-
-  .jobCard p {
-    font-size: var(--font-size-xs);
-  }
-
-  .jobCard button {
-    font-size: var(--font-size-xs);
-    padding: var(--space-1);
-  }
-
-  .error, .noResults {
-    font-size: var(--font-size-sm);
-  }
-}
-
-@media (min-width: 577px) and (max-width: 768px) {
-  .container {
-    padding: var(--space-3);
-  }
-
-  .title {
-    font-size: var(--font-size-xl);
-  }
-
-  .searchForm {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .formRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .formRow:last-child {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formActions {
-    justify-content: center;
-  }
-
-  .selectContainer label {
-    font-size: var(--font-size-sm);
-  }
-
-  .selectContainer select {
-    padding: var(--space-1) var(--space-2);
-    font-size: var(--font-size-sm);
-  }
-}
-
-@media (min-width: 769px) {
-  .container {
-    padding: var(--space-4);
-  }
-
-  .header {
-    margin-bottom: var(--space-4);
+    grid-template-columns: 1fr;
   }
 
   .title {
     font-size: var(--font-size-2xl);
   }
 
-  .searchForm {
-    max-width: 800px;
-    padding: var(--space-4);
-    margin: 0 auto;
-  }
-
-  .formRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .formRow:last-child {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formActions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-
-  .formGroup, .selectContainer {
-    gap: var(--space-2);
-  }
-
-  .selectContainer label {
+  .subtitle {
     font-size: var(--font-size-base);
-  }
-
-  .selectContainer select {
-    padding: var(--space-2);
-    font-size: var(--font-size-base);
-  }
-
-  .jobList {
-    margin-top: var(--space-4);
-    gap: var(--space-3);
-  }
-
-  .jobCard {
-    padding: var(--space-4);
-  }
-
-  .jobCard h3 {
-    font-size: var(--font-size-lg);
-  }
-
-  .jobCard p {
-    font-size: var(--font-size-base);
-  }
-
-  .jobCard button {
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--font-size-base);
-  }
-
-  .error, .noResults {
-    font-size: var(--font-size-lg);
   }
 }
 
-@media (min-width: 1025px) {
+@media (max-width: 480px) {
   .container {
-    padding: var(--space-5);
-  }
-
-  .header {
-    margin-bottom: var(--space-5);
+    padding: var(--space-4) var(--space-3);
   }
 
   .title {
-    font-size: var(--font-size-3xl);
-  }
-
-  .searchForm {
-    max-width: 1000px;
-    padding: var(--space-5);
-  }
-
-  .formRow {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formRow:last-child {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formActions {
-    grid-column: 1 / -1;
-  }
-
-  .selectContainer label {
-    font-size: var(--font-size-sm);
-  }
-
-  .selectContainer select {
-    padding: var(--space-2);
-    font-size: var(--font-size-sm);
-  }
-
-  .jobList {
-    margin-top: var(--space-5);
-    gap: var(--space-4);
-  }
-
-  .jobCard {
-    padding: var(--space-5);
-  }
-
-  .jobCard h3 {
     font-size: var(--font-size-xl);
-  }
-
-  .jobCard p {
-    font-size: var(--font-size-lg);
-  }
-
-  .jobCard button {
-    padding: var(--space-2) var(--space-4);
-    font-size: var(--font-size-lg);
-  }
-
-  .error, .noResults {
-    font-size: var(--font-size-xl);
-  }
-}
-
-@media (min-width: 1440px) {
-  .container {
-    padding: var(--space-6);
-  }
-
-  .header {
-    margin-bottom: var(--space-6);
-  }
-
-  .title {
-    font-size: var(--font-size-4xl);
-  }
-
-  .searchForm {
-    max-width: 1200px;
-    padding: var(--space-6);
-  }
-
-  .formRow {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formRow:last-child {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .formActions {
-    grid-column: 1 / -1;
-    gap: var(--space-3);
-  }
-
-  .selectContainer label {
-    font-size: var(--font-size-base);
-  }
-
-  .selectContainer select {
-    padding: var(--space-2);
-    font-size: var(--font-size-base);
-  }
-
-  .jobList {
-    margin-top: var(--space-6);
-    gap: var(--space-5);
-  }
-
-  .jobCard {
-    padding: var(--space-6);
-  }
-
-  .jobCard h3 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .jobCard p {
-    font-size: var(--font-size-xl);
-  }
-
-  .jobCard button {
-    padding: var(--space-3) var(--space-5);
-    font-size: var(--font-size-xl);
-  }
-
-  .error, .noResults {
-    font-size: var(--font-size-2xl);
   }
 }

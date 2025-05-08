@@ -1,0 +1,163 @@
+/* HeroSection.module.css */
+.hero {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                url('../../assets/hero-bg.jpg') no-repeat center center;
+    background-size: cover;
+    color: var(--white);
+    padding: var(--space-8) 0;
+    position: relative;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-5);
+  }
+  
+  .heroContent {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .heroTitle {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--space-4);
+    line-height: 1.2;
+    font-weight: 800;
+  }
+  
+  .titleHighlight {
+    color: var(--primary-light);
+  }
+  
+  .heroSubtitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-6);
+    opacity: 0.9;
+    max-width: 600px;
+  }
+  
+  .searchBox {
+    display: flex;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .searchInput {
+    flex: 1;
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    font-size: var(--font-size-base);
+  }
+  
+  .searchButton {
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 0 var(--space-5);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    transition: var(--transition-default);
+  }
+  
+  .searchButton:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .ctaButtons {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+  
+  .primaryButton,
+  .secondaryButton {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-default);
+  }
+  
+  .primaryButton {
+    background-color: var(--primary);
+    color: var(--white);
+  }
+  
+  .primaryButton:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+  }
+  
+  .secondaryButton {
+    background-color: transparent;
+    color: var(--white);
+    border: 2px solid var(--white);
+  }
+  
+  .secondaryButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .buttonIcon {
+    font-size: var(--font-size-lg);
+  }
+  
+  .buttonArrow {
+    transition: transform 0.2s ease;
+  }
+  
+  .primaryButton:hover .buttonArrow,
+  .secondaryButton:hover .buttonArrow {
+    transform: translateX(3px);
+  }
+  
+  @media (max-width: 768px) {
+    .hero {
+      padding: var(--space-6) 0;
+    }
+    
+    .heroTitle {
+      font-size: var(--font-size-3xl);
+    }
+    
+    .heroSubtitle {
+      font-size: var(--font-size-base);
+    }
+    
+    .searchBox {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    
+    .searchInput,
+    .searchButton {
+      border-radius: var(--radius-md);
+      width: 100%;
+    }
+    
+    .ctaButtons {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .primaryButton,
+    .secondaryButton {
+      justify-content: center;
+    }
+  }

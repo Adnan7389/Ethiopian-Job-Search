@@ -1,196 +1,497 @@
-.container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 1rem;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .title {
-    text-align: center;
-    color: #333;
-    margin-bottom: 2rem;
-  }
-  
+/* Profile Container */
+.profileContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5);
+}
+
+/* Header Styles */
+.profileHeader {
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+
+.profileTitle {
+  font-size: var(--font-size-3xl);
+  color: var(--text);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.titleIcon {
+  font-size: var(--font-size-2xl);
+}
+
+.lastUpdated {
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
+}
+
+/* Card Styles */
+.profileCard,
+.editProfileCard {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+/* Profile Picture Section */
+.profilePictureSection {
+  display: flex;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+  align-items: flex-start;
+}
+
+.profilePictureContainer {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--primary);
+  flex-shrink: 0;
+}
+
+.profilePicture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileDetails {
+  flex-grow: 1;
+}
+
+.profileName {
+  font-size: var(--font-size-2xl);
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.profileBio {
+  color: var(--text-light);
+  margin-bottom: var(--space-3);
+  line-height: var(--line-height-base);
+}
+
+.profileMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+}
+
+.metaIcon {
+  font-size: var(--font-size-sm);
+}
+
+/* Section Styles */
+.section {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sectionIcon {
+  font-size: var(--font-size-lg);
+  color: var(--primary);
+}
+
+/* List Styles */
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.skillItem {
+  background-color: var(--primary-light);
+  color: var(--white);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+}
+
+.educationList,
+.experienceList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.educationItem,
+.experienceItem {
+  background-color: var(--background);
+  padding: var(--space-3);
+  border-radius: var(--border-radius);
+}
+
+.educationDegree,
+.experiencePosition {
+  font-size: var(--font-size-lg);
+  color: var(--text);
+  margin-bottom: var(--space-1);
+}
+
+.educationInstitution,
+.experienceCompany {
+  color: var(--text-light);
+  margin-bottom: var(--space-1);
+}
+
+.educationYear,
+.experienceDuration {
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
+}
+
+/* Empty State */
+.emptyState {
+  color: var(--text-light);
+  font-style: italic;
+  padding: var(--space-3) 0;
+}
+
+/* Resume Actions */
+.resumeActions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* Profile Actions */
+.profileActions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-5);
+}
+
+.editButton {
+  padding: var(--space-2) var(--space-5);
+}
+
+/* Edit Profile Styles */
+.editProfileCard {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+}
+
+.profilePictureEdit {
+  display: flex;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+  align-items: flex-start;
+}
+
+.uploadControls {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Form Styles */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-4);
+}
+
+.formGroup {
+  margin-bottom: var(--space-3);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  transition: border-color 0.2s ease;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.formTextarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* File Input Styles */
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.fileInputLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fileInputButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fileInputButton:hover {
+  background-color: #e9ecef;
+}
+
+.uploadIcon {
+  font-size: var(--font-size-sm);
+}
+
+.fileName {
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+  margin-left: var(--space-2);
+}
+
+/* Input Group Styles */
+.inputGroup {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.inputGroup .formInput {
+  flex-grow: 1;
+}
+
+/* Add Button Styles */
+.addButton {
+  margin-bottom: var(--space-3);
+}
+
+/* List Edit Styles */
+.skillsListEdit,
+.educationListEdit,
+.experienceListEdit {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.skillItemEdit,
+.educationItemEdit,
+.experienceItemEdit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--background);
+  border-radius: var(--border-radius);
+}
+
+.removeItemButton {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.removeItemButton:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Upload Button Styles */
+.uploadButton {
+  align-self: flex-start;
+}
+
+/* Form Actions */
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.saveButton {
+  min-width: 150px;
+}
+
+.cancelButton {
+  min-width: 100px;
+}
+
+/* Form Messages */
+.formMessage {
+  margin-top: var(--space-3);
+}
+
+.errorMessage {
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
+}
+
+.successMessage {
+  color: var(--success);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
+}
+
+/* Loading and Error States */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: var(--space-3);
+}
+
+.loadingText {
+  color: var(--text-light);
+}
+
+.errorContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-5);
+}
+
+.errorTitle {
+  color: var(--danger);
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
+.errorCard {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.errorMessage {
+  color: var(--text);
+  margin-bottom: var(--space-4);
+}
+
+.errorActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.retryButton {
+  min-width: 120px;
+}
+
+.homeButton {
+  min-width: 120px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
   .profilePictureSection {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  .profilePicture {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ddd;
-  }
-  
-  .fileInput {
-    margin-bottom: 0.5rem;
-  }
-  
-  .uploadButton {
-    margin-top: 0.5rem;
-  }
-  
-  .form {
-    display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .formGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .formGroup label {
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .input,
-  .textarea {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
-  }
-  
-  .input:focus,
-  .textarea:focus {
-    outline: none;
-    border-color: #007bff;
-  }
-  
-  .textarea {
-    min-height: 100px;
-    resize: vertical;
-  }
-  
-  .inputGroup {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
     align-items: center;
-  }
-  
-  .inputGroup .input {
-    flex: 1;
-    min-width: 150px;
-  }
-  
-  .addButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-  
-  .list {
-    list-style: none;
-    padding: 0;
-    margin: 0.5rem 0 0 0;
-  }
-  
-  .listItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .removeButton {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-  }
-  
-  .resumeActions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  
-  .error {
-    color: #dc3545;
-    font-size: 0.875rem;
-  }
-  
-  .success {
-    color: #28a745;
-    font-size: 0.875rem;
     text-align: center;
   }
-  
-  .submitButton {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    font-size: 1rem;
+
+  .profileMeta {
+    justify-content: center;
   }
-  
-  .logoutButton {
-    margin-top: 2rem;
+
+  .profilePictureEdit {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .uploadControls {
     width: 100%;
   }
-  
-  .lastUpdated {
-    text-align: center;
-    color: #666;
-    font-size: 0.875rem;
-    margin-top: 2rem;
+
+  .formActions {
+    flex-direction: column;
   }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .container {
-      margin: 1rem;
-      padding: 1rem;
-    }
-  
-    .profilePictureSection {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  
-    .profilePicture {
-      width: 80px;
-      height: 80px;
-    }
-  
-    .formGroup label {
-      font-size: 0.9rem;
-    }
-  
-    .input,
-    .textarea {
-      font-size: 0.9rem;
-      padding: 0.5rem;
-    }
-  
-    .inputGroup {
-      flex-direction: column;
-    }
-  
-    .inputGroup .input {
-      width: 100%;
-    }
-  
-    .addButton,
-    .removeButton {
-      font-size: 0.8rem;
-      padding: 0.4rem 0.8rem;
-    }
-  
-    .submitButton,
-    .logoutButton {
-      font-size: 0.9rem;
-      padding: 0.5rem;
-    }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
   }
+}

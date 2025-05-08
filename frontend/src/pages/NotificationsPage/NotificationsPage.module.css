@@ -1,26 +1,267 @@
 .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-5);
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  position: relative;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: absolute;
+  left: 0;
+}
+
+.backIcon {
+  font-size: var(--font-size-lg);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.titleIcon {
+  color: var(--primary);
+  font-size: var(--font-size-2xl);
+}
+
+/* Content Styles */
+.content {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: var(--font-size-lg);
+  color: var(--text-light);
+}
+
+/* Error State */
+.errorAlert {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-left: 4px solid var(--danger);
+}
+
+.errorIcon {
+  font-size: var(--font-size-xl);
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.emptyStateIcon {
+  font-size: var(--font-size-4xl);
+  color: var(--primary-light);
+  margin-bottom: var(--space-3);
+}
+
+.emptyState h3 {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.emptyState p {
+  color: var(--text-light);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Notification List */
+.notificationList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.notificationCard {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-default);
+  position: relative;
+}
+
+.notificationCard.unread {
+  background-color: var(--notification-unread-bg);
+  border-left: 4px solid var(--primary);
+}
+
+.notificationCard:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.notificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.notificationType {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.notificationIconSuccess {
+  color: var(--success);
+  font-size: var(--font-size-lg);
+}
+
+.notificationIconError {
+  color: var(--danger);
+  font-size: var(--font-size-lg);
+}
+
+.notificationIconWarning {
+  color: var(--warning);
+  font-size: var(--font-size-lg);
+}
+
+.notificationIconInfo {
+  color: var(--primary);
+  font-size: var(--font-size-lg);
+}
+
+.notificationCategory {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notificationTime {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-light);
+}
+
+.timeIcon {
+  font-size: var(--font-size-sm);
+}
+
+.notificationContent {
+  margin-bottom: var(--space-3);
+}
+
+.notificationMessage {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+
+.actionButton {
+  margin-top: var(--space-2);
+}
+
+.notificationActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.markAsReadButton {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition-default);
+  margin-right: auto;
+}
+
+.markAsReadButton:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: var(--transition-default);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.deleteButton:hover {
+  color: var(--danger);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.deleteIcon {
+  font-size: var(--font-size-base);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-4);
+  }
+  
+  .content {
+    padding: var(--space-4);
   }
   
   .title {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+    font-size: var(--font-size-xl);
   }
   
-  .notificationList {
-    list-style: none;
-    padding: 0;
+  .notificationHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
   }
   
-  .notificationItem {
-    padding: 1rem;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 0.5rem;
+  .notificationTime {
+    margin-top: var(--space-1);
   }
-  
-  .error {
-    color: red;
-    margin-bottom: 1rem;
-  }
+}

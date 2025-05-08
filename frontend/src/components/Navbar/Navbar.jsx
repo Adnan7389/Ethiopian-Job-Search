@@ -35,14 +35,11 @@ const Navbar = () => {
           <span className={styles.hamburger}></span>
         </button>
         <ul className={`${styles.navLinks} ${isMenuOpen ? styles.navLinksOpen : ''}`}>
-          <li>
-            <Link to="/" className={styles.link} onClick={() => setIsMenuOpen(false)}>Home</Link>
-          </li>
-          <li>
-            <Link to="/job-search" className={styles.link} onClick={() => setIsMenuOpen(false)}>Search Jobs</Link>
-          </li>
           {token ? (
             <>
+              <li>
+               <Link to="/job-search" className={styles.link} onClick={() => setIsMenuOpen(false)}>Search Jobs</Link>
+              </li>
               <li>
                 <Link to="/dashboard" className={styles.link} onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               </li>
@@ -62,6 +59,9 @@ const Navbar = () => {
             </>
           ) : (
             <>
+            <li>
+            <Link to="/" className={styles.link} onClick={() => setIsMenuOpen(false)}>Home</Link>
+          </li>
               <li>
                 <Link to="/login" className={styles.link} onClick={() => setIsMenuOpen(false)}>Login</Link>
               </li>
