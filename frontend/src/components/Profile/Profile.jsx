@@ -6,6 +6,7 @@ import Button from "../Button/Button";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 import styles from "./Profile.module.css";
 import defaultProfileIcon from "../../assets/default-profile-icon.png";
+import { FiEdit, FiSave, FiTrash2, FiPlus, FiX, FiUpload, FiDownload, FiEye, FiUser, FiBriefcase, FiAward, FiMapPin, FiLink, FiMail } from "react-icons/fi";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -301,8 +302,9 @@ const Profile = () => {
 
   if (status === "loading" && retryCount === 0 && !profile) {
     return (
-      <div className={styles.container}>
+      <div className={styles.loadingContainer}>
         <LoadingSpinner />
+        <p className={styles.loadingText}>Loading your profile...</p>
       </div>
     );
   }
@@ -310,266 +312,407 @@ const Profile = () => {
   if (status === "failed" && retryCount >= maxRetries && !initialLoadFailed) {
     const isTimeout = error?.includes("timeout");
     return (
-      <div className={styles.container}>
-        <h1 className={styles.title}>My Profile</h1>
-        <p className={styles.error}>
-          {isTimeout
-            ? "Failed to load profile: The request timed out after multiple attempts."
-            : `Failed to load profile: ${error?.message || error || "An error occurred."}`}
-        </p>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <Button
-            onClick={() => {
-              setRetryCount(0);
-              dispatch(fetchProfile());
-            }}
-            variant="primary"
-            className={styles.submitButton}
-          >
-            Retry
-          </Button>
-          <Button
-            onClick={() => navigate("/")}
-            variant="secondary"
-            className={styles.submitButton}
-          >
-            Go to Homepage
-          </Button>
+      <div className={styles.errorContainer}>
+        <h1 className={styles.errorTitle}>Profile Loading Error</h1>
+        <div className={styles.errorCard}>
+          <p className={styles.errorMessage}>
+            {isTimeout
+              ? "We couldn't load your profile. The request timed out after multiple attempts."
+              : `Failed to load profile: ${error?.message || error || "An unknown error occurred."}`}
+          </p>
+          <div className={styles.errorActions}>
+            <Button
+              onClick={() => {
+                setRetryCount(0);
+                dispatch(fetchProfile());
+              }}
+              variant="primary"
+              className={styles.retryButton}
+            >
+              Try Again
+            </Button>
+            <Button
+              onClick={() => navigate("/")}
+              variant="secondary"
+              className={styles.homeButton}
+            >
+              Go to Homepage
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>My Profile</h1>
-
-      {!editMode ? (
-        <div className={styles.viewMode}>
-          <div className={styles.profilePictureSection}>
-            <img
-              src={profile?.profile_picture_url ? `http://localhost:5000${profile.profile_picture_url}` : defaultProfileIcon}
-              alt="Profile"
-              className={styles.profilePicture}
-            />
-          </div>
-
+    <div className={styles.profileContainer}>
+      <header className={styles.profileHeader}>
+        <h1 className={styles.profileTitle}>
           {userType === "job_seeker" ? (
             <>
-              <p><strong>Full Name:</strong> {profile?.full_name || "Not set"}</p>
-              <p><strong>Bio:</strong> {profile?.bio || "Not set"}</p>
-              <p><strong>Location:</strong> {profile?.location || "Not set"}</p>
-              <p><strong>Skills:</strong></p>
-              {profile?.skills?.length > 0 ? (
-                <ul className={styles.list}>
-                  {profile.skills.map((skill, index) => (
-                    <li key={index} className={styles.listItem}>{skill}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Not set</p>
-              )}
-              <p><strong>Education:</strong></p>
-              {profile?.education?.length > 0 ? (
-                <ul className={styles.list}>
-                  {profile.education.map((edu, index) => (
-                    <li key={index} className={styles.listItem}>
-                      {edu.degree}, {edu.institution}, {edu.year}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Not set</p>
-              )}
-              <p><strong>Experience:</strong></p>
-              {profile?.experience?.length > 0 ? (
-                <ul className={styles.list}>
-                  {profile.experience.map((exp, index) => (
-                    <li key={index} className={styles.listItem}>
-                      {exp.position} at {exp.company}, {exp.start_year} - {exp.end_year || "Present"}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Not set</p>
-              )}
-              {profile?.resume_url && (
-                <div className={styles.resumeActions}>
-                  <Button onClick={handlePreviewResume} variant="secondary">
-                    Preview Resume
-                  </Button>
-                  <Button onClick={handleDownloadResume} variant="secondary">
-                    Download Resume
-                  </Button>
-                </div>
-              )}
+              <FiUser className={styles.titleIcon} /> My Profile
             </>
           ) : (
             <>
-              <p><strong>Company Name:</strong> {profile?.company_name || "Not set"}</p>
-              <p><strong>Industry:</strong> {profile?.industry || "Not set"}</p>
-              <p><strong>Website:</strong> {profile?.website || "Not set"}</p>
-              <p><strong>Description:</strong> {profile?.description || "Not set"}</p>
-              <p><strong>Contact Email:</strong> {profile?.contact_email || "Not set"}</p>
-              <p><strong>Location:</strong> {profile?.location || "Not set"}</p>
+              <FiBriefcase className={styles.titleIcon} /> Company Profile
             </>
           )}
+        </h1>
+        {profile?.updated_at && (
+          <p className={styles.lastUpdated}>
+            Last updated: {new Date(profile.updated_at).toLocaleString()}
+          </p>
+        )}
+      </header>
 
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              setEditMode(true);
-            }}
-            variant="primary"
-            className={styles.submitButton}
-          >
-            Edit Profile
-          </Button>
-
-          {profile?.updated_at && (
-            <p className={styles.lastUpdated}>
-              Last Updated: {new Date(profile.updated_at).toLocaleString()}
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
+      {!editMode ? (
+        <div className={styles.profileCard}>
           <div className={styles.profilePictureSection}>
-            <img
-              src={profile?.profile_picture_url ? `http://localhost:5000${profile.profile_picture_url}` : defaultProfileIcon}
-              alt="Profile"
-              className={styles.profilePicture}
-            />
-            <div>
-              <input
-                type="file"
-                id="profilePicture"
-                accept="image/png,image/jpeg,image/jpg"
-                onChange={handleProfilePictureChange}
-                className={styles.fileInput}
-                aria-label="Upload profile picture"
+            <div className={styles.profilePictureContainer}>
+              <img
+                src={profile?.profile_picture_url ? `http://localhost:5000${profile.profile_picture_url}` : defaultProfileIcon}
+                alt="Profile"
+                className={styles.profilePicture}
               />
-              <Button
-                onClick={handleProfilePictureUpload}
-                disabled={!profilePictureFile || uploadStatus === "loading"}
-                variant="primary"
-                className={styles.uploadButton}
-              >
-                {uploadStatus === "loading" ? "Uploading..." : "Upload Profile Picture"}
-              </Button>
-              {formErrors.profilePicture && <p className={styles.error}>{formErrors.profilePicture}</p>}
-              {uploadError && <p className={styles.error}>{uploadError?.message || uploadError}</p>}
-              {uploadStatus === "succeeded" && !uploadError && (
-                <p className={styles.success}>Profile picture uploaded successfully!</p>
+            </div>
+            <div className={styles.profileDetails}>
+              {userType === "job_seeker" ? (
+                <>
+                  <h2 className={styles.profileName}>{profile?.full_name || "Not set"}</h2>
+                  <p className={styles.profileBio}>{profile?.bio || "No bio provided"}</p>
+                  <div className={styles.profileMeta}>
+                    {profile?.location && (
+                      <span className={styles.metaItem}>
+                        <FiMapPin className={styles.metaIcon} /> {profile.location}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className={styles.profileName}>{profile?.company_name || "Company name not set"}</h2>
+                  <p className={styles.profileBio}>{profile?.description || "No company description provided"}</p>
+                  <div className={styles.profileMeta}>
+                    {profile?.industry && (
+                      <span className={styles.metaItem}>
+                        <FiBriefcase className={styles.metaIcon} /> {profile.industry}
+                      </span>
+                    )}
+                    {profile?.location && (
+                      <span className={styles.metaItem}>
+                        <FiMapPin className={styles.metaIcon} /> {profile.location}
+                      </span>
+                    )}
+                    {profile?.website && (
+                      <span className={styles.metaItem}>
+                        <FiLink className={styles.metaIcon} /> {profile.website}
+                      </span>
+                    )}
+                    {profile?.contact_email && (
+                      <span className={styles.metaItem}>
+                        <FiMail className={styles.metaIcon} /> {profile.contact_email}
+                      </span>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {userType === "job_seeker" ? (
-              <>
-                <div className={styles.formGroup}>
-                  <label htmlFor="full_name">Full Name</label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    name="full_name"
-                    value={jobSeekerForm.full_name}
-                    onChange={handleJobSeekerChange}
-                    placeholder="Enter your full name"
-                    className={styles.input}
-                    aria-describedby={formErrors.full_name ? "full_name-error" : undefined}
-                  />
-                  {formErrors.full_name && (
-                    <span id="full_name-error" className={styles.error}>
-                      {formErrors.full_name}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="bio">Bio</label>
-                  <textarea
-                    id="bio"
-                    name="bio"
-                    value={jobSeekerForm.bio}
-                    onChange={handleJobSeekerChange}
-                    placeholder="Tell us about yourself"
-                    className={styles.textarea}
-                    aria-describedby={formErrors.bio ? "bio-error" : undefined}
-                  />
-                  {formErrors.bio && (
-                    <span id="bio-error" className={styles.error}>
-                      {formErrors.bio}
-                    </span>
-                  )}
-                </div>
+          {userType === "job_seeker" && (
+            <>
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>
+                  <FiAward className={styles.sectionIcon} /> Skills
+                </h3>
+                {profile?.skills?.length > 0 ? (
+                  <ul className={styles.skillsList}>
+                    {profile.skills.map((skill, index) => (
+                      <li key={index} className={styles.skillItem}>{skill}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyState}>No skills added yet</p>
+                )}
+              </section>
 
-                <div className={styles.formGroup}>
-                  <label>Skills</label>
-                  <div className={styles.inputGroup}>
-                    <input
-                      type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="e.g., JavaScript"
-                      className={styles.input}
-                    />
-                    <Button
-                      onClick={handleAddSkill}
-                      variant="primary"
-                      disabled={!newSkill.trim() || jobSeekerForm.skills.length >= 10}
-                      className={styles.addButton}
-                    >
-                      Add Skill
-                    </Button>
-                  </div>
-                  {formErrors.skills && <p className={styles.error}>{formErrors.skills}</p>}
-                  <ul className={styles.list}>
-                    {jobSeekerForm.skills.map((skill, index) => (
-                      <li key={index} className={styles.listItem}>
-                        {skill}
-                        <Button
-                          onClick={handleRemoveSkill(index)}
-                          variant="danger"
-                          className={styles.removeButton}
-                        >
-                          Remove
-                        </Button>
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Education</h3>
+                {profile?.education?.length > 0 ? (
+                  <ul className={styles.educationList}>
+                    {profile.education.map((edu, index) => (
+                      <li key={index} className={styles.educationItem}>
+                        <h4 className={styles.educationDegree}>{edu.degree}</h4>
+                        <p className={styles.educationInstitution}>{edu.institution}</p>
+                        <p className={styles.educationYear}>{edu.year}</p>
                       </li>
                     ))}
                   </ul>
-                </div>
+                ) : (
+                  <p className={styles.emptyState}>No education information added</p>
+                )}
+              </section>
 
-                <div className={styles.formGroup}>
-                  <label>Education</label>
-                  <div className={styles.inputGroup}>
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Experience</h3>
+                {profile?.experience?.length > 0 ? (
+                  <ul className={styles.experienceList}>
+                    {profile.experience.map((exp, index) => (
+                      <li key={index} className={styles.experienceItem}>
+                        <h4 className={styles.experiencePosition}>{exp.position}</h4>
+                        <p className={styles.experienceCompany}>{exp.company}</p>
+                        <p className={styles.experienceDuration}>
+                          {exp.start_year} - {exp.end_year || "Present"}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyState}>No experience information added</p>
+                )}
+              </section>
+
+              {profile?.resume_url && (
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Resume</h3>
+                  <div className={styles.resumeActions}>
+                    <Button onClick={handlePreviewResume} variant="secondary" icon={<FiEye />}>
+                      Preview Resume
+                    </Button>
+                    <Button onClick={handleDownloadResume} variant="primary" icon={<FiDownload />}>
+                      Download Resume
+                    </Button>
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+
+          <div className={styles.profileActions}>
+            <Button
+              onClick={() => setEditMode(true)}
+              variant="primary"
+              icon={<FiEdit />}
+              className={styles.editButton}
+            >
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.editProfileCard}>
+          <form onSubmit={handleSubmit} className={styles.editForm}>
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>Profile Picture</h3>
+              <div className={styles.profilePictureEdit}>
+                <div className={styles.profilePictureContainer}>
+                  <img
+                    src={profile?.profile_picture_url ? `http://localhost:5000${profile.profile_picture_url}` : defaultProfileIcon}
+                    alt="Profile"
+                    className={styles.profilePicture}
+                  />
+                </div>
+                <div className={styles.uploadControls}>
+                  <label className={styles.fileInputLabel}>
                     <input
-                      type="text"
-                      name="degree"
-                      value={newEducation.degree}
-                      onChange={handleEducationChange}
-                      placeholder="Degree, e.g., BSc Computer Science"
-                      className={styles.input}
+                      type="file"
+                      id="profilePicture"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={handleProfilePictureChange}
+                      className={styles.fileInput}
+                      aria-label="Upload profile picture"
                     />
-                    <input
-                      type="text"
-                      name="institution"
-                      value={newEducation.institution}
-                      onChange={handleEducationChange}
-                      placeholder="Institution, e.g., Addis Ababa University"
-                      className={styles.input}
-                    />
-                    <input
-                      type="text"
-                      name="year"
-                      value={newEducation.year}
-                      onChange={handleEducationChange}
-                      placeholder="Year, e.g., 2020"
-                      className={styles.input}
-                    />
+                    <span className={styles.fileInputButton}>
+                      <FiUpload className={styles.uploadIcon} /> Choose File
+                    </span>
+                    {profilePictureFile && (
+                      <span className={styles.fileName}>{profilePictureFile.name}</span>
+                    )}
+                  </label>
+                  <Button
+                    onClick={handleProfilePictureUpload}
+                    disabled={!profilePictureFile || uploadStatus === "loading"}
+                    variant="secondary"
+                    className={styles.uploadButton}
+                    icon={uploadStatus === "loading" ? null : <FiUpload />}
+                  >
+                    {uploadStatus === "loading" ? "Uploading..." : "Upload"}
+                  </Button>
+                  {formErrors.profilePicture && (
+                    <p className={styles.errorMessage}>{formErrors.profilePicture}</p>
+                  )}
+                  {uploadError && (
+                    <p className={styles.errorMessage}>{uploadError?.message || uploadError}</p>
+                  )}
+                  {uploadStatus === "succeeded" && !uploadError && (
+                    <p className={styles.successMessage}>Profile picture uploaded successfully!</p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {userType === "job_seeker" ? (
+              <>
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Basic Information</h3>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                      <label htmlFor="full_name" className={styles.formLabel}>
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        id="full_name"
+                        name="full_name"
+                        value={jobSeekerForm.full_name}
+                        onChange={handleJobSeekerChange}
+                        placeholder="Enter your full name"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.full_name ? "full_name-error" : undefined}
+                      />
+                      {formErrors.full_name && (
+                        <span id="full_name-error" className={styles.errorMessage}>
+                          {formErrors.full_name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="location" className={styles.formLabel}>
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value={jobSeekerForm.location}
+                        onChange={handleJobSeekerChange}
+                        placeholder="e.g., Addis Ababa, Ethiopia"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.location ? "location-error" : undefined}
+                      />
+                      {formErrors.location && (
+                        <span id="location-error" className={styles.errorMessage}>
+                          {formErrors.location}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                      <label htmlFor="bio" className={styles.formLabel}>
+                        Bio
+                      </label>
+                      <textarea
+                        id="bio"
+                        name="bio"
+                        value={jobSeekerForm.bio}
+                        onChange={handleJobSeekerChange}
+                        placeholder="Tell us about yourself"
+                        className={styles.formTextarea}
+                        rows="4"
+                        aria-describedby={formErrors.bio ? "bio-error" : undefined}
+                      />
+                      {formErrors.bio && (
+                        <span id="bio-error" className={styles.errorMessage}>
+                          {formErrors.bio}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Skills</h3>
+                  <div className={styles.formGroup}>
+                    <div className={styles.inputGroup}>
+                      <input
+                        type="text"
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        placeholder="e.g., JavaScript, Project Management"
+                        className={styles.formInput}
+                      />
+                      <Button
+                        onClick={handleAddSkill}
+                        variant="secondary"
+                        disabled={!newSkill.trim() || jobSeekerForm.skills.length >= 10}
+                        className={styles.addButton}
+                        icon={<FiPlus />}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    {formErrors.skills && (
+                      <p className={styles.errorMessage}>{formErrors.skills}</p>
+                    )}
+                    <ul className={styles.skillsListEdit}>
+                      {jobSeekerForm.skills.map((skill, index) => (
+                        <li key={index} className={styles.skillItemEdit}>
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={handleRemoveSkill(index)}
+                            className={styles.removeItemButton}
+                            aria-label={`Remove skill ${skill}`}
+                          >
+                            <FiX />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Education</h3>
+                  <div className={styles.formGroup}>
+                    <div className={styles.formGrid}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="education-degree" className={styles.formLabel}>
+                          Degree
+                        </label>
+                        <input
+                          type="text"
+                          id="education-degree"
+                          name="degree"
+                          value={newEducation.degree}
+                          onChange={handleEducationChange}
+                          placeholder="e.g., BSc Computer Science"
+                          className={styles.formInput}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="education-institution" className={styles.formLabel}>
+                          Institution
+                        </label>
+                        <input
+                          type="text"
+                          id="education-institution"
+                          name="institution"
+                          value={newEducation.institution}
+                          onChange={handleEducationChange}
+                          placeholder="e.g., Addis Ababa University"
+                          className={styles.formInput}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="education-year" className={styles.formLabel}>
+                          Year
+                        </label>
+                        <input
+                          type="text"
+                          id="education-year"
+                          name="year"
+                          value={newEducation.year}
+                          onChange={handleEducationChange}
+                          placeholder="e.g., 2020"
+                          className={styles.formInput}
+                        />
+                      </div>
+                    </div>
                     <Button
                       onClick={handleAddEducation}
-                      variant="primary"
+                      variant="secondary"
                       disabled={
                         !newEducation.degree ||
                         !newEducation.institution ||
@@ -577,65 +720,99 @@ const Profile = () => {
                         jobSeekerForm.education.length >= 10
                       }
                       className={styles.addButton}
+                      icon={<FiPlus />}
                     >
                       Add Education
                     </Button>
+                    {formErrors.education && (
+                      <p className={styles.errorMessage}>{formErrors.education}</p>
+                    )}
+                    <ul className={styles.educationListEdit}>
+                      {jobSeekerForm.education.map((edu, index) => (
+                        <li key={index} className={styles.educationItemEdit}>
+                          <div>
+                            <h4 className={styles.educationDegree}>{edu.degree}</h4>
+                            <p className={styles.educationInstitution}>{edu.institution}</p>
+                            <p className={styles.educationYear}>{edu.year}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveEducation(index)}
+                            className={styles.removeItemButton}
+                            aria-label={`Remove education ${edu.degree}`}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  {formErrors.education && <p className={styles.error}>{formErrors.education}</p>}
-                  <ul className={styles.list}>
-                    {jobSeekerForm.education.map((edu, index) => (
-                      <li key={index} className={styles.listItem}>
-                        {edu.degree}, {edu.institution}, {edu.year}
-                        <Button
-                          onClick={handleRemoveEducation(index)}
-                          variant="danger"
-                          className={styles.removeButton}
-                        >
-                          Remove
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                </section>
 
-                <div className={styles.formGroup}>
-                  <label>Experience</label>
-                  <div className={styles.inputGroup}>
-                    <input
-                      type="text"
-                      name="position"
-                      value={newExperience.position}
-                      onChange={handleExperienceChange}
-                      placeholder="Position, e.g., Software Engineer"
-                      className={styles.input}
-                    />
-                    <input
-                      type="text"
-                      name="company"
-                      value={newExperience.company}
-                      onChange={handleExperienceChange}
-                      placeholder="Company, e.g., Company X"
-                      className={styles.input}
-                    />
-                    <input
-                      type="text"
-                      name="start_year"
-                      value={newExperience.start_year}
-                      onChange={handleExperienceChange}
-                      placeholder="Start Year, e.g., 2021"
-                      className={styles.input}
-                    />
-                    <input
-                      type="text"
-                      name="end_year"
-                      value={newExperience.end_year}
-                      onChange={handleExperienceChange}
-                      placeholder="End Year, e.g., 2023 (optional)"
-                      className={styles.input}
-                    />
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Experience</h3>
+                  <div className={styles.formGroup}>
+                    <div className={styles.formGrid}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="experience-position" className={styles.formLabel}>
+                          Position
+                        </label>
+                        <input
+                          type="text"
+                          id="experience-position"
+                          name="position"
+                          value={newExperience.position}
+                          onChange={handleExperienceChange}
+                          placeholder="e.g., Software Engineer"
+                          className={styles.formInput}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="experience-company" className={styles.formLabel}>
+                          Company
+                        </label>
+                        <input
+                          type="text"
+                          id="experience-company"
+                          name="company"
+                          value={newExperience.company}
+                          onChange={handleExperienceChange}
+                          placeholder="e.g., Company X"
+                          className={styles.formInput}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="experience-start_year" className={styles.formLabel}>
+                          Start Year
+                        </label>
+                        <input
+                          type="text"
+                          id="experience-start_year"
+                          name="start_year"
+                          value={newExperience.start_year}
+                          onChange={handleExperienceChange}
+                          placeholder="e.g., 2021"
+                          className={styles.formInput}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="experience-end_year" className={styles.formLabel}>
+                          End Year
+                        </label>
+                        <input
+                          type="text"
+                          id="experience-end_year"
+                          name="end_year"
+                          value={newExperience.end_year}
+                          onChange={handleExperienceChange}
+                          placeholder="Leave blank if current"
+                          className={styles.formInput}
+                        />
+                      </div>
+                    </div>
                     <Button
                       onClick={handleAddExperience}
-                      variant="primary"
+                      variant="secondary"
                       disabled={
                         !newExperience.position ||
                         !newExperience.company ||
@@ -643,220 +820,249 @@ const Profile = () => {
                         jobSeekerForm.experience.length >= 10
                       }
                       className={styles.addButton}
+                      icon={<FiPlus />}
                     >
                       Add Experience
                     </Button>
+                    {formErrors.experience && (
+                      <p className={styles.errorMessage}>{formErrors.experience}</p>
+                    )}
+                    <ul className={styles.experienceListEdit}>
+                      {jobSeekerForm.experience.map((exp, index) => (
+                        <li key={index} className={styles.experienceItemEdit}>
+                          <div>
+                            <h4 className={styles.experiencePosition}>{exp.position}</h4>
+                            <p className={styles.experienceCompany}>{exp.company}</p>
+                            <p className={styles.experienceDuration}>
+                              {exp.start_year} - {exp.end_year || "Present"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveExperience(index)}
+                            className={styles.removeItemButton}
+                            aria-label={`Remove experience ${exp.position}`}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  {formErrors.experience && <p className={styles.error}>{formErrors.experience}</p>}
-                  <ul className={styles.list}>
-                    {jobSeekerForm.experience.map((exp, index) => (
-                      <li key={index} className={styles.listItem}>
-                        {exp.position} at {exp.company}, {exp.start_year} - {exp.end_year || "Present"}
-                        <Button
-                          onClick={handleRemoveExperience(index)}
-                          variant="danger"
-                          className={styles.removeButton}
-                        >
-                          Remove
+                </section>
+
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Resume</h3>
+                  <div className={styles.formGroup}>
+                    <label className={styles.fileInputLabel}>
+                      <input
+                        type="file"
+                        id="resume"
+                        accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        onChange={handleResumeChange}
+                        className={styles.fileInput}
+                        aria-label="Upload resume"
+                      />
+                      <span className={styles.fileInputButton}>
+                        <FiUpload className={styles.uploadIcon} /> Choose File
+                      </span>
+                      {resumeFile && (
+                        <span className={styles.fileName}>{resumeFile.name}</span>
+                      )}
+                    </label>
+                    <Button
+                      onClick={handleResumeUpload}
+                      disabled={!resumeFile || uploadStatus === "loading"}
+                      variant="secondary"
+                      className={styles.uploadButton}
+                      icon={uploadStatus === "loading" ? null : <FiUpload />}
+                    >
+                      {uploadStatus === "loading" ? "Uploading..." : "Upload Resume"}
+                    </Button>
+                    {formErrors.resume && (
+                      <p className={styles.errorMessage}>{formErrors.resume}</p>
+                    )}
+                    {profile?.resume_url && (
+                      <div className={styles.resumeActions}>
+                        <Button onClick={handlePreviewResume} variant="secondary" icon={<FiEye />}>
+                          Preview Resume
                         </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="location">Location</label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={jobSeekerForm.location}
-                    onChange={handleJobSeekerChange}
-                    placeholder="e.g., Addis Ababa, Ethiopia"
-                    className={styles.input}
-                    aria-describedby={formErrors.location ? "location-error" : undefined}
-                  />
-                  {formErrors.location && (
-                    <span id="location-error" className={styles.error}>
-                      {formErrors.location}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="resume">Resume</label>
-                  <input
-                    type="file"
-                    id="resume"
-                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={handleResumeChange}
-                    className={styles.fileInput}
-                    aria-label="Upload resume"
-                  />
-                  <Button
-                    onClick={handleResumeUpload}
-                    disabled={!resumeFile || uploadStatus === "loading"}
-                    variant="primary"
-                    className={styles.uploadButton}
-                  >
-                    {uploadStatus === "loading" ? "Uploading..." : "Upload Resume"}
-                  </Button>
-                  {formErrors.resume && <p className={styles.error}>{formErrors.resume}</p>}
-                  {profile?.resume_url && (
-                    <div className={styles.resumeActions}>
-                      <Button onClick={handlePreviewResume} variant="secondary">
-                        Preview Resume
-                      </Button>
-                      <Button onClick={handleDownloadResume} variant="secondary">
-                        Download Resume
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                        <Button onClick={handleDownloadResume} variant="primary" icon={<FiDownload />}>
+                          Download Resume
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </section>
               </>
             ) : (
               <>
-                <div className={styles.formGroup}>
-                  <label htmlFor="company_name">Company Name</label>
-                  <input
-                    type="text"
-                    id="company_name"
-                    name="company_name"
-                    value={employerForm.company_name}
-                    onChange={handleEmployerChange}
-                    placeholder="Enter your company name"
-                    className={styles.input}
-                    required
-                    aria-describedby={formErrors.company_name ? "company_name-error" : undefined}
-                  />
-                  {formErrors.company_name && (
-                    <span id="company_name-error" className={styles.error}>
-                      {formErrors.company_name}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="industry">Industry</label>
-                  <input
-                    type="text"
-                    id="industry"
-                    name="industry"
-                    value={employerForm.industry}
-                    onChange={handleEmployerChange}
-                    placeholder="e.g., IT, Finance, Healthcare"
-                    className={styles.input}
-                    aria-describedby={formErrors.industry ? "industry-error" : undefined}
-                  />
-                  {formErrors.industry && (
-                    <span id="industry-error" className={styles.error}>
-                      {formErrors.industry}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="website">Website</label>
-                  <input
-                    type="url"
-                    id="website"
-                    name="website"
-                    value={employerForm.website}
-                    onChange={handleEmployerChange}
-                    placeholder="e.g., https://www.example.com"
-                    className={styles.input}
-                    aria-describedby={formErrors.website ? "website-error" : undefined}
-                  />
-                  {formErrors.website && (
-                    <span id="website-error" className={styles.error}>
-                      {formErrors.website}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="description">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={employerForm.description}
-                    onChange={handleEmployerChange}
-                    placeholder="Tell us about your company"
-                    className={styles.textarea}
-                    aria-describedby={formErrors.description ? "description-error" : undefined}
-                  />
-                  {formErrors.description && (
-                    <span id="description-error" className={styles.error}>
-                      {formErrors.description}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="contact_email">Contact Email</label>
-                  <input
-                    type="email"
-                    id="contact_email"
-                    name="contact_email"
-                    value={employerForm.contact_email}
-                    onChange={handleEmployerChange}
-                    placeholder="Enter contact email"
-                    className={styles.input}
-                    aria-describedby={formErrors.contact_email ? "contact_email-error" : undefined}
-                  />
-                  {formErrors.contact_email && (
-                    <span id="contact_email-error" className={styles.error}>
-                      {formErrors.contact_email}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="location">Location</label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={employerForm.location}
-                    onChange={handleEmployerChange}
-                    placeholder="e.g., Addis Ababa, Ethiopia"
-                    className={styles.input}
-                    aria-describedby={formErrors.location ? "location-error" : undefined}
-                  />
-                  {formErrors.location && (
-                    <span id="location-error" className={styles.error}>
-                      {formErrors.location}
-                    </span>
-                  )}
-                </div>
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Company Information</h3>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                      <label htmlFor="company_name" className={styles.formLabel}>
+                        Company Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="company_name"
+                        name="company_name"
+                        value={employerForm.company_name}
+                        onChange={handleEmployerChange}
+                        placeholder="Enter your company name"
+                        className={styles.formInput}
+                        required
+                        aria-describedby={formErrors.company_name ? "company_name-error" : undefined}
+                      />
+                      {formErrors.company_name && (
+                        <span id="company_name-error" className={styles.errorMessage}>
+                          {formErrors.company_name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="industry" className={styles.formLabel}>
+                        Industry
+                      </label>
+                      <input
+                        type="text"
+                        id="industry"
+                        name="industry"
+                        value={employerForm.industry}
+                        onChange={handleEmployerChange}
+                        placeholder="e.g., IT, Finance, Healthcare"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.industry ? "industry-error" : undefined}
+                      />
+                      {formErrors.industry && (
+                        <span id="industry-error" className={styles.errorMessage}>
+                          {formErrors.industry}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="website" className={styles.formLabel}>
+                        Website
+                      </label>
+                      <input
+                        type="url"
+                        id="website"
+                        name="website"
+                        value={employerForm.website}
+                        onChange={handleEmployerChange}
+                        placeholder="e.g., https://www.example.com"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.website ? "website-error" : undefined}
+                      />
+                      {formErrors.website && (
+                        <span id="website-error" className={styles.errorMessage}>
+                          {formErrors.website}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="contact_email" className={styles.formLabel}>
+                        Contact Email
+                      </label>
+                      <input
+                        type="email"
+                        id="contact_email"
+                        name="contact_email"
+                        value={employerForm.contact_email}
+                        onChange={handleEmployerChange}
+                        placeholder="Enter contact email"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.contact_email ? "contact_email-error" : undefined}
+                      />
+                      {formErrors.contact_email && (
+                        <span id="contact_email-error" className={styles.errorMessage}>
+                          {formErrors.contact_email}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="location" className={styles.formLabel}>
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value={employerForm.location}
+                        onChange={handleEmployerChange}
+                        placeholder="e.g., Addis Ababa, Ethiopia"
+                        className={styles.formInput}
+                        aria-describedby={formErrors.location ? "location-error" : undefined}
+                      />
+                      {formErrors.location && (
+                        <span id="location-error" className={styles.errorMessage}>
+                          {formErrors.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Company Description</h3>
+                  <div className={styles.formGroup}>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={employerForm.description}
+                      onChange={handleEmployerChange}
+                      placeholder="Tell us about your company"
+                      className={styles.formTextarea}
+                      rows="6"
+                      aria-describedby={formErrors.description ? "description-error" : undefined}
+                    />
+                    {formErrors.description && (
+                      <span id="description-error" className={styles.errorMessage}>
+                        {formErrors.description}
+                      </span>
+                    )}
+                  </div>
+                </section>
               </>
             )}
 
-            {error && <p className={styles.error}>{error?.message || error}</p>}
-            {status === "succeeded" && !error && (
-              <p className={styles.success}>Profile updated successfully!</p>
-            )}
-
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.formActions}>
               <Button
                 type="submit"
                 variant="primary"
                 disabled={status === "loading"}
-                className={styles.submitButton}
+                className={styles.saveButton}
+                icon={status === "loading" ? null : <FiSave />}
               >
                 {status === "loading" ? "Saving..." : "Save Profile"}
               </Button>
               <Button
                 onClick={() => setEditMode(false)}
                 variant="secondary"
-                className={styles.submitButton}
+                className={styles.cancelButton}
+                icon={<FiX />}
               >
                 Cancel
               </Button>
             </div>
-          </form>
 
-          {profile?.updated_at && (
-            <p className={styles.lastUpdated}>
-              Last Updated: {new Date(profile.updated_at).toLocaleString()}
-            </p>
-          )}
-        </>
+            {error && (
+              <div className={styles.formMessage}>
+                <p className={styles.errorMessage}>{error?.message || error}</p>
+              </div>
+            )}
+            {status === "succeeded" && !error && (
+              <div className={styles.formMessage}>
+                <p className={styles.successMessage}>Profile updated successfully!</p>
+              </div>
+            )}
+          </form>
+        </div>
       )}
     </div>
   );

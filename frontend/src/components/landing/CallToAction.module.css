@@ -1,0 +1,109 @@
+/* CallToAction.module.css */
+.cta {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+    padding: var(--space-7) 0;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-5);
+  }
+  
+  .ctaContent {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .ctaTitle {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--space-3);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  .ctaSubtitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-6);
+    opacity: 0.9;
+  }
+  
+  .ctaButtons {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .ctaButtonPrimary,
+  .ctaButtonSecondary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    transition: var(--transition-default);
+    text-decoration: none;
+  }
+  
+  .ctaButtonPrimary {
+    background-color: var(--white);
+    color: var(--primary);
+  }
+  
+  .ctaButtonPrimary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .ctaButtonSecondary {
+    background-color: transparent;
+    color: var(--white);
+    border: 2px solid var(--white);
+  }
+  
+  .ctaButtonSecondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .ctaIcon {
+    font-size: var(--font-size-lg);
+  }
+  
+  .ctaArrow {
+    transition: transform 0.2s ease;
+  }
+  
+  .ctaButtonPrimary:hover .ctaArrow,
+  .ctaButtonSecondary:hover .ctaArrow {
+    transform: translateX(3px);
+  }
+  
+  @media (max-width: 768px) {
+    .cta {
+      padding: var(--space-6) 0;
+    }
+    
+    .ctaTitle {
+      font-size: var(--font-size-2xl);
+    }
+    
+    .ctaSubtitle {
+      font-size: var(--font-size-base);
+    }
+    
+    .ctaButtons {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .ctaButtonPrimary,
+    .ctaButtonSecondary {
+      width: 100%;
+      justify-content: center;
+    }
+  }

@@ -1,13 +1,226 @@
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-  }
-  .card {
-    background: var(--white);
-    border: 1px solid var(--gray-light);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
+/* Summary Container */
+.summaryContainer {
+  width: 100%;
+  margin-bottom: var(--space-4);
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Summary Card Styles */
+.summaryCard {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.cardTitle {
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  margin: 0;
+  font-weight: 500;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cardCount {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Progress Bar Styles */
+.progressContainer {
+  width: 100%;
+  height: 8px;
+  background-color: var(--background);
+  border-radius: 4px;
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.progressText {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  font-size: var(--font-size-xs);
+  color: var(--text-light);
+}
+
+/* Status Colors */
+.total {
+  border-left: 4px solid var(--primary);
+}
+
+.totalIcon {
+  color: var(--primary);
+  font-size: var(--font-size-lg);
+}
+
+.pending {
+  border-left: 4px solid var(--warning);
+}
+
+.pendingIcon {
+  color: var(--warning);
+  font-size: var(--font-size-lg);
+}
+
+.pending .progressBar {
+  background-color: var(--warning);
+}
+
+.shortlisted {
+  border-left: 4px solid var(--info);
+}
+
+.shortlistedIcon {
+  color: var(--info);
+  font-size: var(--font-size-lg);
+}
+
+.shortlisted .progressBar {
+  background-color: var(--info);
+}
+
+.scheduled {
+  border-left: 4px solid var(--secondary);
+}
+
+.scheduledIcon {
+  color: var(--secondary);
+  font-size: var(--font-size-lg);
+}
+
+.scheduled .progressBar {
+  background-color: var(--secondary);
+}
+
+.interviewed {
+  border-left: 4px solid var(--primary-light);
+}
+
+.interviewedIcon {
+  color: var(--primary-light);
+  font-size: var(--font-size-lg);
+}
+
+.interviewed .progressBar {
+  background-color: var(--primary-light);
+}
+
+.accepted {
+  border-left: 4px solid var(--success);
+}
+
+.acceptedIcon {
+  color: var(--success);
+  font-size: var(--font-size-lg);
+}
+
+.accepted .progressBar {
+  background-color: var(--success);
+}
+
+.rejected {
+  border-left: 4px solid var(--danger);
+}
+
+.rejectedIcon {
+  color: var(--danger);
+  font-size: var(--font-size-lg);
+}
+
+.rejected .progressBar {
+  background-color: var(--danger);
+}
+
+/* Loading and Error States */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  gap: var(--space-3);
+}
+
+.errorContainer {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.errorMessage {
+  color: var(--danger);
+  margin-bottom: var(--space-3);
+}
+
+.retryButton {
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .summaryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-3);
   }
   
+  .cardTitle {
+    font-size: var(--font-size-xs);
+  }
+  
+  .cardCount {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

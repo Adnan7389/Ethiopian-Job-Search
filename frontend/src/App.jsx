@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Navbar from "./components/Navbar/Navbar";
+import LandingPage from "./pages/LandingPage/LandingPage";
 import RoleSelection from "./pages/RoleSelection/RoleSelection";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
@@ -122,7 +123,7 @@ function App() {
       <Navbar />
       <div style={{ padding: "2rem" }}>
         <Routes>
-          <Route path="/" element={<div>Home Page</div>} />
+          <Route path="/" element={<LandingPage/>} />
           <Route path="/role-selection" element={<RoleSelection />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

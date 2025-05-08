@@ -6,6 +6,7 @@ import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { register } from "../../features/auth/authSlice";
 import styles from "./Register.module.css";
+import { FiArrowLeft, FiUser, FiMail, FiLock, FiCheck, FiX } from "react-icons/fi";
 
 function Register() {
   const dispatch = useDispatch();
@@ -19,24 +20,41 @@ function Register() {
     user_type: userType || "job_seeker",
   });
   const [formErrors, setFormErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [passwordMatch, setPasswordMatch] = useState(null);
 
-  // Debug: Log Redux state changes
+  // Filter out "Token not Found" errors
+  const filteredError = reduxError && !reduxError.includes("Token not Found") ? reduxError : null;
+
   useEffect(() => {
-    console.log("Register: Redux state - status:", status, "error:", reduxError);
-  }, [status, reduxError]);
+    if (!userType) {
+      navigate("/role-selection");
+    }
+  }, [userType, navigate]);
+
+  useEffect(() => {
+    // Validate password match in real-time
+    if (formData.password && formData.confirmPassword) {
+      setPasswordMatch(formData.password === formData.confirmPassword);
+    } else {
+      setPasswordMatch(null);
+    }
+  }, [formData.password, formData.confirmPassword]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors({ ...formErrors, [name]: "" });
+    }
   };
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.username) errors.username = "Username is required";
-    if (!formData.email) errors.email = "Email is required";
+    if (!formData.username.trim()) errors.username = "Username is required";
+    if (!formData.email.trim()) errors.email = "Email is required";
     if (!formData.password) errors.password = "Password is required";
-    if (!formData.confirmPassword) errors.confirmPassword = "Confirm Password is required";
+    if (!formData.confirmPassword) errors.confirmPassword = "Please confirm your password";
     if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
       errors.confirmPassword = "Passwords do not match";
     }
@@ -45,25 +63,19 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setFormErrors({});
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setLoading(false);
       return;
     }
 
     try {
-      console.log("Register: Submitting registration request:", formData);
       const result = await dispatch(register(formData)).unwrap();
-      console.log("Register: Registration successful, navigating to /enter-code");
       navigate("/enter-code", { state: { email: result.email } });
     } catch (err) {
-      console.log("Register: Registration failed, error:", err);
-    } finally {
-      setLoading(false);
+      console.error("Registration error:", err);
     }
   };
 
@@ -71,67 +83,119 @@ function Register() {
     navigate("/role-selection");
   };
 
-  if (!userType) {
-    navigate("/role-selection");
-    return null;
-  }
+  if (!userType) return null;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Register as {userType === "employer" ? "Employer" : "Job Seeker"}</h1>
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <FormInput
-          label="Username"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          error={formErrors.username}
-          required
-        />
-        <FormInput
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={formErrors.email}
-          required
-        />
-        <FormInput
-          label="Password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          error={formErrors.password}
-          required
-        />
-        <FormInput
-          label="Confirm Password"
-          name="confirmPassword"
-          type="password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          error={formErrors.confirmPassword}
-          required
-        />
-        {reduxError && (
-          <p className={styles.error} style={{ color: "red", margin: "10px 0" }}>
-            {reduxError}
-          </p>
-        )}
-        <div className={styles.formActions}>
-          <Button type="submit" variant="primary" disabled={loading || status === "loading"}>
-            {loading || status === "loading" ? <LoadingSpinner /> : "Register"}
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <Button
+            variant="text"
+            onClick={handleCancel}
+            icon={<FiArrowLeft />}
+            aria-label="Go back to role selection"
+          >
+            Back
           </Button>
-          <Button type="button" variant="secondary" onClick={handleCancel}>
-            Cancel
-          </Button>
+          <h1 className={styles.title}>
+            Register as {userType === "employer" ? "an Employer" : "a Job Seeker"}
+          </h1>
         </div>
-      </form>
-      <p className={styles.link}>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          {filteredError && (
+            <div className={styles.errorBanner} role="alert">
+              <FiX />
+              <span>{filteredError}</span>
+            </div>
+          )}
+
+          <FormInput
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            error={formErrors.username}
+            required
+            icon={<FiUser />}
+            autoComplete="username"
+          />
+
+          <FormInput
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={formErrors.email}
+            required
+            icon={<FiMail />}
+            autoComplete="email"
+          />
+
+          <FormInput
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            error={formErrors.password}
+            required
+            icon={<FiLock />}
+            autoComplete="new-password"
+          />
+
+          <FormInput
+            label="Confirm Password"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={formErrors.confirmPassword}
+            required
+            icon={<FiLock />}
+            autoComplete="new-password"
+          />
+
+          {passwordMatch !== null && (
+            <div className={`${styles.passwordMatch} ${passwordMatch ? styles.match : styles.noMatch}`}>
+              {passwordMatch ? (
+                <>
+                  <FiCheck /> Passwords match
+                </>
+              ) : (
+                <>
+                  <FiX /> Passwords don't match
+                </>
+              )}
+            </div>
+          )}
+
+          <div className={styles.formActions}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={status === "loading"}
+              fullWidth
+            >
+              {status === "loading" ? (
+                <>
+                  <LoadingSpinner small /> Registering...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </div>
+        </form>
+
+        <div className={styles.loginPrompt}>
+          Already have an account?{" "}
+          <Link to="/login" className={styles.loginLink}>
+            Log in
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,221 +1,142 @@
 .container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   min-height: 100vh;
+  padding: var(--space-5);
   background-color: var(--background);
-  padding: var(--space-3);
 }
 
 .card {
-  background-color: var(--white);
-  padding: var(--space-4);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 400px;
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-xl);
+  max-width: 800px;
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6);
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
+  text-align: center;
 }
 
 .title {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
   color: var(--text);
-  margin: 0;
-  flex: 1;
+  margin: var(--space-3) 0 var(--space-2);
+  font-weight: 700;
 }
 
-.buttonGroup {
+.subtitle {
+  color: var(--text-light);
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.roleCard {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-default);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.roleCard:hover, 
+.roleCard:focus {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.roleCard:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.roleIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+  font-size: var(--font-size-2xl);
+}
+
+.roleTitle {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.roleDescription {
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.roleFeatures {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  margin-bottom: var(--space-5);
   width: 100%;
-}
-
-.buttonGroup button {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-}
-
-.buttonGroup button:hover {
-  transform: scale(1.05);
-}
-
-.header button {
-  padding: var(--space-1) var(--space-2);
+  text-align: left;
   font-size: var(--font-size-sm);
 }
 
-/* Responsive Design */
-@media (max-width: 576px) {
-  .container {
-    padding: var(--space-2);
-  }
-
-  .card {
-    padding: var(--space-3);
-    max-width: 100%;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
-  }
-
-  .title {
-    font-size: var(--font-size-lg);
-    text-align: left;
-  }
-
-  .buttonGroup {
-    gap: var(--space-1);
-  }
-
-  .buttonGroup button {
-    font-size: var(--font-size-sm);
-    padding: var(--space-1) var(--space-2);
-  }
-
-  .header button {
-    font-size: var(--font-size-xs);
-  }
+.roleFeatures span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text);
 }
 
-@media (min-width: 577px) and (max-width: 768px) {
-  .container {
-    padding: var(--space-3);
-  }
-
-  .card {
-    max-width: 500px;
-  }
-
-  .title {
-    font-size: var(--font-size-xl);
-  }
-
-  .buttonGroup {
-    flex-direction: row;
-    justify-content: center;
-    gap: var(--space-2);
-  }
+.roleFeatures svg {
+  color: var(--success);
 }
 
-@media (min-width: 769px) {
-  .container {
+.selectButton {
+  margin-top: auto;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--primary);
+  color: var(--white);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: var(--transition-default);
+}
+
+.roleCard:hover .selectButton {
+  background-color: var(--primary-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card {
     padding: var(--space-4);
   }
-
-  .card {
-    max-width: 600px;
-    padding: var(--space-5);
+  
+  .roleGrid {
+    grid-template-columns: 1fr;
   }
-
-  .header {
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-  }
-
+  
   .title {
-    font-size: var(--font-size-3xl);
-  }
-
-  .buttonGroup {
-    flex-direction: row;
-    gap: var(--space-3);
-  }
-
-  .buttonGroup button {
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--font-size-lg);
-  }
-
-  .header button {
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--font-size-base);
-  }
-}
-
-@media (min-width: 1025px) {
-  .container {
-    padding: var(--space-5);
-  }
-
-  .card {
-    max-width: 800px;
-    padding: var(--space-6);
-  }
-
-  .header {
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-  }
-
-  .title {
-    font-size: var(--font-size-4xl);
-  }
-
-  .buttonGroup {
-    gap: var(--space-4);
-  }
-
-  .buttonGroup button {
-    padding: var(--space-3) var(--space-5);
-    font-size: var(--font-size-xl);
-  }
-
-  .header button {
-    font-size: var(--font-size-lg);
-  }
-}
-
-@media (min-width: 1440px) {
-  .container {
-    padding: var(--space-6);
-  }
-
-  .card {
-    max-width: 900px;
-    padding: var(--space-7);
-  }
-
-  .header {
-    gap: var(--space-5);
-    margin-bottom: var(--space-7);
-  }
-
-  .title {
-    font-size: var(--font-size-5xl);
-  }
-
-  .buttonGroup {
-    gap: var(--space-5);
-  }
-
-  .buttonGroup button {
-    padding: var(--space-4) var(--space-6);
     font-size: var(--font-size-2xl);
-  }
-
-  .header button {
-    font-size: var(--font-size-xl);
   }
 }

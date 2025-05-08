@@ -1,29 +1,280 @@
+/* Main Container */
 .container {
-    padding: 2rem;
+  width: 100%;
+}
+
+/* Applications Grid */
+.applicationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Application Card */
+.applicationCard {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.applicationCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Card Header */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+
+.jobTitle {
+  font-size: var(--font-size-lg);
+  color: var(--text);
+  margin: 0;
+  line-height: var(--line-height-tight);
+}
+
+/* Status Badge */
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.statusBadge.pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.statusBadge.accepted {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.statusBadge.rejected {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.statusBadge.default {
+  background-color: var(--background);
+  color: var(--text-light);
+}
+
+/* Company Info */
+.companyInfo {
+  margin-bottom: var(--space-3);
+}
+
+.companyName {
+  font-size: var(--font-size-base);
+  color: var(--text);
+  margin: 0 0 var(--space-1) 0;
+  font-weight: 500;
+}
+
+.location {
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Application Meta */
+.applicationMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.metaIcon {
+  font-size: var(--font-size-sm);
+}
+
+/* Card Actions */
+.cardActions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.viewButton:hover {
+  background-color: var(--primary-dark);
+}
+
+.withdrawButton {
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.withdrawButton:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.actionIcon {
+  font-size: var(--font-size-sm);
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  gap: var(--space-3);
+}
+
+/* Error State */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  gap: var(--space-3);
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.errorMessage {
+  color: var(--danger);
+  text-align: center;
+}
+
+.retryButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: var(--primary-dark);
+}
+
+.retryIcon {
+  font-size: var(--font-size-sm);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-5);
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  gap: var(--space-3);
+}
+
+.emptyIcon {
+  font-size: var(--font-size-4xl);
+  color: var(--text-light);
+  opacity: 0.5;
+}
+
+.emptyState h3 {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin: 0;
+}
+
+.emptyState p {
+  color: var(--text-light);
+  max-width: 400px;
+  margin: 0;
+}
+
+.searchButton {
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: var(--space-3);
+}
+
+.searchButton:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .applicationsGrid {
+    grid-template-columns: 1fr;
   }
   
-  .list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
+  .cardActions {
+    flex-direction: column;
+    gap: var(--space-2);
   }
   
-  .card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  .viewButton,
+  .withdrawButton {
+    width: 100%;
+    justify-content: center;
   }
-  
-  h2 {
-    margin-bottom: 1rem;
-  }
-  
-  .spinner,
-  .empty {
-    text-align: center;
-    margin-top: 3rem;
-    font-size: 1.2rem;
-  }
-  
+}

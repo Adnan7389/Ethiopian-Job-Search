@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import { applyForJob } from "../../features/job/jobSlice";
 import styles from "./JobApplication.module.css";
+import { FiFileText, FiAlertCircle, FiCheckCircle, FiX, FiUpload } from "react-icons/fi";
 
 function JobApplication() {
   const { slug } = useParams();
@@ -18,41 +19,105 @@ function JobApplication() {
       alert("Only job seekers can apply for jobs.");
       return;
     }
+    if (!resume_url) {
+      return; // This should be prevented by UI already
+    }
     try {
       await dispatch(applyForJob({ slug })).unwrap();
-      alert("Application submitted successfully!");
-      navigate("/dashboard");
+      navigate("/dashboard", { state: { applicationSuccess: true } });
     } catch (err) {
-      alert(`Failed to apply: ${err.message || "Please try again"}`);
+      console.error("Application error:", err);
     }
   };
 
-  if (!job || job.slug !== slug) return <div>Job not found</div>;
+  const handleUploadResume = () => {
+    navigate("/profile?focus=resume");
+  };
+
+  if (!job || job.slug !== slug) {
+    return (
+      <div className={styles.notFound}>
+        <FiAlertCircle size={24} />
+        <p>Job not found</p>
+        <Button variant="secondary" onClick={() => navigate("/job-search")}>
+          Browse Jobs
+        </Button>
+      </div>
+    );
+  }
+
+  const hasResume = !!resume_url;
+  const canApply = userType === "job_seeker" && hasResume;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Apply for {job.title}</h1>
-      <p>Are you sure you want to submit your application for this job?</p>
-      {resume_url ? (
-        <p>Your saved resume will be included.</p>
-      ) : (
-        <p>Note: No resume is attached. You can add one later in your profile.</p>
-      )}
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formActions}>
-          <Button type="submit" variant="primary" disabled={status === "loading"}>
-            Submit Application
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/jobs/${slug}`)}
-          >
-            Cancel
-          </Button>
+      <div className={styles.card}>
+        <h1 className={styles.title}>
+          Apply for <span>{job.title}</span>
+        </h1>
+        
+        <div className={styles.resumeStatus}>
+          {hasResume ? (
+            <div className={`${styles.status} ${styles.hasResume}`}>
+              <FiCheckCircle />
+              <div>
+                <h3>Resume Attached</h3>
+                <p>Your saved resume will be included with this application</p>
+              </div>
+            </div>
+          ) : (
+            <div className={`${styles.status} ${styles.noResume}`}>
+              <FiAlertCircle />
+              <div>
+                <h3>Resume Required</h3>
+                <p>You need to upload a resume before applying</p>
+              </div>
+            </div>
+          )}
         </div>
-        {error && <p className={styles.error}>{error}</p>}
-      </form>
+
+        {!hasResume && (
+          <div className={styles.uploadPrompt}>
+            <Button
+              variant="primary"
+              onClick={handleUploadResume}
+              icon={<FiUpload />}
+            >
+              Upload Resume
+            </Button>
+            <p className={styles.note}>
+              After uploading, return to this page to complete your application
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formActions}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={status === "loading" || !canApply}
+              icon={status === "loading" ? null : <FiFileText />}
+            >
+              {status === "loading" ? "Submitting..." : "Submit Application"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(`/jobs/${slug}`)}
+              icon={<FiX />}
+            >
+              Cancel
+            </Button>
+          </div>
+          {error && (
+            <div className={styles.error}>
+              <FiAlertCircle />
+              <span>{error}</span>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
 }

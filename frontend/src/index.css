@@ -10,16 +10,19 @@
 /* Define CSS Variables for Design System */
 :root {
   /* Color Palette */
-  --primary: #3498db; /* Main brand color */
-  --primary-dark: #2980b9;
-  --secondary: #7f8c8d;
-  --secondary-light: #95a5a6;
-  --success: #2ecc71;
-  --danger: #e74c3c;
-  --background: #f4f7fa;
-  --text: #2c3e50;
-  --text-light: #7f8c8d;
+  --primary: #2563eb; /* More vibrant blue */
+  --primary-light: #3b82f6; /* Lighter blue */
+  --primary-dark: #1d4ed8; /* Darker blue */
+  --secondary: #64748b;
+  --secondary-light: #94a3b8;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --background: #f8fafc;
+  --text: #1e293b;
+  --text-light: #64748b;
   --white: #ffffff;
+  --border-color: #e2e8f0;
   --shadow: rgba(0, 0, 0, 0.1);
 
   /* Spacing Scale */
@@ -30,43 +33,55 @@
   --space-5: 32px;
   --space-6: 40px;
   --space-7: 48px;
+  --space-8: 64px;
 
   /* Typography */
-  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
-  --font-size-5xl: 3rem;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs: 0.75rem;  /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-md: 1.125rem; /* 18px */
+  --font-size-lg: 1.25rem;  /* 20px */
+  --font-size-xl: 1.5rem;   /* 24px */
+  --font-size-2xl: 1.75rem; /* 28px */
+  --font-size-3xl: 2rem;    /* 32px */
+  --font-size-4xl: 2.5rem;  /* 40px */
+  --font-size-5xl: 3rem;    /* 48px */
 
   /* Line Heights */
+  --line-height-tight: 1.25;
   --line-height-base: 1.5;
-  --line-height-heading: 1.2;
+  --line-height-loose: 1.75;
 
   /* Shadows */
-  --shadow-sm: 0 2px 4px var(--shadow);
-  --shadow-md: 0 4px 8px var(--shadow);
-  --shadow-lg: 0 6px 12px var(--shadow);
-  --shadow-xl: 0 8px 16px var(--shadow);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Card Styles */
+  --card-bg: var(--white);
+  --card-shadow: var(--shadow-md);
+  --card-padding: var(--space-5);
+
+  /* Transition */
+  --transition-default: all 0.2s ease-in-out;
+
+  /* Animation */
+  --transition-fast: 0.15s ease;
+  --transition-medium: 0.3s ease;
   
-    /* Additional variables for the dashboard */
-    --card-bg: var(--white);
-    --card-shadow: var(--shadow-sm);
-    --border-radius: 8px;
-    --border-color: #e0e0e0;
-    --table-header-bg: #f8f9fa;
-    --table-row-hover: #f8f9fa;
-    
-    /* Status colors */
-    --status-open: #2ecc71;
-    --status-closed: #e74c3c;
-    --status-paused: #f39c12;
-    --status-archived: #95a5a6;
+  /* Notification Colors */
+  --notification-unread-bg: rgba(37, 99, 235, 0.05);
+  --notification-hover-bg: #f8fafc;
 }
 
 /* Global Styles */
