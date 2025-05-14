@@ -12,15 +12,17 @@ import {
   FiAlertCircle, 
   FiInfo,
   FiClock,
-  FiTrash2
+  FiTrash2,
+  FiFileText
 } from "react-icons/fi";
 import Button from "../../components/Button/Button";
+import axios from "axios";
 
 function NotificationsPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { notifications, notificationStatus, notificationError } = useSelector((state) => state.notification);
-  const { status: authStatus, error: authError } = useSelector((state) => state.auth);
+  const { status: authStatus, error: authError, token } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (authStatus !== "succeeded") {
@@ -83,22 +85,94 @@ function NotificationsPage() {
         return <FiAlertCircle className={styles.notificationIconError} />;
       case 'warning':
         return <FiAlertCircle className={styles.notificationIconWarning} />;
+      case 'application_status':
+        return <FiFileText className={styles.notificationIconInfo} />;
       default:
         return <FiInfo className={styles.notificationIconInfo} />;
     }
   };
 
-  const handleMarkAsRead = (notificationId) => {
-    // Implement mark as read functionality
-    console.log("Mark as read:", notificationId);
+  const renderNotificationContent = (notification) => {
+    if (notification.type === 'application_status' && notification.payload) {
+      return (
+        <div className={styles.notificationContent}>
+          <p className={styles.notificationMessage}>{notification.message}</p>
+          
+          {notification.payload.match_details && (
+            <div className={styles.matchDetails}>
+              <h4>Match Details:</h4>
+              <ul>
+                <li>Skills Match: {Math.round(notification.payload.match_details.skillsMatch)}%</li>
+                <li>Education Match: {Math.round(notification.payload.match_details.educationMatch)}%</li>
+                <li>Experience Match: {Math.round(notification.payload.match_details.experienceMatch)}%</li>
+              </ul>
+            </div>
+          )}
+          
+          {notification.action && (
+            <Button
+              onClick={() => navigate(notification.action.url)}
+              variant="primary"
+              size="small"
+              className={styles.actionButton}
+            >
+              {notification.action.text || 'View'}
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.notificationContent}>
+        <p className={styles.notificationMessage}>{notification.message}</p>
+        
+        {notification.action && (
+          <Button
+            onClick={() => navigate(notification.action.url)}
+            variant="primary"
+            size="small"
+            className={styles.actionButton}
+          >
+            {notification.action.text || 'View'}
+          </Button>
+        )}
+      </div>
+    );
   };
 
-  const handleDeleteNotification = (notificationId) => {
-    // Implement delete notification functionality
-    console.log("Delete notification:", notificationId);
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await axios.put(`http://localhost:5000/api/notifications/${notificationId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Socket event will trigger fetchNotifications
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
   };
 
-  console.log("NotificationsPage: Current state:", { notificationStatus, notifications, notificationError });
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Socket event will trigger fetchNotifications
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await axios.delete('http://localhost:5000/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Socket event will trigger fetchNotifications
+    } catch (error) {
+      console.error("Failed to clear notifications:", error);
+    }
+  };
 
   if (authStatus === "loading") {
     return <LoadingSpinner />;
@@ -120,6 +194,14 @@ function NotificationsPage() {
           <FiBell className={styles.titleIcon} />
           Notifications
         </h1>
+        <Button
+          onClick={handleClearAll}
+          variant="danger"
+          className={styles.clearButton}
+          aria-label="Clear all notifications"
+        >
+          Clear All
+        </Button>
       </header>
 
       <div className={styles.content}>
@@ -147,13 +229,13 @@ function NotificationsPage() {
             {notifications.map((notification) => (
               <li 
                 key={notification.id} 
-                className={`${styles.notificationCard} ${notification.unread ? styles.unread : ''}`}
+                className={`${styles.notificationCard} ${notification.is_read ? '' : styles.unread}`}
               >
                 <div className={styles.notificationHeader}>
                   <div className={styles.notificationType}>
                     {getNotificationIcon(notification.type || 'info')}
                     <span className={styles.notificationCategory}>
-                      {notification.category || 'General'}
+                      {notification.type === 'application_status' ? 'Application Update' : notification.category || 'General'}
                     </span>
                   </div>
                   <div className={styles.notificationTime}>
@@ -162,23 +244,10 @@ function NotificationsPage() {
                   </div>
                 </div>
                 
-                <div className={styles.notificationContent}>
-                  <p className={styles.notificationMessage}>{notification.message}</p>
-                  
-                  {notification.action && (
-                    <Button
-                      onClick={() => navigate(notification.action.url)}
-                      variant="primary"
-                      size="small"
-                      className={styles.actionButton}
-                    >
-                      {notification.action.text || 'View'}
-                    </Button>
-                  )}
-                </div>
+                {renderNotificationContent(notification)}
                 
                 <div className={styles.notificationActions}>
-                  {notification.unread && (
+                  {!notification.is_read && (
                     <button 
                       onClick={() => handleMarkAsRead(notification.id)}
                       className={styles.markAsReadButton}

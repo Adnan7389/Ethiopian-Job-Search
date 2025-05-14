@@ -32,6 +32,74 @@
   padding: var(--space-6);
 }
 
+/* Company Profile Styles */
+.companyProfile {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.companyHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.companyLogo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  background: var(--bg-light);
+  padding: var(--space-2);
+}
+
+.companyInfo {
+  flex: 1;
+}
+
+.companyName {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.companyMeta {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.companyLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: color 0.2s ease;
+}
+
+.companyLink:hover {
+  color: var(--primary-dark);
+}
+
+.companyDescription {
+  margin-top: var(--space-4);
+}
+
+.companyDescription h3 {
+  font-size: var(--font-size-lg);
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.companyDescription p {
+  color: var(--text-light);
+  line-height: var(--line-height-base);
+}
+
 .metaGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -90,6 +158,41 @@
   margin-bottom: 0;
 }
 
+/* Requirements Section */
+.requirements {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-color);
+}
+
+.requirementsTitle {
+  font-size: var(--font-size-xl);
+  color: var(--text);
+  margin-bottom: var(--space-4);
+}
+
+.requirementsContent {
+  line-height: var(--line-height-base);
+  color: var(--text);
+}
+
+.requirementsContent p {
+  margin-bottom: var(--space-4);
+  padding-left: var(--space-4);
+  position: relative;
+}
+
+.requirementsContent p:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+}
+
+.requirementsContent p:last-child {
+  margin-bottom: 0;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -114,20 +217,21 @@
 
 .statusClosed {
   background-color: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
+  color: var(--error);
 }
 
 .statusDraft {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
+  background-color: rgba(156, 163, 175, 0.1);
+  color: var(--text-light);
 }
 
 .error {
-  color: var(--danger);
-  padding: var(--space-4);
-  background-color: rgba(239, 68, 68, 0.1);
-  border-radius: var(--radius-md);
+  color: var(--error);
   text-align: center;
+  padding: var(--space-4);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
 }
 
 /* Responsive adjustments */

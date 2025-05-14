@@ -10,6 +10,7 @@
   align-items: center;
   margin-bottom: var(--space-6);
   position: relative;
+  justify-content: space-between; /* Distribute items across the header */
 }
 
 .backButton {
@@ -37,6 +38,20 @@
 .titleIcon {
   color: var(--primary);
   font-size: var(--font-size-2xl);
+}
+
+.clearButton {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--danger);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.clearButton:hover {
+  background-color: darken(var(--danger), 10%);
 }
 
 /* Content Styles */
@@ -264,4 +279,50 @@
   .notificationTime {
     margin-top: var(--space-1);
   }
+}
+
+/* Fix for SCSS darken function not working in CSS */
+.clearButton:hover {
+  background-color: #c82333; /* Darkened version of danger (e.g., #dc3545) */
+}
+
+.matchDetails {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--bg-light);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary);
+}
+
+.matchDetails h4 {
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.matchDetails ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.matchDetails li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+}
+
+.matchDetails li::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-right: var(--space-2);
 }

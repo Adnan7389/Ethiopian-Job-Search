@@ -6,8 +6,11 @@ const authMiddleware = require('../middleware/authMiddleware');
 const validator = require('validator');
 const path = require('path');
 const fs = require('fs');
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+const { findMatchingJobs } = require('../services/jobMatchingService');
+const { queueProfileUpdate } = require('../queues/matchingQueue');
 
-// Utility to wrap database queries with a timeout
 const queryWithTimeout = async (query, params, timeout = 15000) => {
   const queryPromise = pool.query(query, params);
   const timeoutPromise = new Promise((_, reject) => {
@@ -16,13 +19,6 @@ const queryWithTimeout = async (query, params, timeout = 15000) => {
   return Promise.race([queryPromise, timeoutPromise]);
 };
 
-// Debug route to bypass middleware
-router.get('/debug', (req, res) => {
-  console.log(`[${new Date().toISOString()}] profileRoutes: Handling GET /debug`);
-  res.json({ message: 'Debug route working' });
-});
-
-// Validate JSON fields
 const validateJsonFields = (field, fieldName, maxEntries = 10) => {
   if (!field) return null;
   try {
@@ -39,7 +35,11 @@ const validateJsonFields = (field, fieldName, maxEntries = 10) => {
   }
 };
 
-// Get Profile
+router.get('/debug', (req, res) => {
+  console.log(`[${new Date().toISOString()}] profileRoutes: Handling GET /debug`);
+  res.json({ message: 'Debug route working' });
+});
+
 router.get('/', (req, res, next) => {
   console.log(`[${new Date().toISOString()}] profileRoutes: Entering GET / route`);
   next();
@@ -48,7 +48,7 @@ router.get('/', (req, res, next) => {
 
   const { userId, user_type } = req.user;
 
-  console.time('Profile endpoint'); // Start total timer
+  console.time('Profile endpoint');
   try {
     let query;
     let params = [userId];
@@ -63,6 +63,7 @@ router.get('/', (req, res, next) => {
           jsp.experience, 
           jsp.location, 
           jsp.profile_picture_url, 
+          jsp.recommended_jobs,
           u.email, 
           u.resume_url
         FROM job_seeker_profiles jsp
@@ -97,10 +98,20 @@ router.get('/', (req, res, next) => {
 
     console.time('Response serialization');
     const profile = rows[0] || {};
+
+    let parsedRecommendations = null;
+    try {
+      parsedRecommendations = profile.recommended_jobs ? JSON.parse(profile.recommended_jobs) : null;
+    } catch (err) {
+      console.warn(`Warning: Failed to parse recommended_jobs for user ${userId}: ${err.message}`);
+      parsedRecommendations = null;
+    }
+
     const response = {
       ...profile,
       email: profile.email || null,
       resume_url: profile.resume_url || null,
+      recommended_jobs: parsedRecommendations,
       user_type,
     };
     console.timeEnd('Response serialization');
@@ -114,18 +125,15 @@ router.get('/', (req, res, next) => {
   }
 });
 
-// Update Profile
 router.put('/', authMiddleware(), async (req, res) => {
   const { userId, user_type } = req.user;
   let profileData = req.body;
 
   try {
-    // Validate email if provided
     if (profileData.email) {
       if (!validator.isEmail(profileData.email)) {
         return res.status(400).json({ message: 'Invalid email format' });
       }
-      // Check if email is already in use by another user
       const [existingEmail] = await queryWithTimeout(
         'SELECT user_id FROM users WHERE email = ? AND user_id != ?',
         [profileData.email, userId]
@@ -133,18 +141,15 @@ router.put('/', authMiddleware(), async (req, res) => {
       if (existingEmail.length > 0) {
         return res.status(409).json({ message: 'Email is already in use by another user' });
       }
-      // Update email in users table
       await queryWithTimeout(
         'UPDATE users SET email = ? WHERE user_id = ?',
         [profileData.email, userId]
       );
     }
 
-    // Remove email from profileData to avoid storing it in profile tables
     delete profileData.email;
 
     if (user_type === 'job_seeker') {
-      // Validate Job Seeker fields
       const { full_name, bio, skills, education, experience, location } = profileData;
 
       if (full_name && (full_name.length < 2 || full_name.length > 100)) {
@@ -157,12 +162,10 @@ router.put('/', authMiddleware(), async (req, res) => {
         return res.status(400).json({ message: 'Location must be less than 100 characters' });
       }
 
-      // Validate JSON fields
       const validatedSkills = validateJsonFields(skills, 'Skills');
       const validatedEducation = validateJsonFields(education, 'Education');
       const validatedExperience = validateJsonFields(experience, 'Experience');
 
-      // Additional validation for education and experience objects
       if (validatedEducation) {
         for (const edu of validatedEducation) {
           if (!edu.degree || !edu.institution || !edu.year) {
@@ -183,7 +186,6 @@ router.put('/', authMiddleware(), async (req, res) => {
         [userId]
       );
       if (existing.length > 0) {
-        // Update existing profile
         await queryWithTimeout(
           `UPDATE job_seeker_profiles 
            SET full_name = ?, bio = ?, skills = ?, education = ?, experience = ?, location = ?
@@ -199,7 +201,6 @@ router.put('/', authMiddleware(), async (req, res) => {
           ]
         );
       } else {
-        // Insert new profile
         await queryWithTimeout(
           `INSERT INTO job_seeker_profiles (user_id, full_name, bio, skills, education, experience, location)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -214,8 +215,14 @@ router.put('/', authMiddleware(), async (req, res) => {
           ]
         );
       }
+
+      await queueProfileUpdate(userId);
+      const recommendations = await findMatchingJobs(userId);
+      await queryWithTimeout(
+        'UPDATE job_seeker_profiles SET recommended_jobs = ? WHERE user_id = ?',
+        [JSON.stringify(recommendations), userId]
+      );
     } else if (user_type === 'employer') {
-      // Validate Employer fields
       const { company_name, industry, website, description, contact_email, location } = profileData;
       if (!company_name || company_name.length < 2 || company_name.length > 100) {
         return res.status(400).json({ message: 'Company name is required and must be between 2 and 100 characters' });
@@ -241,7 +248,6 @@ router.put('/', authMiddleware(), async (req, res) => {
         [userId]
       );
       if (existing.length > 0) {
-        // Update existing profile
         await queryWithTimeout(
           `UPDATE employer_profiles 
            SET company_name = ?, industry = ?, website = ?, description = ?, contact_email = ?, location = ?
@@ -249,7 +255,6 @@ router.put('/', authMiddleware(), async (req, res) => {
           [company_name, industry || null, website || null, description || null, contact_email || null, location || null, userId]
         );
       } else {
-        // Insert new profile
         await queryWithTimeout(
           `INSERT INTO employer_profiles (user_id, company_name, industry, website, description, contact_email, location)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -267,7 +272,6 @@ router.put('/', authMiddleware(), async (req, res) => {
   }
 });
 
-// Upload Resume (Job Seekers Only)
 router.post('/resume', authMiddleware(), uploadResume.single('resume'), async (req, res) => {
   const { userId, user_type } = req.user;
 
@@ -281,8 +285,8 @@ router.post('/resume', authMiddleware(), uploadResume.single('resume'), async (r
 
   try {
     const resumePath = `/uploads/resumes/${req.file.filename}`;
+    const resumeText = await extractResumeText(req.file.path);
 
-    // Delete old resume file if it exists
     const [userRows] = await queryWithTimeout(
       'SELECT resume_url FROM users WHERE user_id = ?',
       [userId]
@@ -292,16 +296,37 @@ router.post('/resume', authMiddleware(), uploadResume.single('resume'), async (r
       fs.unlinkSync(path.join(__dirname, '..', oldResumePath));
     }
 
-    // Update resume_url in users table
     await queryWithTimeout(
       'UPDATE users SET resume_url = ? WHERE user_id = ?',
       [resumePath, userId]
     );
 
-    res.json({ message: 'Resume uploaded successfully', resume_url: resumePath });
+    const [profileRows] = await queryWithTimeout(
+      'SELECT 1 FROM job_seeker_profiles WHERE user_id = ?',
+      [userId]
+    );
+    if (profileRows.length === 0) {
+      await queryWithTimeout(
+        'INSERT INTO job_seeker_profiles (user_id, resume_text) VALUES (?, ?)',
+        [userId, resumeText]
+      );
+    } else {
+      await queryWithTimeout(
+        'UPDATE job_seeker_profiles SET resume_text = ? WHERE user_id = ?',
+        [resumeText, userId]
+      );
+    }
+
+    await queueProfileUpdate(userId);
+    const recommendations = await findMatchingJobs(userId);
+    await queryWithTimeout(
+      'UPDATE job_seeker_profiles SET recommended_jobs = ? WHERE user_id = ?',
+      [JSON.stringify(recommendations), userId]
+    );
+
+    res.json({ message: 'Resume uploaded successfully', resume_url: resumePath, recommendations });
   } catch (error) {
     console.error('Error uploading resume:', error.message);
-    // Delete the uploaded file if DB update fails
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -309,7 +334,20 @@ router.post('/resume', authMiddleware(), uploadResume.single('resume'), async (r
   }
 });
 
-// Download Resume (Job Seekers Only)
+async function extractResumeText(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.pdf') {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+  } else if (ext === '.docx') {
+    const result = await mammoth.extractRawText({ path: filePath });
+    return result.value;
+  } else {
+    throw new Error('Unsupported file format');
+  }
+}
+
 router.get('/resume/download', authMiddleware(), async (req, res) => {
   const { userId, user_type } = req.user;
 
@@ -340,7 +378,6 @@ router.get('/resume/download', authMiddleware(), async (req, res) => {
   }
 });
 
-// Upload Profile Picture
 router.post('/profile-picture', authMiddleware(), uploadProfilePicture.single('profilePicture'), async (req, res) => {
   const { userId, user_type } = req.user;
 
@@ -352,7 +389,6 @@ router.post('/profile-picture', authMiddleware(), uploadProfilePicture.single('p
     const profilePicturePath = `/uploads/profile_pictures/${req.file.filename}`;
     const tableName = user_type === 'job_seeker' ? 'job_seeker_profiles' : 'employer_profiles';
 
-    // Delete old profile picture if it exists
     const [profileRows] = await queryWithTimeout(
       `SELECT profile_picture_url FROM ${tableName} WHERE user_id = ?`,
       [userId]
@@ -362,7 +398,6 @@ router.post('/profile-picture', authMiddleware(), uploadProfilePicture.single('p
       fs.unlinkSync(path.join(__dirname, '..', oldPicturePath));
     }
 
-    // Update profile_picture_url in the appropriate table
     const [existing] = await queryWithTimeout(
       `SELECT 1 FROM ${tableName} WHERE user_id = ?`,
       [userId]
@@ -373,7 +408,6 @@ router.post('/profile-picture', authMiddleware(), uploadProfilePicture.single('p
         [profilePicturePath, userId]
       );
     } else {
-      // Insert a minimal profile if it doesn't exist
       if (user_type === 'job_seeker') {
         await queryWithTimeout(
           `INSERT INTO job_seeker_profiles (user_id, profile_picture_url) VALUES (?, ?)`,
@@ -387,7 +421,6 @@ router.post('/profile-picture', authMiddleware(), uploadProfilePicture.single('p
     res.json({ message: 'Profile picture uploaded successfully', profile_picture_url: profilePicturePath });
   } catch (error) {
     console.error('Error uploading profile picture:', error.message);
-    // Delete the uploaded file if DB update fails
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }

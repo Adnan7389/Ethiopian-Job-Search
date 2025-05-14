@@ -5,6 +5,7 @@ import { fetchJobBySlug } from "../../features/job/jobSlice";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import Button from "../../components/Button/Button";
 import styles from "./JobDetail.module.css";
+import DEFAULT_LOGO from "../../assets/default-profile-icon.png";
 
 // React Icons
 import { 
@@ -17,7 +18,11 @@ import {
   FiClock, 
   FiCalendar,
   FiEdit2,
-  FiCheckCircle
+  FiCheckCircle,
+  FiHome,
+  FiGlobe,
+  FiLinkedin,
+  FiMail
 } from "react-icons/fi";
 
 function JobDetail() {
@@ -45,6 +50,36 @@ function JobDetail() {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  // Format salary range if it exists
+  const formatSalary = (salary) => {
+    if (!salary) return 'Not specified';
+    if (salary.includes('-')) {
+      const [min, max] = salary.split('-');
+      return `${min.trim()} - ${max.trim()} ETB`;
+    }
+    return `${salary} ETB`;
+  };
+
+  // Calculate days since posting
+  const getDaysAgo = (dateString) => {
+    if (!dateString) return 'Date not available';
+    try {
+      const postedDate = new Date(dateString);
+      const today = new Date();
+      const diffTime = Math.abs(today - postedDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "1 day ago";
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays/7)} weeks ago`;
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error('Error calculating days ago:', error);
+      return 'Date not available';
+    }
   };
 
   if (status === "loading") return <LoadingSpinner />;
@@ -77,6 +112,56 @@ function JobDetail() {
 
       <div className={styles.content}>
         <div className={styles.mainCard}>
+          {/* Company Profile Section */}
+          <div className={styles.companyProfile}>
+            <div className={styles.companyHeader}>
+              <img
+                src={job.profile_picture_url || DEFAULT_LOGO}
+                alt={job.company_name || 'Company Logo'}
+                className={styles.companyLogo}
+              />
+              <div className={styles.companyInfo}>
+                <h2 className={styles.companyName}>{job.company_name || 'Company Not Specified'}</h2>
+                <div className={styles.companyMeta}>
+                  {job.website && (
+                    <a 
+                      href={job.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={styles.companyLink}
+                    >
+                      <FiGlobe /> Website
+                    </a>
+                  )}
+                  {job.linkedin_url && (
+                    <a 
+                      href={job.linkedin_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={styles.companyLink}
+                    >
+                      <FiLinkedin /> LinkedIn
+                    </a>
+                  )}
+                  {job.email && (
+                    <a 
+                      href={`mailto:${job.email}`}
+                      className={styles.companyLink}
+                    >
+                      <FiMail /> Contact
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+            {job.company_description && (
+              <div className={styles.companyDescription}>
+                <h3>About {job.company_name}</h3>
+                <p>{job.company_description}</p>
+              </div>
+            )}
+          </div>
+
           <div className={styles.metaGrid}>
             <div className={styles.metaItem}>
               <FiMapPin className={styles.metaIcon} />
@@ -90,7 +175,7 @@ function JobDetail() {
               <FiDollarSign className={styles.metaIcon} />
               <div>
                 <h3 className={styles.metaLabel}>Salary</h3>
-                <p className={styles.metaValue}>{job.salary_range ? job.salary_range : "Not specified"}</p>
+                <p className={styles.metaValue}>{formatSalary(job.salary_range)}</p>
               </div>
             </div>
             
@@ -122,7 +207,7 @@ function JobDetail() {
               <FiClock className={styles.metaIcon} />
               <div>
                 <h3 className={styles.metaLabel}>Posted</h3>
-                <p className={styles.metaValue}>{new Date(job.created_at).toLocaleDateString()}</p>
+                <p className={styles.metaValue}>{getDaysAgo(job.created_at)}</p>
               </div>
             </div>
             
@@ -140,11 +225,22 @@ function JobDetail() {
           <div className={styles.description}>
             <h2 className={styles.descriptionTitle}>Job Description</h2>
             <div className={styles.descriptionContent}>
-              {job.description.split('\n').map((paragraph, i) => (
+              {(job.description ? job.description.split('\n') : []).map((paragraph, i) => (
                 <p key={i}>{paragraph}</p>
               ))}
             </div>
           </div>
+
+          {job.requirements && (
+            <div className={styles.requirements}>
+              <h2 className={styles.requirementsTitle}>Requirements</h2>
+              <div className={styles.requirementsContent}>
+                {(job.requirements ? job.requirements.split('\n') : []).map((requirement, i) => (
+                  <p key={i}>{requirement}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={styles.actions}>

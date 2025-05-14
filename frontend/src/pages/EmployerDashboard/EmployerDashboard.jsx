@@ -265,7 +265,7 @@ function EmployerDashboard() {
 
   const handleEditJob = useCallback(
     (slug) => {
-      navigate(`edit-job/${slug}`);
+      navigate(`/dashboard/edit-job/${slug}`);
     },
     [navigate]
   );
@@ -501,7 +501,7 @@ function EmployerDashboard() {
           ) : (
             <>
               <div className={styles.jobList}>
-                {jobs.map((job) => {
+                {jobs.filter(job => job && job.job_id && job.slug).map((job) => {
                   const jobApplications = applications[String(job.job_id)];
                   const isFetching = fetchingApplications.includes(String(job.job_id));
                   const isArchived = job.is_archived;
@@ -534,7 +534,9 @@ function EmployerDashboard() {
                               <span>Loading applications...</span>
                             ) : (
                               <>
-                                <strong>{jobApplications?.length || 0}</strong> applications
+                                <strong>
+                                  {jobApplications?.length || 0}
+                                </strong> qualified applications
                               </>
                             )}
                           </div>
@@ -542,7 +544,7 @@ function EmployerDashboard() {
                             onClick={() => handleViewApplications(job.job_id)}
                             variant="secondary"
                             className={styles.actionButton}
-                            aria-label={`View applicants for ${job.title}`}
+                            aria-label={`View qualified applicants for ${job.title}`}
                           >
                             <FiEye className={styles.buttonIcon} />
                             View
@@ -550,6 +552,7 @@ function EmployerDashboard() {
                         </div>
 
                         <div className={styles.jobActions}>
+                          {job.slug && (
                           <Button
                             onClick={() => handleEditJob(job.slug)}
                             variant="primary"
@@ -559,6 +562,7 @@ function EmployerDashboard() {
                             <FiEdit2 className={styles.buttonIcon} />
                             Edit
                           </Button>
+                          )}
                           {isArchived ? (
                             <Button
                               onClick={() => handleRestore(job.job_id)}

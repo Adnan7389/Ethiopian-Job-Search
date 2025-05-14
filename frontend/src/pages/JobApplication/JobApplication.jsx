@@ -1,6 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import Button from "../../components/Button/Button";
 import { applyForJob } from "../../features/job/jobSlice";
 import styles from "./JobApplication.module.css";
@@ -16,21 +17,28 @@ function JobApplication() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (userType !== "job_seeker") {
-      alert("Only job seekers can apply for jobs.");
+      toast.error("Only job seekers can apply for jobs.");
       return;
     }
     if (!resume_url) {
-      return; // This should be prevented by UI already
+      toast.error("Please upload a resume before applying.");
+      return;
     }
     try {
-      await dispatch(applyForJob({ slug })).unwrap();
+      const result = await dispatch(applyForJob({ slug })).unwrap();
+      toast.success("Application submitted successfully!");
+      // Wait for 2 seconds before redirecting to show the success message
+      setTimeout(() => {
       navigate("/dashboard", { state: { applicationSuccess: true } });
+      }, 2000);
     } catch (err) {
       console.error("Application error:", err);
+      toast.error(err.message || "Failed to submit application. Please try again.");
     }
   };
 
   const handleUploadResume = () => {
+    toast.info("Redirecting to profile page to upload resume...");
     navigate("/profile?focus=resume");
   };
 

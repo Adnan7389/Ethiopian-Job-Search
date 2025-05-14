@@ -3,6 +3,9 @@ const router = express.Router();
 const jobController = require("../controllers/jobController");
 const authMiddleware = require("../middleware/authMiddleware");
 
+// New route for recommended jobs
+router.get('/recommended', authMiddleware('job_seeker'), jobController.getRecommendedJobs);
+
 router.get("/", jobController.getJobs); // Public route for job seekers
 router.get("/employer", authMiddleware("employer"), jobController.getJobsByEmployer);
 router.get("/:slug", jobController.getJobBySlug);
