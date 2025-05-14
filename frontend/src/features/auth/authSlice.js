@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
+import { fetchRecommendedJobs } from '../job/jobSlice';
 
 const initialState = {
   token: null,
@@ -159,6 +160,10 @@ export const login = createAsyncThunk(
       localStorage.setItem('resume_url', resume_url || '');
       localStorage.setItem('isVerified', 'true');
 
+      // if (user.userType === 'job_seeker') {
+      //   await dispatch(fetchRecommendedJobs()).unwrap();
+      // }
+      
       return {
         token: accessToken,
         refreshToken,

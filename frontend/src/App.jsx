@@ -27,11 +27,8 @@ import Profile from "./components/Profile/Profile";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { initializeAuth } from "./features/auth/authSlice";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
-
-// 🧩 ADD THESE:
-import { initSocket } from "./services/socket";
+import { SocketProvider, useSocket } from "./SocketContext";
 import { receiveNotification } from "./features/notification/notificationSlice";
-import { store } from "./store";
 
 function PrivateRoute({ children, allowedRoles }) {
   const { token, userType, isVerified, status, hasInitialized } = useSelector((state) => state.auth);
@@ -65,13 +62,32 @@ function PrivateRoute({ children, allowedRoles }) {
   return children;
 }
 
+function NotificationHandler() {
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNotification = (notification) => {
+      toast.info(notification.message);
+    };
+
+    socket.on("notification", handleNotification);
+
+    return () => {
+      socket.off("notification", handleNotification);
+    };
+  }, [socket]);
+
+  return null;
+}
+
 function App() {
   const dispatch = useDispatch();
   const { token, userType, isVerified, hasInitialized, status } = useSelector((state) => state.auth);
   const location = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
 
-  // ✅ INIT AUTH ON LOAD
   useEffect(() => {
     if (hasInitialized || authChecked) {
       setAuthChecked(true);
@@ -87,25 +103,6 @@ function App() {
       });
   }, [dispatch, hasInitialized, authChecked]);
 
-  // ✅ INIT SOCKET.IO WHEN LOGGED IN
-  useEffect(() => {
-    if (token && userType && isVerified) {
-      const socket = initSocket();
-
-      if (!socket) return;
-
-      socket.on("notification", (notification) => {
-        store.dispatch(receiveNotification(notification));
-        toast.info(notification.message);
-      });
-
-      return () => {
-        socket.off("notification");
-        // socket.disconnect();
-      };
-    }
-  }, [token, userType, isVerified]);
-
   if (!authChecked || status === "loading") {
     return <LoadingSpinner />;
   }
@@ -119,43 +116,46 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
-      <Navbar />
-      <div style={{ padding: "2rem" }}>
-        <Routes>
-          <Route path="/" element={<LandingPage/>} />
-          <Route path="/role-selection" element={<RoleSelection />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/enter-reset-code" element={<EnterResetCode />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/enter-code" element={<EnterCode />} />
-          <Route path="/job-search" element={<PrivateRoute><JobSearch /></PrivateRoute>} />
-          <Route path="/jobs/:slug" element={<PrivateRoute><JobDetail /></PrivateRoute>} />
-          <Route
-            path="/jobs/:slug/apply"
-            element={<PrivateRoute allowedRoles={["job_seeker"]}><JobApplication /></PrivateRoute>}
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                {userType === 'employer' ? <EmployerDashboard /> : <JobSeekerDashboard />}
-              </PrivateRoute>
-            }
-           >
-            <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
-            <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
-            <Route path="/dashboard/job/:jobId/applicants" element={<ApplicantsPage />} />
-          </Route>
-          <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
-          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/my-applications" element={<PrivateRoute allowedRoles={["job_seeker"]}><MyApplications /></PrivateRoute>} />
-        </Routes>
-        <ToastContainer position="top-right" autoClose={3000} />
-      </div>
-    </ErrorBoundary>
+    <SocketProvider>
+      <ErrorBoundary>
+        <NotificationHandler />
+        <Navbar />
+        <div style={{ padding: "2rem" }}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/role-selection" element={<RoleSelection />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/enter-reset-code" element={<EnterResetCode />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/enter-code" element={<EnterCode />} />
+            <Route path="/job-search" element={<PrivateRoute><JobSearch /></PrivateRoute>} />
+            <Route path="/jobs/:slug" element={<PrivateRoute><JobDetail /></PrivateRoute>} />
+            <Route
+              path="/jobs/:slug/apply"
+              element={<PrivateRoute allowedRoles={["job_seeker"]}><JobApplication /></PrivateRoute>}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  {userType === 'employer' ? <EmployerDashboard /> : <JobSeekerDashboard />}
+                </PrivateRoute>
+              }
+            >
+              <Route path="post-job" element={<PrivateRoute allowedRoles={["employer"]}><PostJob /></PrivateRoute>} />
+              <Route path="edit-job/:slug" element={<PrivateRoute allowedRoles={["employer"]}><EditJob /></PrivateRoute>} />
+              <Route path="job/:jobId/applicants" element={<PrivateRoute allowedRoles={["employer"]}><ApplicantsPage /></PrivateRoute>} />
+            </Route>
+            <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/my-applications" element={<PrivateRoute allowedRoles={["job_seeker"]}><MyApplications /></PrivateRoute>} />
+          </Routes>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </div>
+      </ErrorBoundary>
+    </SocketProvider>
   );
 }
 

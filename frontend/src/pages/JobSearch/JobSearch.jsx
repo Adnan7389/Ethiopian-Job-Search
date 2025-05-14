@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchJobs } from "../../features/job/jobSlice";
+import { fetchJobs, fetchRecommendedJobs } from "../../features/job/jobSlice";
 import JobCard from "../../components/JobCard/JobCard";
 import FormInput from "../../components/FormInput/FormInput";
 import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import styles from "./JobSearch.module.css";
-import { FiSearch, FiX, FiBriefcase, FiMapPin, FiClock, FiAward } from "react-icons/fi";
+import { FiSearch, FiX, FiBriefcase, FiMapPin, FiClock, FiAward, FiInfo } from "react-icons/fi";
 
 const JobSearch = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { jobs, status, error } = useSelector((state) => state.job);
+  const { jobs, recommendedJobs, status, error, recommendedStatus, recommendedError } = useSelector((state) => state.job);
   const { userType } = useSelector((state) => state.auth);
 
   const [filters, setFilters] = useState({
@@ -23,21 +23,20 @@ const JobSearch = () => {
     experience_level: "",
   });
 
+  // Initial load of jobs
   useEffect(() => {
     dispatch(
       fetchJobs({
         page: 1,
         limit: 10,
-        search: filters.search,
-        industry: filters.industry,
-        location: filters.location,
-        job_type: filters.job_type,
-        experience_level: filters.experience_level,
         status: "open",
         includeArchived: false,
       })
     );
-  }, [dispatch, filters]);
+    if (userType === "job_seeker") {
+      dispatch(fetchRecommendedJobs());
+    }
+  }, [dispatch, userType]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -52,15 +51,65 @@ const JobSearch = () => {
       job_type: "",
       experience_level: "",
     });
+    // Reset and fetch jobs with default filters
+    dispatch(
+      fetchJobs({
+        page: 1,
+        limit: 10,
+        status: "open",
+        includeArchived: false,
+      })
+    );
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Search is already handled by the useEffect
+    dispatch(
+      fetchJobs({
+        page: 1,
+        limit: 10,
+        search: filters.search,
+        industry: filters.industry,
+        location: filters.location,
+        job_type: filters.job_type,
+        experience_level: filters.experience_level,
+        status: "open",
+        includeArchived: false,
+      })
+    );
   };
 
   const handleJobClick = (slug) => {
     navigate(`/jobs/${slug}`);
+  };
+
+  // Validate recommended job
+  const isValidRecommendedJob = (job) => {
+    if (!job || !job.job) return false;
+    
+    const { job_id, slug, status, expires_at } = job.job;
+    
+    // Check if job has required fields
+    if (!job_id || !slug) return false;
+    
+    // Check if job is open and not expired
+    if (status !== 'open') return false;
+    if (expires_at && new Date(expires_at) < new Date()) return false;
+    
+    return true;
+  };
+
+  // Get valid recommended jobs
+  const getValidRecommendedJobs = () => {
+    if (!recommendedJobs || !Array.isArray(recommendedJobs)) return [];
+    return recommendedJobs.filter(isValidRecommendedJob);
+  };
+
+  // Filter out recommended jobs from the main job list
+  const getFilteredJobs = () => {
+    if (!jobs || !Array.isArray(jobs)) return [];
+    const recommendedJobIds = getValidRecommendedJobs().map(job => job.job.job_id);
+    return jobs.filter(job => !recommendedJobIds.includes(job.job_id));
   };
 
   return (
@@ -193,6 +242,58 @@ const JobSearch = () => {
         </div>
       </form>
 
+      {/* Recommended Jobs Section (Job Seekers Only) */}
+      {userType === "job_seeker" && (
+        <section className={styles.recommendedSection}>
+          <h2 className={styles.recommendedTitle}>Recommended Jobs for You</h2>
+          {recommendedStatus === "loading" && (
+            <div className={styles.loadingContainer}>
+              <LoadingSpinner />
+              <p className={styles.loadingText}>Loading recommendations...</p>
+            </div>
+          )}
+          {recommendedStatus === "failed" && (
+            <div className={styles.errorCard}>
+              <h3 className={styles.errorTitle}>Unable to Load Recommendations</h3>
+              <p className={styles.errorMessage}>
+                {recommendedError || "We couldn't load your job recommendations. Please try again later."}
+              </p>
+              <Button
+                onClick={() => dispatch(fetchRecommendedJobs())}
+                variant="primary"
+                className={styles.retryButton}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {recommendedStatus === "succeeded" && (
+            <>
+              {getValidRecommendedJobs().length > 0 ? (
+                <div className={styles.recommendedList}>
+                  {getValidRecommendedJobs().map((recommendedJob, index) => (
+                    <div 
+                      key={`${recommendedJob.job.job_id}-${index}`} 
+                      className={styles.recommendedJobCard}
+                      onClick={() => handleJobClick(recommendedJob.job.slug)}
+                    >
+                      <JobCard job={recommendedJob.job} showMatchScore={false} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <h3 className={styles.emptyStateTitle}>No recommendations yet</h3>
+                  <p className={styles.emptyStateText}>
+                    Complete your profile and apply for jobs to get personalized recommendations
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
       {/* Job Listings */}
       <section className={styles.jobListSection}>
         {status === "loading" && (
@@ -218,7 +319,7 @@ const JobSearch = () => {
           </div>
         )}
 
-        {status === "succeeded" && jobs.length === 0 && (
+        {status === "succeeded" && getFilteredJobs().length === 0 && (
           <div className={styles.emptyState}>
             <h3 className={styles.emptyStateTitle}>No jobs found</h3>
             <p className={styles.emptyStateText}>
@@ -234,22 +335,22 @@ const JobSearch = () => {
           </div>
         )}
 
-        {status === "succeeded" && jobs.length > 0 && (
+        {status === "succeeded" && getFilteredJobs().length > 0 && (
           <>
             <div className={styles.resultsHeader}>
               <h2 className={styles.resultsTitle}>
-                Showing {jobs.length} {jobs.length === 1 ? "job" : "jobs"}
+                Showing {getFilteredJobs().length} {getFilteredJobs().length === 1 ? "job" : "jobs"}
               </h2>
             </div>
             
             <div className={styles.jobList}>
-              {jobs.map((job) => (
+              {getFilteredJobs().map((job) => (
                 <div
                   key={job.job_id}
                   onClick={() => handleJobClick(job.slug)}
                   className={styles.jobCardWrapper}
                 >
-                  <JobCard job={job} />
+                  <JobCard job={job} showMatchScore={true} />
                 </div>
               ))}
             </div>

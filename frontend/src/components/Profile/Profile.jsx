@@ -301,6 +301,7 @@ const Profile = () => {
   };
 
   if (status === "loading" && retryCount === 0 && !profile) {
+    console.log("Loading profile...", { status, retryCount, profile });
     return (
       <div className={styles.loadingContainer}>
         <LoadingSpinner />

@@ -22,6 +22,12 @@ const PORT = process.env.PORT || 5000;
 // Log environment variables for debugging
 console.log('ACCESS_TOKEN_SECRET:', process.env.ACCESS_TOKEN_SECRET);
 
+// Log all incoming requests at the very start
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Incoming Request: ${req.method} ${req.url}`);
+  next();
+});
+
 // Utility to wrap database queries with a timeout
 const queryWithTimeout = async (query, params, timeout = 10000) => {
   const queryPromise = pool.query(query, params);
@@ -70,7 +76,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Log all incoming requests
+// Log all incoming requests (already handled above, this middleware can be removed)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   res.on('finish', () => {
@@ -146,8 +152,8 @@ const server = http.createServer(app);
 const io = initSocket(server);
 
 server.listen(PORT, () => {
-   console.log(`🚀 Server and Socket.IO running on port ${PORT}`);
-  });
+  console.log(`🚀 Server and Socket.IO running on port ${PORT}`);
+});
 
 // Set server timeout (60 seconds)
 server.setTimeout(60000, (socket) => {

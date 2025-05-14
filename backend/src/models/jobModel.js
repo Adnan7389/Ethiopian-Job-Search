@@ -88,22 +88,55 @@ class Job {
 
   async findBySlug(slug) {
     const [rows] = await queryWithTimeout(
-      "SELECT *, company_name FROM jobs WHERE slug = ? AND (expires_at IS NULL OR expires_at > NOW())",
-      [slug],
-      5000
+      `
+      SELECT 
+        j.*, 
+        e.company_name,
+        e.website,
+        e.location AS company_location,
+        e.profile_picture_url,
+        e.description AS company_description
+      FROM jobs j
+      JOIN employer_profiles e ON j.employer_id = e.user_id
+      WHERE j.slug = ?
+        AND j.is_archived = 0
+        AND (j.expires_at IS NULL OR j.expires_at > NOW())
+      `,
+      [slug]
     );
     return rows[0];
   }
 
   async findAll({ page, limit, search, job_type, industry, experience_level, status, date_posted, includeArchived }) {
-    let query = "SELECT * FROM jobs WHERE is_archived = 0 AND status = ? AND (expires_at IS NULL OR expires_at > NOW())";
-    let countQuery = "SELECT COUNT(*) as total FROM jobs WHERE is_archived = 0 AND status = ? AND (expires_at IS NULL OR expires_at > NOW())";
-    const params = [status || "open"];
-    const countParams = [status || "open"];
+    // Only non-archived, non-expired, with an explicit status filter
+   let query = `
+     SELECT
+       j.*,
+       e.company_name,
+       e.website,
+       e.location AS company_location,
+       e.profile_picture_url,
+       e.description AS company_description
+     FROM jobs j
+     JOIN employer_profiles e ON j.employer_id = e.user_id
+     WHERE j.is_archived = ?
+       AND j.status = ?
+       AND (j.expires_at IS NULL OR j.expires_at > NOW())
+   `;
+   let countQuery = `
+     SELECT COUNT(*) AS total
+     FROM jobs j
+     WHERE j.is_archived = ?
+       AND j.status = ?
+       AND (j.expires_at IS NULL OR j.expires_at > NOW())
+  `;
+   // First two params are is_archived and status
+   const params = [ includeArchived ? 1 : 0, status || "open" ];
+   const countParams = [ includeArchived ? 1 : 0, status || "open" ];
 
     if (search) {
-      query += " AND (title LIKE ? OR description LIKE ?)";
-      countQuery += " AND (title LIKE ? OR description LIKE ?)";
+      query += " AND (j.title LIKE ? OR j.description LIKE ?)";
+      countQuery += " AND (j.title LIKE ? OR j.description LIKE ?)";
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm);
       countParams.push(searchTerm, searchTerm);
@@ -111,20 +144,20 @@ class Job {
 
     if (job_type) {
       const mappedJobType = this.mapJobType(job_type);
-      query += " AND job_type = ?";
-      countQuery += " AND job_type = ?";
+      query += " AND j.job_type = ?";
+      countQuery += " AND j.job_type = ?";
       params.push(mappedJobType);
       countParams.push(mappedJobType);
     }
     if (industry) {
-      query += " AND industry = ?";
-      countQuery += " AND industry = ?";
+      query += " AND j.industry = ?";
+      countQuery += " AND j.industry = ?";
       params.push(industry);
       countParams.push(industry);
     }
     if (experience_level) {
-      query += " AND experience_level = ?";
-      countQuery += " AND experience_level = ?";
+      query += " AND j.experience_level = ?";
+      countQuery += " AND j.experience_level = ?";
       params.push(experience_level);
       countParams.push(experience_level);
     }
@@ -134,17 +167,17 @@ class Job {
       else if (date_posted === "last_7_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
       else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 30 DAY)";
       if (dateFilter) {
-        query += ` AND created_at >= ${dateFilter}`;
-        countQuery += ` AND created_at >= ${dateFilter}`;
+        query += ` AND j.created_at >= ${dateFilter}`;
+        countQuery += ` AND j.created_at >= ${dateFilter}`;
       }
     }
 
-    const offset = (page - 1) * limit;
-    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    params.push(parseInt(limit), offset);
+     const offset = (page - 1) * limit;
+     query += ` ORDER BY j.created_at DESC LIMIT ? OFFSET ?`;
+     params.push(limit, (page-1)*limit);
 
-    const [jobs] = await queryWithTimeout(query, params, 10000);
-    const [[{ total }]] = await queryWithTimeout(countQuery, countParams, 5000);
+    const [jobs] = await queryWithTimeout(query, params);
+     const [[{ total }]] = await queryWithTimeout(countQuery, countParams);
     return { jobs, total };
   }
 

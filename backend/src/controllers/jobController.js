@@ -1,10 +1,12 @@
 const Job = require("../models/jobModel");
 const User = require("../models/userModel");
-const pool = require("../config/db"); 
+const pool = require("../config/db");
+const { findMatchingJobs, updateAllRecommendations } = require('../services/jobMatchingService'); 
 const Applicant = require("../models/Applicant");
 const Notification = require("../models/Notification");
+const { invalidateCache } = require('../services/applicantMatchingService');
+const {queueApplicationProcessing} = require('../queues/matchingQueue')
 
-// Import queryWithTimeout from app.js (or define here if not accessible)
 const queryWithTimeout = async (query, params, timeout = 10000) => {
   const queryPromise = pool.query(query, params);
   const timeoutPromise = new Promise((_, reject) => {
@@ -24,7 +26,6 @@ const createJob = async (req, res) => {
     return res.status(403).json({ error: "Only employers can create jobs" });
   }
 
-  // Validate required fields
   if (!title || !description || !location || !job_type || !industry || !experience_level || !status) {
     console.log("Validation failed: Missing required fields");
     return res.status(400).json({ error: "All required fields must be provided" });
@@ -49,6 +50,10 @@ const createJob = async (req, res) => {
     console.log("Creating job with data:", jobData);
     const job = await Job.create(jobData);
     console.log("Job created successfully:", { jobId: job.job_id, slug: job.slug });
+
+    const newJobId = job.insertId;
+    await updateAllRecommendations(newJobId);
+    
     res.status(201).json({ message: "Job created successfully", jobId: job.job_id, slug: job.slug });
   } catch (error) {
     console.error("Error creating job:", error.message);
@@ -82,6 +87,34 @@ const getJobs = async (req, res) => {
   }
 };
 
+const getRecommendedJobs = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Always fetch fresh recommendations
+    const recommendations = await findMatchingJobs(userId);
+    
+    // Update the cache
+    let jsonRecommendations;
+    try {
+      jsonRecommendations = JSON.stringify(recommendations);
+    } catch (e) {
+      console.error("Failed to serialize recommendations:", e);
+      return res.status(500).json({ error: "Failed to process recommendations" });
+    }
+    
+    await pool.query(
+      "UPDATE job_seeker_profiles SET recommended_jobs = ? WHERE user_id = ?",
+      [jsonRecommendations, userId]
+    );
+
+    return res.json(recommendations);
+  } catch (err) {
+    console.error("Error fetching recommended jobs:", err);
+    return res.status(500).json({ error: "Failed to fetch recommended jobs" });
+  }
+};
+
 const getJobsByEmployer = async (req, res) => {
   try {
     if (req.user.user_type !== "employer") {
@@ -101,10 +134,9 @@ const getJobsByEmployer = async (req, res) => {
     countParams.push(isArchived);
 
     if (search) {
-      // Use MATCH ... AGAINST for full-text search
       query += " AND MATCH(title, description) AGAINST (? IN BOOLEAN MODE)";
       countQuery += " AND MATCH(title, description) AGAINST (? IN BOOLEAN MODE)";
-      const searchParam = `${search}*`; // Add wildcard for partial matches
+      const searchParam = `${search}*`;
       queryParams.push(searchParam);
       countParams.push(searchParam);
     }
@@ -184,72 +216,120 @@ const getJobBySlug = async (req, res) => {
   }
 };
 
+const validateResumeUrl = (url) => {
+  try {
+    if (!url) {
+      return { valid: false, message: "Resume URL is required" };
+    }
+    
+    // Only handle local file paths (starting with /uploads/resumes/)
+    if (!url.startsWith('/uploads/resumes/')) {
+      return { valid: false, message: "Resume must be uploaded to /uploads/resumes/ directory" };
+    }
+    
+    // Validate file extension
+    if (!url.match(/\.(pdf|doc|docx)$/i)) {
+      return { valid: false, message: "Resume must be in PDF, DOC, or DOCX format" };
+    }
+    
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, message: "Invalid resume URL format" };
+  }
+};
+
+const sanitizeUrl = (url) => {
+  try {
+    const parsedUrl = new URL(url);
+    // Remove any potentially dangerous characters from the URL
+    return parsedUrl.toString().replace(/[<>]/g, '');
+  } catch (error) {
+    return url;
+  }
+};
+
 const applyForJob = async (req, res) => {
   try {
     const { slug } = req.params;
+    const { resume_url } = req.body;
+    const userId = req.user.userId;
 
-    console.log("Entering applyForJob for slug:", slug);
-    console.log("req.user at start of applyForJob:", req.user);
-
-    // Validate user type
     if (!req.user || !req.user.user_type) {
-      console.log("Missing user or user_type in req.user");
       return res.status(401).json({ message: "User authentication failed: missing user type" });
     }
-
     if (req.user.user_type !== "job_seeker") {
-      console.log("User type is not job_seeker:", req.user.user_type);
       return res.status(403).json({ message: "Only job seekers can apply for jobs" });
     }
-
-    // Validate userId
     if (!req.user.userId) {
-      console.log("User ID is missing from req.user:", req.user);
       return res.status(400).json({ message: "User ID is missing from token" });
     }
 
-    console.log("Applying for job with userId:", req.user.userId);
+    const urlValidation = validateResumeUrl(resume_url);
+    if (!urlValidation.valid) {
+      return res.status(400).json({ message: urlValidation.message });
+    }
+    const sanitizedResumeUrl = sanitizeUrl(resume_url);
+
+    // Check if job seeker has a complete profile
+    const [[profile]] = await queryWithTimeout(
+      "SELECT * FROM job_seeker_profiles WHERE user_id = ?",
+      [req.user.userId],
+      5000
+    );
+    if (!profile) {
+      return res.status(400).json({ message: "Please complete your profile before applying for jobs" });
+    }
 
     const [jobs] = await queryWithTimeout(
-      "SELECT * FROM jobs WHERE slug = ? AND status = 'open'",
+      "SELECT * FROM jobs WHERE slug = ? AND status = 'open' AND (expires_at IS NULL OR expires_at > NOW())",
       [slug],
       5000
     );
     const job = jobs[0];
     if (!job) {
-      console.log("Job not found or closed for slug:", slug);
-      return res.status(404).json({ message: "Job not found or closed" });
+      return res.status(404).json({ message: "Job not found, closed, or expired" });
     }
-
-    console.log("Found job:", job);
 
     const existingApplication = await Applicant.findByJobSeekerAndJob(req.user.userId, job.job_id);
     if (existingApplication) {
-      console.log("User has already applied for job:", job.job_id);
       return res.status(400).json({ message: "You have already applied for this job" });
     }
 
-    console.log("Creating new application for job_id:", job.job_id, "with job_seeker_id:", req.user.userId);
+    // --- Use applicantMatchingService to process the application and get result ---
+    const { processJobApplication } = require('../services/applicantMatchingService');
+    const result = await processJobApplication(userId, job.job_id, sanitizedResumeUrl);
 
-    const applicantId = await Applicant.create({
-      job_id: job.job_id,
-      job_seeker_id: req.user.userId,
-      resume_url: req.body.resume_url || null,
-    });
+    // Only send employer notification if applicant is qualified (status: 'pending')
+    if (result && result.status === 'pending') {
+      await Notification.create({
+        user_id: job.employer_id,
+        message: `New application for ${job.title} from user ${req.user.userId}`,
+        type: 'application',
+        reference_id: result.applicationId
+      });
+    }
 
-    console.log("Application created with applicantId:", applicantId);
-
-    await Notification.create({
-      user_id: job.employer_id,
-      message: `New application for ${job.title} from user ${req.user.userId}`,
-    });
-
-    console.log("Notification created for employer:", job.employer_id);
-
-    res.status(201).json({ message: "Application submitted successfully", applicantId });
+    // Respond to the job seeker
+    if (result && result.status === 'unqualified') {
+      return res.status(200).json({
+        message: result.message,
+        applicationId: result.applicationId,
+        status: result.status,
+        details: result.details
+      });
+    }
+    if (result && result.status === 'pending') {
+      return res.status(201).json({
+        message: result.message,
+        applicationId: result.applicationId,
+        status: result.status
+      });
+    }
+    // fallback
+    return res.status(500).json({ message: "Failed to process application" });
   } catch (error) {
     console.error("Apply for job error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error", details: error.message });
   }
 };
 
@@ -310,6 +390,7 @@ const updateJob = async (req, res) => {
       status: status || job.status,
     };
     const updatedJob = await Job.update(slug, updates);
+    await invalidateCache('job', job.job_id);
     res.json({ message: "Job updated successfully", slug: updatedJob.slug });
   } catch (error) {
     res.status(500).json({ error: "Failed to update job", details: error.message });
@@ -333,6 +414,7 @@ const archiveJob = async (req, res) => {
       return res.status(403).json({ error: "You can only delete your own jobs" });
     }
     await Job.archive(jobId);
+    await invalidateCache('job', jobId);
     res.json({ message: "Job archived successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete job", details: error.message });
@@ -359,6 +441,7 @@ const restoreJob = async (req, res) => {
       return res.status(400).json({ error: "Job is not archived" });
     }
     await Job.restore(jobId);
+    await invalidateCache('job', jobId);
     res.json({ message: "Job restored successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to restore job", details: error.message });
@@ -385,24 +468,12 @@ const duplicateJob = async (req, res) => {
     if (!newJob) {
       return res.status(404).json({ error: "Job not found" });
     }
+    await updateAllRecommendations(newJob.job_id);
     res.json({ message: "Job duplicated successfully", newJobId: newJob.job_id, slug: newJob.slug });
   } catch (error) {
     res.status(500).json({ error: "Failed to duplicate job", details: error.message });
   }
 };
-
-console.log("Exporting from jobController:", { 
-  createJob, 
-  getJobs, 
-  getJobsByEmployer, 
-  getJobBySlug, 
-  updateJob, 
-  archiveJob, 
-  restoreJob, 
-  duplicateJob, 
-  applyForJob, 
-  getApplicationsByJobId 
-});
 
 module.exports = { 
   createJob, 
@@ -414,5 +485,6 @@ module.exports = {
   restoreJob, 
   duplicateJob, 
   applyForJob, 
-  getApplicationsByJobId 
+  getApplicationsByJobId,
+  getRecommendedJobs 
 };

@@ -2,7 +2,7 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-5) var(--space-4);
+  padding: 2rem;
 }
 
 /* Header Styles */
@@ -26,32 +26,33 @@
 }
 
 /* Search Form Styles */
-.searchForm {
-  margin-bottom: var(--space-6);
-}
-
-.searchBar {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
+.searchSection {
+  margin-bottom: 2rem;
 }
 
 .searchInput {
-  flex-grow: 1;
-  position: relative;
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
 }
 
-.searchIcon {
-  position: absolute;
-  left: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-light);
-  z-index: 1;
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.searchButton {
-  min-width: 160px;
+.filterSelect {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--white);
+  font-size: 1rem;
 }
 
 /* Filter Section */
@@ -102,24 +103,6 @@
   font-size: var(--font-size-sm);
 }
 
-.filterSelect {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  background-color: var(--white);
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.filterSelect:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
 .filterActions {
   display: flex;
   justify-content: flex-end;
@@ -148,10 +131,10 @@
   color: var(--text);
 }
 
-.jobList {
+.jobGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 .jobCardWrapper {
@@ -231,19 +214,15 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .searchBar {
-    flex-direction: column;
+  .container {
+    padding: 1rem;
   }
 
-  .searchButton {
-    width: 100%;
-  }
-
-  .filterGrid {
+  .filters {
     grid-template-columns: 1fr;
   }
 
-  .jobList {
+  .jobGrid {
     grid-template-columns: 1fr;
   }
 
@@ -264,4 +243,161 @@
   .title {
     font-size: var(--font-size-xl);
   }
+}
+
+.recommendedSection,
+.jobsSection {
+  margin-bottom: 3rem;
+}
+
+.recommendedSection h2,
+.jobsSection h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+.recommendedList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.recommendedJobCard {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.recommendedJobCard:hover {
+  transform: translateY(-2px);
+}
+
+.detailsButton {
+  width: 100%;
+  margin-top: auto;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.loadingText {
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+.errorCard {
+  background: var(--error-light);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.errorTitle {
+  color: var(--error);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.errorMessage {
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.retryButton {
+  margin-top: 1rem;
+}
+
+.emptyState {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.emptyStateTitle {
+  color: var(--text);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.emptyStateText {
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+}
+
+.suggestionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto 1.5rem;
+}
+
+.suggestionsList li {
+  color: var(--text);
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.suggestionsList li::before {
+  content: "•";
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.emptyStateButton {
+  min-width: 200px;
+}
+
+@media (max-width: 768px) {
+  .recommendedSection {
+    padding: 1rem;
+  }
+
+  .recommendedList {
+    grid-template-columns: 1fr;
+  }
+
+  .emptyStateActions {
+    flex-direction: column;
+  }
+
+  .emptyStateButton {
+    width: 100%;
+  }
+}
+
+.noJobs {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 1.1rem;
+  padding: 2rem;
+}
+
+.error {
+  color: var(--error);
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
 }

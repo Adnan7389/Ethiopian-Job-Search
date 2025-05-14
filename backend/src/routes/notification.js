@@ -1,13 +1,22 @@
 const express = require("express");
-const { getNotifications, markAllAsRead } = require("../controllers/notificationController");
+const { getNotifications, markAllAsRead, markAsRead, deleteNotification, deleteAllNotifications } = require("../controllers/notificationController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// now allows any authenticated user
+// Get all notifications for the authenticated user
 router.get("/", authMiddleware(), getNotifications);
 
-// new endpoint
+// Mark all notifications as read
 router.put("/mark-all-read", authMiddleware(), markAllAsRead);
+
+// Mark a single notification as read
+router.put("/:id/read", authMiddleware(), markAsRead);
+
+// Delete a single notification
+router.delete("/:id", authMiddleware(), deleteNotification);
+
+// Clear all notifications for the user
+router.delete("/", authMiddleware(), deleteAllNotifications);
 
 module.exports = router;

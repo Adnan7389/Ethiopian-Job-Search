@@ -1,29 +1,35 @@
 const Applicant = require('../models/Applicant');
 const Job = require('../models/jobModel');
+const { queueApplicationProcessing } = require('../queues/matchingQueue');
+const Notification = require('../models/Notification');
 
 const applyForJob = async (req, res) => {
   const { job_id, resume_url } = req.body;
-  const job_seeker_id = req.user.userId; // From JWT
+  const job_seeker_id = req.user.userId;
 
   if (req.user.user_type !== 'job_seeker') {
     return res.status(403).json({ error: 'Only job seekers can apply for jobs' });
   }
 
   try {
-    // Check if job exists
     const job = await Job.findById(job_id);
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Check if already applied
     const existingApplication = await Applicant.findByJobSeekerAndJob(job_seeker_id, job_id);
     if (existingApplication) {
       return res.status(400).json({ error: 'You have already applied for this job' });
     }
 
-    const applicantId = await Applicant.create({ job_id, job_seeker_id, resume_url });
-    res.status(201).json({ message: 'Application submitted', applicant_id: applicantId });
+    await queueApplicationProcessing(job_seeker_id, job_id, resume_url);
+
+    await Notification.create({
+      user_id: job.employer_id,
+      message: `New application for ${job.title} from user ${job_seeker_id}`,
+    });
+
+    res.status(202).json({ message: 'Application is being processed. You will be notified if there are any issues.' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to apply for job', details: error.message });
   }
@@ -34,7 +40,6 @@ const getApplicationsByJobId = async (req, res) => {
     const { jobId } = req.params;
     console.log(`applicantController.getApplicationsByJobId: Fetching job ${jobId} for user ${req.user.userId}`);
 
-    // Verify that the job exists and belongs to the authenticated employer
     const job = await Job.findById(jobId);
     if (!job) {
       console.log(`applicantController.getApplicationsByJobId: Job ${jobId} not found`);
@@ -54,9 +59,31 @@ const getApplicationsByJobId = async (req, res) => {
   }
 };
 
+const getQualifiedApplicationsByJobId = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    if (job.employer_id !== req.user.userId) {
+      return res.status(403).json({ message: "Unauthorized to view applications for this job" });
+    }
+
+    const { applicants, pagination } = await require('../services/applicantMatchingService').getQualifiedApplicants(jobId, page, limit);
+    res.status(200).json({ applicants, pagination });
+  } catch (error) {
+    console.error("Get qualified applications error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 const updateApplication = async (req, res) => {
   const { applicant_id } = req.params;
-  const { resume_url } = req.body; // Only allow updating resume_url for now
+  const { resume_url } = req.body;
 
   if (req.user.user_type !== 'job_seeker') {
     return res.status(403).json({ error: 'Only job seekers can update their applications' });
@@ -70,7 +97,7 @@ const updateApplication = async (req, res) => {
     if (application.job_seeker_id !== req.user.userId) {
       return res.status(403).json({ error: 'You are not authorized to update this application' });
     }
-    if (application.status !== 'applied') {
+    if (application.status !== 'pending') {
       return res.status(400).json({ error: 'Cannot update application after approval/review' });
     }
 
@@ -111,4 +138,4 @@ const deleteApplication = async (req, res) => {
   }
 };
 
-module.exports = { applyForJob, getApplicationsByJobId, updateApplication, deleteApplication };
+module.exports = { applyForJob, getApplicationsByJobId, getQualifiedApplicationsByJobId, updateApplication, deleteApplication };
