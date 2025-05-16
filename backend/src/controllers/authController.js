@@ -218,6 +218,9 @@ const login = async (req, res) => {
     if (!user.is_verified) {
       return res.status(403).json({ error: "Please verify your email before logging in" });
     }
+    if (user.is_suspended) {
+      return res.status(403).json({ error: "Your account has been suspended. Please contact support for assistance." });
+    }
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
     res.json({

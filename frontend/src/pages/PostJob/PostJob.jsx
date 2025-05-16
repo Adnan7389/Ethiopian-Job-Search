@@ -12,6 +12,11 @@ function PostJob() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { status, error, job } = useSelector((state) => state.job);
+  const { user, userType } = useSelector((state) => state.auth);
+
+  // Assume user.employer_profile.isApproved is available in auth slice
+  const isApproved = user?.employer_profile?.isApproved === 1;
+
   const { register, handleSubmit, formState: { errors }, watch } = useForm({
     defaultValues: {
       title: "",
@@ -55,6 +60,19 @@ function PostJob() {
   const handleCancel = () => {
     navigate("/dashboard");
   };
+
+  if (!isApproved) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.notApprovedWarning}>
+          <h2>Your account is not yet approved to post jobs.</h2>
+          <p>
+            Please <a href="mailto:ethiohirehub@gmail.com" style={{ color: '#0d6efd', textDecoration: 'underline' }}>contact support</a> for assistance.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   console.log("PostJob state:", { status, error });
   console.log("Form errors:", errors);

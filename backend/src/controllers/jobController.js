@@ -19,15 +19,22 @@ const createJob = async (req, res) => {
   const { title, description, location, salary_range, job_type, industry, experience_level, application_deadline, status } = req.body;
   const employerId = req.user.userId;
 
-  console.log("Received createJob request:", { employerId, ...req.body });
+  // Check if employer is approved
+  const [[profile]] = await pool.query(
+    "SELECT isApproved FROM employer_profiles WHERE user_id = ?",
+    [employerId]
+  );
+  if (!profile || profile.isApproved !== 1) {
+    return res.status(403).json({
+      error: "Your account is not yet approved to post jobs. Please contact support for assistance."
+    });
+  }
 
   if (req.user.user_type !== "employer") {
-    console.log("Authorization failed: User is not an employer");
     return res.status(403).json({ error: "Only employers can create jobs" });
   }
 
   if (!title || !description || !location || !job_type || !industry || !experience_level || !status) {
-    console.log("Validation failed: Missing required fields");
     return res.status(400).json({ error: "All required fields must be provided" });
   }
 
@@ -47,16 +54,11 @@ const createJob = async (req, res) => {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    console.log("Creating job with data:", jobData);
     const job = await Job.create(jobData);
-    console.log("Job created successfully:", { jobId: job.job_id, slug: job.slug });
-
     const newJobId = job.insertId;
     await updateAllRecommendations(newJobId);
-    
     res.status(201).json({ message: "Job created successfully", jobId: job.job_id, slug: job.slug });
   } catch (error) {
-    console.error("Error creating job:", error.message);
     res.status(500).json({ error: "Failed to create job", details: error.message });
   }
 };

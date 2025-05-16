@@ -48,11 +48,11 @@ async function processJobSeeker(userId) {
     highestEducation: getHighestEducation(education),
     yearsOfExperience: calculateTotalExperience(experience),
     extractedKeywords: [...new Set([
-      ...skillKeywords,
+        ...skillKeywords,
       ...educationKeywords,
       ...experienceKeywords,
-      ...bioKeywords,
-      ...resumeKeywords
+        ...bioKeywords,
+        ...resumeKeywords
     ])]
   };
 }
@@ -190,7 +190,7 @@ async function findMatchingJobs(userId, topN = 5) {
 
   const filteredMatches = matches.filter(match => match.score >= LOW_FIT_THRESHOLD);
 
-  return filteredMatches
+return filteredMatches
     .sort((a, b) => b.score - a.score || new Date(b.job.created_at) - new Date(a.job.created_at))
     .slice(0, topN);
 }
