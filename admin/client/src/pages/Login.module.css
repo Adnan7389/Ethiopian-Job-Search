@@ -1,0 +1,175 @@
+/* Page Container */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-light);
+  padding: var(--spacing-md);
+}
+
+/* Login Card */
+.loginCard {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.logo {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Error Message */
+.errorMessage {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  margin-top: var(--spacing-xs);
+}
+
+/* Submit Button */
+.submitButton {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.submitButton:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.submitButton:disabled {
+  background-color: var(--color-primary-light);
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: var(--spacing-xl);
+}
+
+.loadingIcon {
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: var(--spacing-xl);
+}
+
+.errorIcon {
+  font-size: 2rem;
+  color: var(--color-danger);
+  margin-bottom: var(--spacing-md);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--spacing-md);
+}
+
+.retryButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--text-light);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  transition: background-color var(--transition-fast);
+}
+
+.retryButton:hover {
+  background-color: var(--color-primary-dark);
+} 

@@ -1,0 +1,352 @@
+/* Page Container */
+.container {
+  padding: 2rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* Header Section */
+.header {
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.title {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1.25rem);
+}
+
+/* Filter Section */
+.filterContainer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #4b5563;
+  font-weight: 500;
+  font-size: clamp(0.875rem, 2vw, 1.125rem);
+}
+
+.filterLabelIcon {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.filterButtons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  white-space: nowrap;
+}
+
+.filterButton:hover {
+  background-color: #e5e7eb;
+}
+
+.filterButtonActive {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+/* Grid Container */
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* Card Styles */
+.card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  padding: 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.cardBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardFooter {
+  padding: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cardDetail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+}
+
+.cardDetailIcon {
+  color: #6b7280;
+}
+
+/* User Info */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userAvatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+}
+
+.userName {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.userEmail {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Status Badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusBadgeIcon {
+  font-size: 1rem;
+}
+
+.statusActive {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusSuspended {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Action Buttons */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  flex: 1;
+  justify-content: center;
+}
+
+.actionButtonIcon {
+  font-size: 1.25rem;
+}
+
+.suspendButton {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.suspendButton:hover {
+  background-color: #fecaca;
+}
+
+.unsuspendButton {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.unsuspendButton:hover {
+  background-color: #bbf7d0;
+}
+
+.viewButton {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.viewButton:hover {
+  background-color: #bae6fd;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  grid-column: 1 / -1;
+}
+
+.emptyStateIcon {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.emptyStateText {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.emptyStateSubtext {
+  color: #6b7280;
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loadingIcon {
+  font-size: 2rem;
+  color: #2563eb;
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  color: #4b5563;
+  font-size: 1.125rem;
+}
+
+/* Error State */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 2rem;
+  color: #ef4444;
+}
+
+.errorText {
+  color: #4b5563;
+  font-size: 1.125rem;
+}
+
+.retryButton {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background-color: #1d4ed8;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cardFooter {
+    flex-direction: column;
+  }
+  
+  .actionButton {
+    width: 100%;
+  }
+} 

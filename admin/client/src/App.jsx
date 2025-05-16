@@ -10,6 +10,7 @@ import EmployerDetails from './pages/EmployerDetails';
 import Users from './pages/Users';
 import UserDetails from './pages/UserDetails';
 import Layout from './components/Layout';
+import { FiLoader } from 'react-icons/fi';
 
 const App = () => {
   return (
@@ -25,14 +26,21 @@ const AppRoutes = () => {
   const { isAuthenticated, loading } = useContext(AuthContext);
   
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <FiLoader className="mx-auto h-8 w-8 animate-spin text-blue-600 mb-4" />
+          <p className="text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
   }
   
   return (
     <Routes>
       <Route 
         path="/login" 
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} 
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
       />
       
       {isAuthenticated ? (
@@ -42,10 +50,14 @@ const AppRoutes = () => {
           <Route path="/employers/:userId" element={<EmployerDetails />} />
           <Route path="/users" element={<Users />} />
           <Route path="/users/:userId" element={<UserDetails />} />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          
+          {/* Catch-all routes for authenticated users */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       ) : (
-        <Route path="*" element={<Navigate to="/login" />} />
+        // Redirect all unauthenticated access attempts to login
+        <Route path="*" element={<Navigate to="/login" replace />} />
       )}
     </Routes>
   );
