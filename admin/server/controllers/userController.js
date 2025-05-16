@@ -30,13 +30,28 @@ exports.getAllUsers = async (req, res) => {
 
 // Toggle user suspension
 exports.toggleUserSuspension = async (req, res) => {
+  console.log('toggleUserSuspension called with body:', req.body);
   try {
     const { userId, suspended } = req.body;
-    await pool.query(`
+    console.log('Updating user suspension status:', { userId, suspended });
+    
+    const [result] = await pool.query(`
       UPDATE users
       SET is_suspended = ?
       WHERE user_id = ?
     `, [suspended ? 1 : 0, userId]);
+    
+    console.log('Update result:', result);
+    
+    if (result.affectedRows === 0) {
+      console.log('No user found with ID:', userId);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+    
+    console.log('User suspension status updated successfully');
     res.json({ 
       success: true, 
       message: `User ${suspended ? 'suspended' : 'activated'} successfully` 

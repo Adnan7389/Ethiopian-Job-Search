@@ -26,10 +26,11 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       const res = await getAllUsers();
+      console.log('Fetched users:', res.data);
       setUsers(res.data);
     } catch (err) {
       setError('Failed to load users');
-      console.error(err);
+      console.error('Error fetching users:', err);
     } finally {
       setLoading(false);
     }
@@ -41,15 +42,39 @@ const Users = () => {
   
   const handleSuspendToggle = async (userId, currentSuspendedStatus) => {
     try {
-      await toggleUserSuspension(userId, !currentSuspendedStatus);
-      setUsers(users.map(user => 
-        user.user_id === userId 
-          ? { ...user, is_suspended: !currentSuspendedStatus ? 1 : 0 } 
-          : user
-      ));
+      setLoading(true);
+      console.log('Toggling suspension for user:', userId, 'Current status:', currentSuspendedStatus);
+      
+      const response = await toggleUserSuspension(userId, !currentSuspendedStatus);
+      console.log('Toggle response:', response);
+      
+      if (response.success) {
+        // Update the local state immediately for real-time feedback
+        setUsers(prevUsers => {
+          const updatedUsers = prevUsers.map(user => {
+            if (user.user_id === userId) {
+              console.log('Updating user:', user.user_id, 'New status:', !currentSuspendedStatus);
+              return {
+                ...user,
+                is_suspended: !currentSuspendedStatus ? 1 : 0
+              };
+            }
+            return user;
+          });
+          console.log('Updated users list:', updatedUsers);
+          return updatedUsers;
+        });
+      } else {
+        // Show error message from the server
+        alert(response.message || 'Failed to update user status');
+      }
     } catch (err) {
       console.error('Failed to update user suspension status:', err);
-      alert('Failed to update user suspension status');
+      // Show the error message from the server response
+      const errorMessage = err.response?.data?.message || 'Failed to update user suspension status';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
   

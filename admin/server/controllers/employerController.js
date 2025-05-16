@@ -20,13 +20,57 @@ exports.getAllEmployers = async (req, res) => {
 
 // Approve/reject employer
 exports.toggleEmployerApproval = async (req, res) => {
+  console.log('toggleEmployerApproval called with body:', req.body);
   try {
     const { userId, approved } = req.body;
-    await pool.query(`
+    console.log('Updating employer approval status:', { userId, approved });
+    
+    // First check if user exists and is an employer
+    const [[user]] = await pool.query(
+      'SELECT * FROM users WHERE user_id = ? AND user_type = ?',
+      [userId, 'employer']
+    );
+    
+    if (!user) {
+      console.log('No employer user found with ID:', userId);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Employer user not found' 
+      });
+    }
+    
+    // Check if employer profile exists
+    const [[profile]] = await pool.query(
+      'SELECT * FROM employer_profiles WHERE user_id = ?',
+      [userId]
+    );
+    
+    if (!profile) {
+      console.log('No employer profile found for user:', userId);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Employer profile not found. Please ensure the employer profile is created first.' 
+      });
+    }
+    
+    // Update existing profile
+    const [result] = await pool.query(`
       UPDATE employer_profiles
       SET isApproved = ?
       WHERE user_id = ?
     `, [approved ? 1 : 0, userId]);
+    
+    console.log('Update result:', result);
+    
+    if (result.affectedRows === 0) {
+      console.log('Failed to update employer profile for ID:', userId);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update employer status' 
+      });
+    }
+    
+    console.log('Employer approval status updated successfully');
     res.json({ 
       success: true, 
       message: `Employer ${approved ? 'approved' : 'disapproved'} successfully` 

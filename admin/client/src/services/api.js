@@ -76,11 +76,14 @@ export const toggleEmployerSuspension = async (employerId, suspended) => {
 };
 
 export const toggleEmployerApproval = async (userId, approved) => {
+  console.log('toggleEmployerApproval called with:', { userId, approved });
   try {
     const res = await api.post('/employers/toggle-approval', { userId, approved });
+    console.log('toggleEmployerApproval response:', res.data);
     return res.data;
   } catch (error) {
-    throw error.response?.data || error;
+    console.error('toggleEmployerApproval error:', error.response?.data || error);
+    throw error;
   }
 };
 
@@ -104,11 +107,14 @@ export const getAllUsers = async () => {
 };
 
 export const toggleUserSuspension = async (userId, suspended) => {
+  console.log('toggleUserSuspension called with:', { userId, suspended });
   try {
-    const res = await api.post('/users/toggle-suspension', { userId, suspended });
-    return res.data;
+    const response = await api.post('/users/toggle-suspension', { userId, suspended });
+    console.log('toggleUserSuspension response:', response.data);
+    return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    console.error('toggleUserSuspension error:', error.response?.data || error);
+    throw error;
   }
 };
 
