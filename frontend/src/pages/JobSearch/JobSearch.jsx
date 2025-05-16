@@ -255,9 +255,9 @@ const JobSearch = () => {
           {recommendedStatus === "failed" && (
             <div className={styles.errorCard}>
               <h3 className={styles.errorTitle}>Unable to Load Recommendations</h3>
-              <p className={styles.errorMessage}>
+            <p className={styles.errorMessage}>
                 {recommendedError || "We couldn't load your job recommendations. Please try again later."}
-              </p>
+            </p>
               <Button
                 onClick={() => dispatch(fetchRecommendedJobs())}
                 variant="primary"
@@ -270,23 +270,23 @@ const JobSearch = () => {
           {recommendedStatus === "succeeded" && (
             <>
               {getValidRecommendedJobs().length > 0 ? (
-                <div className={styles.recommendedList}>
+            <div className={styles.recommendedList}>
                   {getValidRecommendedJobs().map((recommendedJob, index) => (
                     <div 
                       key={`${recommendedJob.job.job_id}-${index}`} 
                       className={styles.recommendedJobCard}
-                      onClick={() => handleJobClick(recommendedJob.job.slug)}
-                    >
+                    onClick={() => handleJobClick(recommendedJob.job.slug)}
+                  >
                       <JobCard job={recommendedJob.job} showMatchScore={false} />
-                    </div>
-                  ))}
                 </div>
-              ) : (
+              ))}
+            </div>
+          ) : (
                 <div className={styles.emptyState}>
                   <h3 className={styles.emptyStateTitle}>No recommendations yet</h3>
                   <p className={styles.emptyStateText}>
                     Complete your profile and apply for jobs to get personalized recommendations
-                  </p>
+            </p>
                 </div>
               )}
             </>

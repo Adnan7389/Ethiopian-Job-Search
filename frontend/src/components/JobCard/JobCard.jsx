@@ -60,16 +60,16 @@ const JobCard = ({ job, showMatchScore = false }) => {
   const getDaysAgo = (dateString) => {
     if (!dateString) return 'Date not available';
     try {
-      const postedDate = new Date(dateString);
-      const today = new Date();
-      const diffTime = Math.abs(today - postedDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 0) return "Today";
-      if (diffDays === 1) return "1 day ago";
-      if (diffDays < 7) return `${diffDays} days ago`;
-      if (diffDays < 30) return `${Math.floor(diffDays/7)} weeks ago`;
-      return new Date(dateString).toLocaleDateString();
+    const postedDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today - postedDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays/7)} weeks ago`;
+    return new Date(dateString).toLocaleDateString();
     } catch (error) {
       console.error('Error calculating days ago:', error);
       return 'Date not available';
@@ -90,11 +90,11 @@ const JobCard = ({ job, showMatchScore = false }) => {
       {/* Company Profile Section */}
       <div className={styles.companyProfile}>
         <div className={styles.companyHeader}>
-          <img
+            <img
             src={profile_picture_url || DEFAULT_LOGO}
             alt={company_name || 'Company Logo'}
             className={styles.companyLogo}
-          />
+            />
           <div className={styles.companyInfo}>
             <h3 className={styles.companyName}>{company_name || 'Company Not Specified'}</h3>
             <div className={styles.companyMeta}>
@@ -124,7 +124,7 @@ const JobCard = ({ job, showMatchScore = false }) => {
           <div className={styles.metaItem}>
             <FiDollarSign className={styles.icon} />
             <span>{formatSalary(salary_range)}</span>
-          </div>
+        </div>
           <div className={styles.metaItem}>
             <FiBarChart2 className={styles.icon} />
             <span>{industry}</span>
@@ -132,13 +132,13 @@ const JobCard = ({ job, showMatchScore = false }) => {
           <div className={styles.metaItem}>
             <FiHome className={styles.icon} />
             <span>{experience_level}</span>
-          </div>
+        </div>
           <div className={styles.metaItem}>
             <FiClock className={styles.icon} />
             <span>{getDaysAgo(created_at)}</span>
-          </div>
         </div>
-
+        </div>
+        
         {showMatchScore && match_score !== undefined && (
           <div className={styles.matchScore}>
             <span className={styles.scoreLabel}>Match Score:</span>

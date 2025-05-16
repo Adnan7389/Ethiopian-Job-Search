@@ -201,16 +201,16 @@ async function processJobApplication(userId, jobId, resume_url) {
   }
 
   try {
-    const matchResult = await calculateMatchScore(userId, jobId);
+  const matchResult = await calculateMatchScore(userId, jobId);
 
-    if (matchResult.score < LOW_FIT_THRESHOLD) {
-      const [jobRows] = await pool.query(
+  if (matchResult.score < LOW_FIT_THRESHOLD) {
+    const [jobRows] = await pool.query(
         "SELECT j.title, u.username as company_name, j.experience_level, j.industry FROM jobs j JOIN users u ON j.employer_id = u.user_id WHERE j.job_id = ?",
-        [jobId]
-      );
+      [jobId]
+    );
 
-      if (jobRows.length > 0) {
-        const job = jobRows[0];
+    if (jobRows.length > 0) {
+      const job = jobRows[0];
         
         // Create application record with failed status
         const [result] = await pool.query(
@@ -220,24 +220,24 @@ async function processJobApplication(userId, jobId, resume_url) {
 
         try {
           // Create a more detailed notification for the job seeker
-          const notification = await Notification.create({
-            user_id: userId,
+      const notification = await Notification.create({
+        user_id: userId,
             message: `Your application for ${job.title} at ${job.company_name} was not accepted. The position requires ${job.experience_level} experience in ${job.industry}. Consider updating your profile with relevant skills and experience to better match similar positions.`,
             type: 'application_status',
             reference_id: result.insertId,
-            is_read: false,
+        is_read: false,
             payload: {
               match_details: matchResult.details,
               required_experience: job.experience_level,
               industry: job.industry
             }
-          });
+      });
 
           // Emit notification via Socket.IO with error handling
-          const io = getIO();
+      const io = getIO();
           if (io) {
             try {
-              io.to(userId.toString()).emit('notification', notification);
+      io.to(userId.toString()).emit('notification', notification);
             } catch (socketError) {
               console.error('Socket emission error:', socketError);
               // Continue execution even if socket emission fails
@@ -246,12 +246,12 @@ async function processJobApplication(userId, jobId, resume_url) {
         } catch (notificationError) {
           console.error('Notification creation error:', notificationError);
           // Continue execution even if notification creation fails
-        }
+    }
 
-        return {
-          success: false,
-          message: "Your qualifications do not match the job requirements.",
-          score: matchResult.score,
+    return {
+      success: false,
+      message: "Your qualifications do not match the job requirements.",
+      score: matchResult.score,
           applicationId: result.insertId,
           status: 'unqualified',
           details: matchResult.details
@@ -262,13 +262,13 @@ async function processJobApplication(userId, jobId, resume_url) {
         success: false,
         message: "Job not found.",
         score: 0
-      };
-    }
+    };
+  }
 
-    const [result] = await pool.query(
+  const [result] = await pool.query(
       "INSERT INTO applicants (job_id, job_seeker_id, resume_url, match_score, status) VALUES (?, ?, ?, ?, ?)",
       [jobId, userId, resume_url || null, matchResult.score, 'pending']
-    );
+  );
 
     try {
       // Create notification for successful application
@@ -303,10 +303,10 @@ async function processJobApplication(userId, jobId, resume_url) {
       // Continue execution even if notification creation fails
     }
 
-    return {
-      success: true,
-      message: "Application submitted successfully.",
-      score: matchResult.score,
+  return {
+    success: true,
+    message: "Application submitted successfully.",
+    score: matchResult.score,
       applicationId: result.insertId,
       status: 'pending'
     };
@@ -316,7 +316,7 @@ async function processJobApplication(userId, jobId, resume_url) {
       success: false,
       message: "An error occurred while processing your application. Please try again.",
       score: 0
-    };
+  };
   }
 }
 

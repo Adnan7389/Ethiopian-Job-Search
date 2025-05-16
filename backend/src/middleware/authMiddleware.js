@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
 
 // Utility to wrap a promise with a timeout (for async operations if needed)
 const withTimeout = (promise, ms) => {
@@ -8,7 +9,7 @@ const withTimeout = (promise, ms) => {
   return Promise.race([promise, timeout]);
 };
 
-module.exports = (requiredRole = null) => (req, res, next) => {
+module.exports = (requiredRole = null) => async (req, res, next) => {
   console.log(`[${new Date().toISOString()}] authMiddleware: Processing request for ${req.method} ${req.url}`);
 
   try {
@@ -40,6 +41,13 @@ module.exports = (requiredRole = null) => (req, res, next) => {
 
     console.log(`[${new Date().toISOString()}] authMiddleware: Decoded token:`, decoded);
     req.user = decoded;
+
+    // Check if user is suspended
+    const user = await User.findById(decoded.userId);
+    if (user && user.is_suspended) {
+      console.log(`[${new Date().toISOString()}] authMiddleware: User is suspended`);
+      return res.status(403).json({ message: "Your account has been suspended. Please contact support for assistance." });
+    }
 
     if (requiredRole && decoded.user_type !== requiredRole) {
       console.log(`[${new Date().toISOString()}] authMiddleware: Role mismatch - required: ${requiredRole}, got: ${decoded.user_type}`);

@@ -144,7 +144,7 @@ const Dashboard = () => {
           <div className={styles.statContent}>
             <h3 id="active-jobs-title" className={styles.statTitle}>Active Jobs</h3>
             <p className={styles.statValue}>
-              {(stats.jobsByStatus.find(job => job.status === 'active')?.count || 0).toLocaleString()}
+              {(stats.jobsByStatus.find(job => job.status === 'open')?.count || 0).toLocaleString()}
             </p>
             <div className={styles.statTrend}>
               <FiTrendingUp />
