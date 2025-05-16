@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllUsers, toggleUserSuspension } from '../services/api';
+import {
+  FiUser,
+  FiMail,
+  FiUserCheck,
+  FiUserX,
+  FiCalendar,
+  FiCheckCircle,
+  FiXCircle,
+  FiEye,
+  FiFilter,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiBriefcase
+} from 'react-icons/fi';
+import styles from './Users.module.css';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -8,27 +23,25 @@ const Users = () => {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('all');
   
+  const fetchUsers = async () => {
+    try {
+      const res = await getAllUsers();
+      setUsers(res.data);
+    } catch (err) {
+      setError('Failed to load users');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getAllUsers();
-        setUsers(res.data);
-      } catch (err) {
-        setError('Failed to load users');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchUsers();
   }, []);
   
   const handleSuspendToggle = async (userId, currentSuspendedStatus) => {
     try {
       await toggleUserSuspension(userId, !currentSuspendedStatus);
-      
-      // Update local state
       setUsers(users.map(user => 
         user.user_id === userId 
           ? { ...user, is_suspended: !currentSuspendedStatus ? 1 : 0 } 
@@ -43,30 +56,54 @@ const Users = () => {
   const filteredUsers = filterType === 'all' 
     ? users 
     : users.filter(user => user.user_type === filterType);
+
+  if (loading) return (
+    <div className={styles.loadingState}>
+      <FiRefreshCw className={styles.loadingIcon} />
+      <p className={styles.loadingText}>Loading users...</p>
+    </div>
+  );
   
-  if (loading) return <div className="text-center py-10">Loading users...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (error) return (
+    <div className={styles.errorState}>
+      <FiAlertCircle className={styles.errorIcon} />
+      <p className={styles.errorText}>{error}</p>
+      <button 
+        onClick={fetchUsers}
+        className={styles.retryButton}
+      >
+        Try Again
+      </button>
+    </div>
+  );
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>User Management</h1>
+        <p className={styles.subtitle}>Manage all platform users</p>
+      </div>
         
-        <div className="flex space-x-2">
+      <div className={styles.filterContainer}>
+        <div className={styles.filterLabel}>
+          <FiFilter className={styles.filterLabelIcon} />
+          <span>Filter:</span>
+        </div>
+        <div className={styles.filterButtons}>
           <button 
-            className={`px-4 py-2 rounded ${filterType === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            className={`${styles.filterButton} ${filterType === 'all' ? styles.filterButtonActive : ''}`}
             onClick={() => setFilterType('all')}
           >
             All
           </button>
           <button 
-            className={`px-4 py-2 rounded ${filterType === 'job_seeker' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            className={`${styles.filterButton} ${filterType === 'job_seeker' ? styles.filterButtonActive : ''}`}
             onClick={() => setFilterType('job_seeker')}
           >
             Job Seekers
           </button>
           <button 
-            className={`px-4 py-2 rounded ${filterType === 'employer' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            className={`${styles.filterButton} ${filterType === 'employer' ? styles.filterButtonActive : ''}`}
             onClick={() => setFilterType('employer')}
           >
             Employers
@@ -74,92 +111,93 @@ const Users = () => {
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Username
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                User Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Joined
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-                  No users found
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr key={user.user_id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.user_type === 'employer'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
-                    }`}>
-                      {user.user_type === 'employer' ? 'Employer' : 'Job Seeker'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.is_suspended
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {user.is_suspended ? 'Suspended' : 'Active'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleSuspendToggle(user.user_id, user.is_suspended)}
-                      className={`mr-2 px-3 py-1 rounded ${
-                        user.is_suspended
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-red-600 text-white hover:bg-red-700'
-                      }`}
-                    >
-                      {user.is_suspended ? 'Unsuspend' : 'Suspend'}
-                    </button>
-                    <Link
-                      to={`/users/${user.user_id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className={styles.gridContainer}>
+        {filteredUsers.length === 0 ? (
+          <div className={styles.emptyState}>
+            <FiUser className={styles.emptyStateIcon} />
+            <p className={styles.emptyStateText}>No users found</p>
+            <p className={styles.emptyStateSubtext}>Try changing your filters</p>
+          </div>
+        ) : (
+          filteredUsers.map((user) => (
+            <div key={user.user_id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div className={styles.userInfo}>
+                  <div className={styles.userAvatar}>
+                    <FiUser />
+                  </div>
+                  <div>
+                    <div className={styles.userName}>{user.username}</div>
+                    <div className={styles.userEmail}>{user.email}</div>
+                  </div>
+                </div>
+                <span className={`${styles.statusBadge} ${
+                  user.user_type === 'employer' ? styles.statusActive : styles.statusSuspended
+                }`}>
+                  {user.user_type === 'employer' ? (
+                    <>
+                      <FiBriefcase className={styles.statusBadgeIcon} />
+                      <span>Employer</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiUser className={styles.statusBadgeIcon} />
+                      <span>Job Seeker</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              
+              <div className={styles.cardBody}>
+                <div className={styles.cardDetail}>
+                  <FiCalendar className={styles.cardDetailIcon} />
+                  <span>Joined: {new Date(user.created_at).toLocaleDateString()}</span>
+                </div>
+                
+                <div className={styles.cardDetail}>
+                  <span className={`${styles.statusBadge} ${
+                    user.is_suspended ? styles.statusSuspended : styles.statusActive
+                  }`}>
+                    {user.is_suspended ? (
+                      <>
+                        <FiUserX className={styles.statusBadgeIcon} />
+                        <span>Suspended</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiCheckCircle className={styles.statusBadgeIcon} />
+                        <span>Active</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+              
+              <div className={styles.cardFooter}>
+                <button
+                  onClick={() => handleSuspendToggle(user.user_id, user.is_suspended)}
+                  className={`${styles.actionButton} ${
+                    user.is_suspended ? styles.unsuspendButton : styles.suspendButton
+                  }`}
+                >
+                  {user.is_suspended ? (
+                    <FiUserCheck className={styles.actionButtonIcon} />
+                  ) : (
+                    <FiUserX className={styles.actionButtonIcon} />
+                  )}
+                  <span>{user.is_suspended ? 'Unsuspend' : 'Suspend'}</span>
+                </button>
+                <Link
+                  to={`/users/${user.user_id}`}
+                  className={`${styles.actionButton} ${styles.viewButton}`}
+                >
+                  <FiEye className={styles.actionButtonIcon} />
+                  <span>View</span>
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

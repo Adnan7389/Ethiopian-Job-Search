@@ -1,8 +1,19 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
-export const AuthContext = createContext();
+// Create the context
+const AuthContext = createContext(null);
 
+// Custom hook to use the auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+// Provider component
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -14,24 +25,26 @@ export const AuthProvider = ({ children }) => {
       
       if (!token) {
         setLoading(false);
+        setIsAuthenticated(false);
         return;
       }
       
       try {
-        const res = await api.get('/auth/verify', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const res = await api.get('/auth/verify');
         
         if (res.data.success) {
           setIsAuthenticated(true);
           setUser(res.data.user);
         } else {
           localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
         }
       } catch (error) {
+        console.error('Auth verification error:', error);
         localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setUser(null);
       }
       
       setLoading(false);
@@ -40,40 +53,33 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (username, password) => {
-    try {
-      const res = await api.post('/auth/login', { username, password });
-      
-      if (res.data.success) {
-        localStorage.setItem('token', res.data.token);
-        setIsAuthenticated(true);
-        setUser(res.data.user);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      return false;
-    }
+  const login = async (token) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUser(null);
+    window.location.href = '/login';
+  };
+
+  const value = {
+    isAuthenticated,
+    loading,
+    user,
+    login,
+    logout
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        loading,
-        user,
-        login,
-        logout
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+// Export both named and default exports
+export { AuthContext };
+export default AuthContext;

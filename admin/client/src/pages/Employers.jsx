@@ -1,172 +1,211 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllEmployers, toggleEmployerApproval } from '../services/api';
+import {
+  FiBriefcase,
+  FiMail,
+  FiMapPin,
+  FiCheckCircle,
+  FiXCircle,
+  FiEye,
+  FiFilter,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiGlobe
+} from 'react-icons/fi';
+import styles from './Employers.module.css';
+
+// Add a console log to debug styles
+console.log('Employers styles:', styles);
 
 const Employers = () => {
   const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filterVerified, setFilterVerified] = useState('all');
+  const [filterType, setFilterType] = useState('all');
   
-  useEffect(() => {
-    const fetchEmployers = async () => {
-      try {
-        const res = await getAllEmployers();
-        setEmployers(res.data);
-      } catch (err) {
-        setError('Failed to load employers');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchEmployers();
-  }, []);
-  
-  const handleApprovalToggle = async (userId, currentStatus) => {
+  const fetchEmployers = async () => {
     try {
-      await toggleEmployerApproval(userId, !currentStatus);
-      
-      // Update local state
-      setEmployers(employers.map(employer => 
-        employer.user_id === userId 
-          ? { ...employer, is_verified: !currentStatus ? 1 : 0 } 
-          : employer
-      ));
+      const res = await getAllEmployers();
+      setEmployers(res.data);
     } catch (err) {
-      console.error('Failed to update employer status:', err);
-      alert('Failed to update employer status');
+      setError('Failed to load employers');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
   
-  const filteredEmployers = filterVerified === 'all' 
-    ? employers 
-    : employers.filter(emp => 
-        filterVerified === 'verified' 
-          ? emp.is_verified === 1 
-          : emp.is_verified === 0
-      );
+  useEffect(() => {
+    fetchEmployers();
+  }, []);
   
-  if (loading) return <div className="text-center py-10">Loading employers...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  const handleApprovalToggle = async (userId, currentApprovalStatus) => {
+    try {
+      await toggleEmployerApproval(userId, !currentApprovalStatus);
+      setEmployers(employers.map(employer => 
+        employer.user_id === userId 
+          ? { ...employer, is_approved: !currentApprovalStatus ? 1 : 0 } 
+          : employer
+      ));
+    } catch (err) {
+      console.error('Failed to update employer approval status:', err);
+      alert('Failed to update employer approval status');
+    }
+  };
+  
+  const filteredEmployers = filterType === 'all' 
+    ? employers 
+    : employers.filter(employer => employer.industry === filterType);
+
+  if (loading) return (
+    <div className={styles.loadingState}>
+      <FiRefreshCw className={styles.loadingIcon} />
+      <p className={styles.loadingText}>Loading employers...</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className={styles.errorState}>
+      <FiAlertCircle className={styles.errorIcon} />
+      <p className={styles.errorText}>{error}</p>
+      <button 
+        onClick={fetchEmployers}
+        className={styles.retryButton}
+      >
+        Try Again
+      </button>
+    </div>
+  );
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Employer Management</h1>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Employer Management</h1>
+        <p className={styles.subtitle}>Manage all registered employers</p>
+      </div>
         
-        <div className="flex space-x-2">
+      <div className={styles.filterContainer}>
+        <div className={styles.filterLabel}>
+          <FiFilter className={styles.filterLabelIcon} />
+          <span>Filter:</span>
+        </div>
+        <div className={styles.filterButtons}>
           <button 
-            className={`px-4 py-2 rounded ${filterVerified === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            onClick={() => setFilterVerified('all')}
+            className={`${styles.filterButton} ${filterType === 'all' ? styles.filterButtonActive : ''}`}
+            onClick={() => setFilterType('all')}
           >
             All
           </button>
           <button 
-            className={`px-4 py-2 rounded ${filterVerified === 'verified' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            onClick={() => setFilterVerified('verified')}
+            className={`${styles.filterButton} ${filterType === 'technology' ? styles.filterButtonActive : ''}`}
+            onClick={() => setFilterType('technology')}
           >
-            Verified
+            Technology
           </button>
           <button 
-            className={`px-4 py-2 rounded ${filterVerified === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            onClick={() => setFilterVerified('pending')}
+            className={`${styles.filterButton} ${filterType === 'healthcare' ? styles.filterButtonActive : ''}`}
+            onClick={() => setFilterType('healthcare')}
           >
-            Pending
+            Healthcare
+          </button>
+          <button 
+            className={`${styles.filterButton} ${filterType === 'finance' ? styles.filterButtonActive : ''}`}
+            onClick={() => setFilterType('finance')}
+          >
+            Finance
           </button>
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Industry
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Joined
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredEmployers.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-                  No employers found
-                </td>
-              </tr>
-            ) : (
-              filteredEmployers.map((employer) => (
-                <tr key={employer.user_id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {employer.company_name || 'No company name'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {employer.username}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{employer.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{employer.industry || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(employer.created_at).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      employer.is_verified === 1
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {employer.is_verified === 1 ? 'Verified' : 'Pending'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleApprovalToggle(employer.user_id, employer.is_verified === 1)}
-                      className={`mr-2 px-3 py-1 rounded ${
-                        employer.is_verified === 1
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      }`}
+      <div className={styles.gridContainer}>
+        {filteredEmployers.length === 0 ? (
+          <div className={styles.emptyState}>
+            <FiBriefcase className={styles.emptyStateIcon} />
+            <p className={styles.emptyStateText}>No employers found</p>
+            <p className={styles.emptyStateSubtext}>Try changing your filters</p>
+          </div>
+        ) : (
+          filteredEmployers.map((employer) => (
+            <div key={employer.user_id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div className={styles.employerInfo}>
+                  <div className={styles.employerLogo}>
+                    <FiBriefcase />
+                  </div>
+                  <div>
+                    <div className={styles.employerName}>{employer.company_name}</div>
+                    <div className={styles.employerEmail}>{employer.email}</div>
+                  </div>
+                </div>
+                <span className={`${styles.statusBadge} ${
+                  employer.is_approved ? styles.statusActive : styles.statusSuspended
+                }`}>
+                  {employer.is_approved ? (
+                    <>
+                      <FiCheckCircle className={styles.statusBadgeIcon} />
+                      <span>Approved</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiXCircle className={styles.statusBadgeIcon} />
+                      <span>Pending</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              
+              <div className={styles.cardBody}>
+                <div className={styles.cardDetail}>
+                  <FiMapPin className={styles.cardDetailIcon} />
+                  <span>{employer.location || 'No location specified'}</span>
+                </div>
+                
+                <div className={styles.cardDetail}>
+                  <FiBriefcase className={styles.cardDetailIcon} />
+                  <span>{employer.industry || 'No industry specified'}</span>
+                </div>
+                
+                {employer.website && (
+                  <div className={styles.cardDetail}>
+                    <FiGlobe className={styles.cardDetailIcon} />
+                    <a 
+                      href={employer.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={styles.websiteLink}
                     >
-                      {employer.is_verified === 1 ? 'Reject' : 'Approve'}
-                    </button>
-                    <Link
-                      to={`/employers/${employer.user_id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                      {employer.website}
+                    </a>
+                  </div>
+                )}
+              </div>
+              
+              <div className={styles.cardFooter}>
+                <button
+                  onClick={() => handleApprovalToggle(employer.user_id, employer.is_approved)}
+                  className={`${styles.actionButton} ${
+                    employer.is_approved ? styles.unsuspendButton : styles.suspendButton
+                  }`}
+                >
+                  {employer.is_approved ? (
+                    <FiXCircle className={styles.actionButtonIcon} />
+                  ) : (
+                    <FiCheckCircle className={styles.actionButtonIcon} />
+                  )}
+                  <span>{employer.is_approved ? 'Revoke' : 'Approve'}</span>
+                </button>
+                <Link
+                  to={`/employers/${employer.user_id}`}
+                  className={`${styles.actionButton} ${styles.viewButton}`}
+                >
+                  <FiEye className={styles.actionButtonIcon} />
+                  <span>View</span>
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

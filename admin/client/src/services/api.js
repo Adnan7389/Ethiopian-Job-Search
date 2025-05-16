@@ -4,26 +4,53 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: API_URL
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 console.log('Using API base URL:', API_URL);
+
 // Add token to requests
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
-  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
   return config;
+}, error => {
+  return Promise.reject(error);
 });
 
+// Handle response errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth
+export const login = async (username, password) => {
+  try {
+    const res = await api.post('/auth/login', { username, password });
+    return res;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // Dashboard
-export const getDashboardAnalytics = async () => {
+export const getDashboardStats = async () => {
   try {
     const res = await api.get('/dashboard/analytics');
-    return res.data;
+    return res;
   } catch (error) {
     throw error.response?.data || error;
   }
@@ -33,6 +60,15 @@ export const getDashboardAnalytics = async () => {
 export const getAllEmployers = async () => {
   try {
     const res = await api.get('/employers');
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const toggleEmployerSuspension = async (employerId, suspended) => {
+  try {
+    const res = await api.post(`/employers/${employerId}/toggle-suspension`, { suspended });
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
