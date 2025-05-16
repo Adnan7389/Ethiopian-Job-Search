@@ -27,10 +27,11 @@ const Employers = () => {
   const fetchEmployers = async () => {
     try {
       const res = await getAllEmployers();
+      console.log('Fetched employers:', res.data);
       setEmployers(res.data);
     } catch (err) {
       setError('Failed to load employers');
-      console.error(err);
+      console.error('Error fetching employers:', err);
     } finally {
       setLoading(false);
     }
@@ -42,15 +43,39 @@ const Employers = () => {
   
   const handleApprovalToggle = async (userId, currentApprovalStatus) => {
     try {
-      await toggleEmployerApproval(userId, !currentApprovalStatus);
-      setEmployers(employers.map(employer => 
-        employer.user_id === userId 
-          ? { ...employer, is_approved: !currentApprovalStatus ? 1 : 0 } 
-          : employer
-      ));
+      setLoading(true);
+      console.log('Toggling approval for user:', userId, 'Current status:', currentApprovalStatus);
+      
+      const response = await toggleEmployerApproval(userId, !currentApprovalStatus);
+      console.log('Toggle response:', response);
+      
+      if (response.success) {
+        // Update the local state immediately for real-time feedback
+        setEmployers(prevEmployers => {
+          const updatedEmployers = prevEmployers.map(employer => {
+            if (employer.user_id === userId) {
+              console.log('Updating employer:', employer.user_id, 'New status:', !currentApprovalStatus);
+              return {
+                ...employer,
+                isApproved: !currentApprovalStatus ? 1 : 0
+              };
+            }
+            return employer;
+          });
+          console.log('Updated employers list:', updatedEmployers);
+          return updatedEmployers;
+        });
+      } else {
+        // Show error message from the server
+        alert(response.message || 'Failed to update employer status');
+      }
     } catch (err) {
       console.error('Failed to update employer approval status:', err);
-      alert('Failed to update employer approval status');
+      // Show the error message from the server response
+      const errorMessage = err.response?.data?.message || 'Failed to update employer approval status';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -139,9 +164,9 @@ const Employers = () => {
                   </div>
                 </div>
                 <span className={`${styles.statusBadge} ${
-                  employer.is_approved ? styles.statusActive : styles.statusSuspended
+                  employer.isApproved ? styles.statusActive : styles.statusSuspended
                 }`}>
-                  {employer.is_approved ? (
+                  {employer.isApproved ? (
                     <>
                       <FiCheckCircle className={styles.statusBadgeIcon} />
                       <span>Approved</span>
@@ -183,17 +208,17 @@ const Employers = () => {
               
               <div className={styles.cardFooter}>
                 <button
-                  onClick={() => handleApprovalToggle(employer.user_id, employer.is_approved)}
+                  onClick={() => handleApprovalToggle(employer.user_id, employer.isApproved)}
                   className={`${styles.actionButton} ${
-                    employer.is_approved ? styles.unsuspendButton : styles.suspendButton
+                    employer.isApproved ? styles.unsuspendButton : styles.suspendButton
                   }`}
                 >
-                  {employer.is_approved ? (
+                  {employer.isApproved ? (
                     <FiXCircle className={styles.actionButtonIcon} />
                   ) : (
                     <FiCheckCircle className={styles.actionButtonIcon} />
                   )}
-                  <span>{employer.is_approved ? 'Revoke' : 'Approve'}</span>
+                  <span>{employer.isApproved ? 'Revoke' : 'Approve'}</span>
                 </button>
                 <Link
                   to={`/employers/${employer.user_id}`}
