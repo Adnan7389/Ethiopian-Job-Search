@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import axios from 'axios';
 
 const initialState = {
   jobs: [],
@@ -24,6 +25,8 @@ const initialState = {
   job: null,
   applications: {},
   fetchingApplications: [], // Changed from Set to Array
+  reportStatus: 'idle',
+  reportError: null,
 };
 
 export const fetchJobs = createAsyncThunk('job/fetchJobs', async (params, { rejectWithValue }) => {
@@ -164,6 +167,23 @@ export const duplicateJob = createAsyncThunk('job/duplicateJob', async (jobId, {
     return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
+
+export const reportJob = createAsyncThunk(
+  'job/reportJob',
+  async ({ jobId, reason, description }, { rejectWithValue }) => {
+    try {
+      console.log('Submitting job report:', { jobId, reason, description });
+      const response = await api.post(`/jobs/${jobId}/report`, { reason, description });
+      console.log('Job report response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error reporting job:', error.response?.data || error.message);
+      // Extract the error message from the response
+      const errorMessage = error.response?.data?.message || 'Failed to report job';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 
 const jobSlice = createSlice({
   name: 'job',
@@ -386,6 +406,19 @@ const jobSlice = createSlice({
       .addCase(duplicateJob.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      // Report Job
+      .addCase(reportJob.pending, (state) => {
+        state.reportStatus = 'loading';
+        state.reportError = null;
+      })
+      .addCase(reportJob.fulfilled, (state) => {
+        state.reportStatus = 'succeeded';
+        state.reportError = null;
+      })
+      .addCase(reportJob.rejected, (state, action) => {
+        state.reportStatus = 'failed';
+        state.reportError = action.payload || 'Failed to report job';
       });
   },
 });
