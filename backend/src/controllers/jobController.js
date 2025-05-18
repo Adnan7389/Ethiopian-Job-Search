@@ -64,7 +64,20 @@ const createJob = async (req, res) => {
 };
 
 const getJobs = async (req, res) => {
-  const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived = "false" } = req.query;
+  const { page = 1, limit = 10, search, job_type, industry, experience_level, status, date_posted, includeArchived = "false", location } = req.query;
+
+  console.log('Job Search Parameters:', {
+    page,
+    limit,
+    search,
+    job_type,
+    industry,
+    experience_level,
+    status,
+    date_posted,
+    includeArchived,
+    location
+  });
 
   try {
     const { jobs, total } = await Job.findAll({
@@ -77,7 +90,15 @@ const getJobs = async (req, res) => {
       status: status || "open",
       date_posted,
       includeArchived: includeArchived === "true",
+      location,
     });
+
+    console.log('Job Search Results:', {
+      totalJobs: total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit))
+    });
+
     res.json({
       jobs,
       total,
@@ -85,7 +106,17 @@ const getJobs = async (req, res) => {
       totalPages: Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch jobs", details: error.message });
+    console.error('Job Search Error:', {
+      message: error.message,
+      stack: error.stack,
+      query: req.query,
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json({ 
+      error: "Failed to fetch jobs", 
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 };
 
