@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchJobBySlug } from "../../features/job/jobSlice";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import Button from "../../components/Button/Button";
+import ReportJobModal from "../../components/ReportJobModal/ReportJobModal";
 import styles from "./JobDetail.module.css";
 import DEFAULT_LOGO from "../../assets/default-profile-icon.png";
 
@@ -22,7 +23,8 @@ import {
   FiHome,
   FiGlobe,
   FiLinkedin,
-  FiMail
+  FiMail,
+  FiAlertTriangle
 } from "react-icons/fi";
 
 function JobDetail() {
@@ -31,6 +33,7 @@ function JobDetail() {
   const navigate = useNavigate();
   const { job, status, error } = useSelector((state) => state.job);
   const { userType, userId } = useSelector((state) => state.auth);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchJobBySlug(slug));
@@ -245,14 +248,23 @@ function JobDetail() {
 
         <div className={styles.actions}>
           {userType === "job_seeker" && (
-            <Button 
-              onClick={handleApply} 
-              variant="primary" 
-              disabled={!isJobOpen}
-              icon={<FiCheckCircle />}
-            >
-              {isJobOpen ? "Apply Now" : "Position Closed"}
-            </Button>
+            <>
+              <Button 
+                onClick={handleApply} 
+                variant="primary" 
+                disabled={!isJobOpen}
+                icon={<FiCheckCircle />}
+              >
+                {isJobOpen ? "Apply Now" : "Position Closed"}
+              </Button>
+              <Button
+                onClick={() => setIsReportModalOpen(true)}
+                variant="secondary"
+                icon={<FiAlertTriangle />}
+              >
+                Report Job
+              </Button>
+            </>
           )}
           {userType === "employer" && job.employer_id === userId && (
             <Button
@@ -265,6 +277,12 @@ function JobDetail() {
           )}
         </div>
       </div>
+
+      <ReportJobModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        jobId={job?.job_id}
+      />
     </div>
   );
 }
