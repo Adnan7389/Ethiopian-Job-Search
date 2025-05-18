@@ -8,6 +8,7 @@ import Button from "../../components/Button/Button";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import styles from "./JobSearch.module.css";
 import { FiSearch, FiX, FiBriefcase, FiMapPin, FiClock, FiAward, FiInfo } from "react-icons/fi";
+import { debounce } from "lodash";
 
 const JobSearch = () => {
   const dispatch = useDispatch();
@@ -38,9 +39,69 @@ const JobSearch = () => {
     }
   }, [dispatch, userType]);
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Show loading state immediately
+    dispatch(
+      fetchJobs({
+        page: 1,
+        limit: 10,
+        search: filters.search.trim(),
+        industry: filters.industry,
+        location: filters.location,
+        job_type: filters.job_type,
+        experience_level: filters.experience_level,
+        status: "open",
+        includeArchived: false,
+      })
+    );
+  };
+
+  // Add debounced search for better performance
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      if (searchValue.trim()) {
+        dispatch(
+          fetchJobs({
+            page: 1,
+            limit: 10,
+            search: searchValue.trim(),
+            industry: filters.industry,
+            location: filters.location,
+            job_type: filters.job_type,
+            experience_level: filters.experience_level,
+            status: "open",
+            includeArchived: false,
+          })
+        );
+      }
+    }, 500),
+    [filters.industry, filters.location, filters.job_type, filters.experience_level]
+  );
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+    
+    // If it's the search input, use debounced search
+    if (name === 'search') {
+      debouncedSearch(value);
+    } else {
+      // For other filters, search immediately
+      dispatch(
+        fetchJobs({
+          page: 1,
+          limit: 10,
+          search: filters.search.trim(),
+          industry: name === 'industry' ? value : filters.industry,
+          location: name === 'location' ? value : filters.location,
+          job_type: name === 'job_type' ? value : filters.job_type,
+          experience_level: name === 'experience_level' ? value : filters.experience_level,
+          status: "open",
+          includeArchived: false,
+        })
+      );
+    }
   };
 
   const handleResetFilters = () => {
@@ -56,23 +117,6 @@ const JobSearch = () => {
       fetchJobs({
         page: 1,
         limit: 10,
-        status: "open",
-        includeArchived: false,
-      })
-    );
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    dispatch(
-      fetchJobs({
-        page: 1,
-        limit: 10,
-        search: filters.search,
-        industry: filters.industry,
-        location: filters.location,
-        job_type: filters.job_type,
-        experience_level: filters.experience_level,
         status: "open",
         includeArchived: false,
       })
@@ -112,6 +156,27 @@ const JobSearch = () => {
     return jobs.filter(job => !recommendedJobIds.includes(job.job_id));
   };
 
+  // Add a function to check if any filters are active
+  const hasActiveFilters = () => {
+    return Object.values(filters).some(value => value !== "");
+  };
+
+  // Add a function to get active filter count
+  const getActiveFilterCount = () => {
+    return Object.values(filters).filter(value => value !== "").length;
+  };
+
+  // Add a function to get active filter names
+  const getActiveFilterNames = () => {
+    const activeFilters = [];
+    if (filters.search) activeFilters.push("Search");
+    if (filters.industry) activeFilters.push("Industry");
+    if (filters.location) activeFilters.push("Location");
+    if (filters.job_type) activeFilters.push("Job Type");
+    if (filters.experience_level) activeFilters.push("Experience");
+    return activeFilters;
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -136,15 +201,38 @@ const JobSearch = () => {
               hideLabel
             />
           </div>
-          <Button type="submit" variant="primary" className={styles.searchButton}>
-            Search Jobs
+          <Button 
+            type="submit" 
+            variant="primary" 
+            className={styles.searchButton}
+            disabled={status === "loading"}
+          >
+            {status === "loading" ? "Searching..." : "Search Jobs"}
           </Button>
         </div>
 
         <div className={styles.filterSection}>
-          <h3 className={styles.filterTitle}>
-            <FiBriefcase className={styles.filterIcon} /> Filter Jobs
-          </h3>
+          <div className={styles.filterHeader}>
+            <h3 className={styles.filterTitle}>
+              <FiBriefcase className={styles.filterIcon} /> Filter Jobs
+            </h3>
+            {hasActiveFilters() && (
+              <div className={styles.activeFilters}>
+                <span className={styles.activeFilterCount}>
+                  {getActiveFilterCount()} {getActiveFilterCount() === 1 ? 'filter' : 'filters'} active
+                </span>
+                <Button
+                  type="button"
+                  variant="text"
+                  onClick={handleResetFilters}
+                  icon={<FiX />}
+                  className={styles.clearFiltersButton}
+                >
+                  Clear all
+                </Button>
+              </div>
+            )}
+          </div>
           
           <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
@@ -184,7 +272,7 @@ const JobSearch = () => {
                 onChange={handleFilterChange}
                 placeholder="City or region"
                 hideLabel
-                icon={<FiMapPin />}
+                
               />
             </div>
 
@@ -203,8 +291,6 @@ const JobSearch = () => {
                 <option value="full-time">Full Time</option>
                 <option value="part-time">Part Time</option>
                 <option value="contract">Contract</option>
-                <option value="internship">Internship</option>
-                <option value="remote">Remote</option>
               </select>
             </div>
 
@@ -226,18 +312,6 @@ const JobSearch = () => {
                 <option value="executive">Executive</option>
               </select>
             </div>
-          </div>
-
-          <div className={styles.filterActions}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleResetFilters}
-              icon={<FiX />}
-              className={styles.resetButton}
-            >
-              Reset Filters
-            </Button>
           </div>
         </div>
       </form>
@@ -299,7 +373,9 @@ const JobSearch = () => {
         {status === "loading" && (
           <div className={styles.loadingContainer}>
             <LoadingSpinner />
-            <p className={styles.loadingText}>Searching for jobs...</p>
+            <p className={styles.loadingText}>
+              {hasActiveFilters() ? "Filtering jobs..." : "Searching for jobs..."}
+            </p>
           </div>
         )}
 
@@ -323,15 +399,29 @@ const JobSearch = () => {
           <div className={styles.emptyState}>
             <h3 className={styles.emptyStateTitle}>No jobs found</h3>
             <p className={styles.emptyStateText}>
-              Try adjusting your search filters or check back later for new postings
+              {hasActiveFilters() 
+                ? "No jobs match your current filters. Try adjusting your search criteria."
+                : "No jobs available at the moment. Please check back later."}
             </p>
-            <Button
-              onClick={handleResetFilters}
-              variant="secondary"
-              className={styles.emptyStateButton}
-            >
-              Reset Filters
-            </Button>
+            {hasActiveFilters() && (
+              <>
+                <div className={styles.activeFilterList}>
+                  <p>Active filters:</p>
+                  <ul>
+                    {getActiveFilterNames().map((filter, index) => (
+                      <li key={index}>{filter}</li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  onClick={handleResetFilters}
+                  variant="secondary"
+                  className={styles.emptyStateButton}
+                >
+                  Reset Filters
+                </Button>
+              </>
+            )}
           </div>
         )}
 
@@ -339,8 +429,19 @@ const JobSearch = () => {
           <>
             <div className={styles.resultsHeader}>
               <h2 className={styles.resultsTitle}>
-                Showing {getFilteredJobs().length} {getFilteredJobs().length === 1 ? "job" : "jobs"}
+                {hasActiveFilters() ? "Filtered Results: " : "All Jobs: "}
+                {getFilteredJobs().length} {getFilteredJobs().length === 1 ? "job" : "jobs"}
               </h2>
+              {hasActiveFilters() && (
+                <Button
+                  onClick={handleResetFilters}
+                  variant="text"
+                  icon={<FiX />}
+                  className={styles.clearFiltersButton}
+                >
+                  Clear filters
+                </Button>
+              )}
             </div>
             
             <div className={styles.jobList}>
