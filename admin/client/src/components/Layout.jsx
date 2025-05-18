@@ -7,7 +7,8 @@ import {
   FiMenu,
   FiX,
   FiChevronRight,
-  FiLogOut
+  FiLogOut,
+  FiMonitor
 } from 'react-icons/fi';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
@@ -105,6 +106,18 @@ const Layout = () => {
             </div>
             <FiChevronRight />
           </Link>
+
+          <Link 
+            to="/system-monitor" 
+            className={`${styles.navLink} ${isActive('/system-monitor') ? styles.navLinkActive : ''}`}
+            aria-current={isActive('/system-monitor') ? 'page' : undefined}
+          >
+            <div>
+              <FiMonitor className={styles.navLinkIcon} />
+              <span>System Monitor</span>
+            </div>
+            <FiChevronRight />
+          </Link>
         </nav>
       </aside>
 
@@ -124,6 +137,7 @@ const Layout = () => {
               {isActive('/dashboard') && 'Dashboard'}
               {isActive('/employers') && 'Employers'}
               {isActive('/users') && 'Users'}
+              {isActive('/system-monitor') && 'System Monitor'}
             </h1>
           </div>
           

@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const employerRoutes = require('./routes/employers');
 const userRoutes = require('./routes/users');
+const systemMonitorRoutes = require('./routes/systemMonitor');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/employers', employerRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', systemMonitorRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -14,6 +14,13 @@ exports.login = async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: '8h' }
       );
+
+      // Log admin login activity
+      const ip = req.headers['x-forwarded-for'] || req.ip;
+      await pool.query(
+        'INSERT INTO login_logs (user_id, ip_address) VALUES (?, ?)',
+        ['admin', ip]
+      );
       
       return res.json({ success: true, token });
     }
