@@ -6,6 +6,8 @@ const Applicant = require("../models/Applicant");
 const Notification = require("../models/Notification");
 const { invalidateCache } = require('../services/applicantMatchingService');
 const {queueApplicationProcessing} = require('../queues/matchingQueue')
+const JobReport = require("../models/jobReportModel");
+const { handleReportActions } = require("../services/reportService");
 
 const queryWithTimeout = async (query, params, timeout = 10000) => {
   const queryPromise = pool.query(query, params);
@@ -508,6 +510,49 @@ const duplicateJob = async (req, res) => {
   }
 };
 
+const reportJob = async (req, res) => {
+  const { jobId } = req.params;
+  const { reason } = req.body;
+  const userId = req.user.userId;
+
+  if (req.user.user_type !== "job_seeker") {
+    return res.status(403).json({ error: "Only job seekers can report jobs" });
+  }
+
+  if (!reason || reason.trim().length === 0) {
+    return res.status(400).json({ error: "Report reason is required" });
+  }
+
+  try {
+    // Check if job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Check if user has already reported this job
+    const hasReported = await JobReport.hasUserReportedJob(jobId, userId);
+    if (hasReported) {
+      return res.status(400).json({ error: "You have already reported this job" });
+    }
+
+    // Create the report
+    await JobReport.create({
+      job_id: jobId,
+      reported_by: userId,
+      reason: reason.trim()
+    });
+
+    // Handle auto-actions based on report counts
+    await handleReportActions(jobId);
+
+    res.status(201).json({ message: "Job reported successfully" });
+  } catch (error) {
+    console.error("Report job error:", error);
+    res.status(500).json({ error: "Failed to report job", details: error.message });
+  }
+};
+
 module.exports = { 
   createJob, 
   getJobs, 
@@ -519,5 +564,6 @@ module.exports = {
   duplicateJob, 
   applyForJob, 
   getApplicationsByJobId,
-  getRecommendedJobs 
+  getRecommendedJobs,
+  reportJob 
 };

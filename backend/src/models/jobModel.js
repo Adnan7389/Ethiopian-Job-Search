@@ -20,6 +20,19 @@ class Job {
     return jobTypeMap[jobType] || 'full_time'; // Default to 'full_time' if invalid
   }
 
+  // Add searchKeywords method inside the class
+  searchKeywords(searchTerm) {
+    if (!searchTerm) return '';
+    const keywords = searchTerm.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+    if (keywords.length === 0) return '';
+    
+    const conditions = keywords.map(keyword => 
+      `(j.title LIKE ? OR j.description LIKE ? OR e.company_name LIKE ?)`
+    ).join(' AND ');
+    
+    return conditions;
+  }
+
   async create(data) {
     const {
       employer_id,
@@ -146,15 +159,23 @@ class Job {
           AND (j.expires_at IS NULL OR j.expires_at > NOW())
       `;
       // First two params are is_archived and status
-      const params = [ includeArchived ? 1 : 0, status || "open" ];
-      const countParams = [ includeArchived ? 1 : 0, status || "open" ];
+      const params = [includeArchived ? 1 : 0, status || "open"];
+      const countParams = [includeArchived ? 1 : 0, status || "open"];
 
       if (search) {
-        query += " AND (j.title LIKE ? OR j.description LIKE ?)";
-        countQuery += " AND (j.title LIKE ? OR j.description LIKE ?)";
-        const searchTerm = `%${search}%`;
-        params.push(searchTerm, searchTerm);
-        countParams.push(searchTerm, searchTerm);
+        const keywordConditions = this.searchKeywords(search);
+        if (keywordConditions) {
+          const searchParams = [];
+          const keywords = search.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+          keywords.forEach(keyword => {
+            searchParams.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+          });
+          
+          query += ` AND ${keywordConditions}`;
+          countQuery += ` AND ${keywordConditions}`;
+          params.push(...searchParams);
+          countParams.push(...searchParams);
+        }
       }
 
       if (location) {

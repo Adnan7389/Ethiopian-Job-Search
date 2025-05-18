@@ -17,4 +17,7 @@ router.put("/:jobId/archive", authMiddleware("employer"), jobController.archiveJ
 router.put("/:jobId/restore", authMiddleware("employer"), jobController.restoreJob);
 router.post("/:jobId/duplicate", authMiddleware("employer"), jobController.duplicateJob);
 
+// Add report endpoint
+router.post("/:jobId/report", authMiddleware("job_seeker"), jobController.reportJob);
+
 module.exports = router;
