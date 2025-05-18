@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const mysql = require("mysql2/promise");
+const { sendVerificationEmail: sendEmail } = require("../utils/email");
 require("dotenv").config();
 
 const db = mysql.createPool({
@@ -21,11 +22,7 @@ const mockSendEmail = ({ to, subject, text }) => {
 
 const sendVerificationEmail = async (email, code) => {
   try {
-    mockSendEmail({
-      to: email,
-      subject: "Verify Your Email - Ethio Jobs",
-      text: `Your verification code is: ${code}. It expires in 10 minutes.`,
-    });
+    await sendEmail(email, code);
   } catch (error) {
     console.error("Error sending verification email:", error.message);
     throw new Error("Failed to send verification email");
@@ -34,11 +31,7 @@ const sendVerificationEmail = async (email, code) => {
 
 const sendResetCodeEmail = async (email, code) => {
   try {
-    mockSendEmail({
-      to: email,
-      subject: "Password Reset Code - Ethio Jobs",
-      text: `Your password reset code is: ${code}. It expires in 10 minutes.`,
-    });
+    await sendEmail(email, code);
   } catch (error) {
     console.error("Error sending reset code email:", error.message);
     throw new Error("Failed to send reset code email");
@@ -221,6 +214,14 @@ const login = async (req, res) => {
     if (user.is_suspended) {
       return res.status(403).json({ error: "Your account has been suspended. Please contact support for assistance." });
     }
+
+    // Log login activity
+    const ip = req.headers['x-forwarded-for'] || req.ip;
+    await db.execute(
+      'INSERT INTO login_logs (user_id, ip_address) VALUES (?, ?)',
+      [user.user_id, ip]
+    );
+
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
     res.json({

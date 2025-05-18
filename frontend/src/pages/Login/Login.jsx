@@ -75,37 +75,61 @@ function Login() {
         setFormErrors({ general: 'Invalid authentication token. Please try again.' });
       }
     } else if (status === 'failed') {
-      // Parse the error message to display it properly
-      let errorMessage = error;
-      try {
-        if (error.includes('401')) {
+      console.log('Login failed with error:', error);
+      let errorMessage = 'An error occurred during login. Please try again.';
+      let errorType = 'error';
+      
+      // Safely handle error message
+      if (error) {
+        const errorLower = error.toLowerCase();
+        if (errorLower.includes('suspended')) {
+          errorMessage = 'Your account has been suspended. Please contact our support team for assistance.';
+          errorType = 'suspended';
+        } else if (errorLower.includes('verify')) {
+          errorMessage = 'Please verify your email before logging in.';
+          errorType = 'warning';
+        } else if (errorLower.includes('invalid credentials')) {
           errorMessage = 'Invalid email/username or password';
-        } else if (error.includes('500')) {
+        } else if (errorLower.includes('500')) {
           errorMessage = 'Server error. Please try again later.';
-        } else if (error.includes('Network Error')) {
+        } else if (errorLower.includes('network error')) {
           errorMessage = 'Network connection failed. Please check your internet.';
+        } else {
+          // Use the original error message if it doesn't match any known patterns
+          errorMessage = error;
         }
-      } catch (e) {
-        errorMessage = error || 'Login failed. Please try again.';
       }
-      setFormErrors({ general: errorMessage });
+      
+      setFormErrors({ general: errorMessage, type: errorType });
     }
   }, [status, userType, token, navigate, dispatch, error]);
 
   return (
     <div className={styles.container}>
       <div className={styles.loginCard}>
-        <h2 className={styles.title}>Welcome Back</h2>
-        <p className={styles.subtitle}>Login to access your account</p>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Welcome Back</h1>
+          <p className={styles.subtitle}>Sign in to your account</p>
+        </div>
+
+        {formErrors.general && (
+          <div className={`${styles.alert} ${styles[formErrors.type || 'error']}`}>
+            <FiAlertCircle className={styles.alertIcon} />
+            <div className={styles.alertContent}>
+              <p>{formErrors.general}</p>
+              {formErrors.type === 'suspended' && (
+                <div className={styles.supportInfo}>
+                  <p>Contact our support team:</p>
+                  <a href="mailto:support@example.com" className={styles.supportLink}>
+                    support@example.com
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {formErrors.general && (
-            <div className={styles.errorBanner} role="alert">
-              <FiAlertCircle className={styles.errorIcon} />
-              <span>{formErrors.general}</span>
-            </div>
-          )}
-
           <FormInput
             type="text"
             name="identifier"

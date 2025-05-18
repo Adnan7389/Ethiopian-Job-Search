@@ -168,10 +168,10 @@ async function calculateMatchScore(userId, jobId) {
   const experienceMatchScore = calculateExperienceMatchScore(jobSeeker.yearsOfExperience, jobRequirements.requiredExperience);
 
   const totalScore = Math.round(
-    (keywordMatchingScore * 0.4) +
+    (keywordMatchingScore * 0.25) +
     (skillsMatchScore * 0.3) +
-    (educationMatchScore * 0.15) +
-    (experienceMatchScore * 0.15)
+    (educationMatchScore * 0.25) +
+    (experienceMatchScore * 0.2)
   );
 
   const result = {
