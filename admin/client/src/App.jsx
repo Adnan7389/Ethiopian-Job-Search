@@ -9,6 +9,7 @@ import Employers from './pages/Employers';
 import EmployerDetails from './pages/EmployerDetails';
 import Users from './pages/Users';
 import UserDetails from './pages/UserDetails';
+import SystemMonitor from './pages/SystemMonitor';
 import Layout from './components/Layout';
 import { FiLoader } from 'react-icons/fi';
 
@@ -50,6 +51,7 @@ const AppRoutes = () => {
           <Route path="/employers/:userId" element={<EmployerDetails />} />
           <Route path="/users" element={<Users />} />
           <Route path="/users/:userId" element={<UserDetails />} />
+          <Route path="/system-monitor" element={<SystemMonitor />} />
           
           {/* Catch-all routes for authenticated users */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
