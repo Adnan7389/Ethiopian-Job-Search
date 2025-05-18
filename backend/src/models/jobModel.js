@@ -107,78 +107,126 @@ class Job {
     return rows[0];
   }
 
-  async findAll({ page, limit, search, job_type, industry, experience_level, status, date_posted, includeArchived }) {
-    // Only non-archived, non-expired, with an explicit status filter
-   let query = `
-     SELECT
-       j.*,
-       e.company_name,
-       e.website,
-       e.location AS company_location,
-       e.profile_picture_url,
-       e.description AS company_description
-     FROM jobs j
-     JOIN employer_profiles e ON j.employer_id = e.user_id
-     WHERE j.is_archived = ?
-       AND j.status = ?
-       AND (j.expires_at IS NULL OR j.expires_at > NOW())
-   `;
-   let countQuery = `
-     SELECT COUNT(*) AS total
-     FROM jobs j
-     WHERE j.is_archived = ?
-       AND j.status = ?
-       AND (j.expires_at IS NULL OR j.expires_at > NOW())
-  `;
-   // First two params are is_archived and status
-   const params = [ includeArchived ? 1 : 0, status || "open" ];
-   const countParams = [ includeArchived ? 1 : 0, status || "open" ];
+  async findAll({ page, limit, search, job_type, industry, experience_level, status, date_posted, includeArchived, location }) {
+    console.log('Job Model - findAll called with params:', {
+      page,
+      limit,
+      search,
+      job_type,
+      industry,
+      experience_level,
+      status,
+      date_posted,
+      includeArchived,
+      location
+    });
 
-    if (search) {
-      query += " AND (j.title LIKE ? OR j.description LIKE ?)";
-      countQuery += " AND (j.title LIKE ? OR j.description LIKE ?)";
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm);
-    }
+    try {
+      // Only non-archived, non-expired, with an explicit status filter
+      let query = `
+        SELECT
+          j.*,
+          e.company_name,
+          e.website,
+          e.location AS company_location,
+          e.profile_picture_url,
+          e.description AS company_description
+        FROM jobs j
+        JOIN employer_profiles e ON j.employer_id = e.user_id
+        WHERE j.is_archived = ?
+          AND j.status = ?
+          AND (j.expires_at IS NULL OR j.expires_at > NOW())
+      `;
+      let countQuery = `
+        SELECT COUNT(*) AS total
+        FROM jobs j
+        JOIN employer_profiles e ON j.employer_id = e.user_id
+        WHERE j.is_archived = ?
+          AND j.status = ?
+          AND (j.expires_at IS NULL OR j.expires_at > NOW())
+      `;
+      // First two params are is_archived and status
+      const params = [ includeArchived ? 1 : 0, status || "open" ];
+      const countParams = [ includeArchived ? 1 : 0, status || "open" ];
 
-    if (job_type) {
-      const mappedJobType = this.mapJobType(job_type);
-      query += " AND j.job_type = ?";
-      countQuery += " AND j.job_type = ?";
-      params.push(mappedJobType);
-      countParams.push(mappedJobType);
-    }
-    if (industry) {
-      query += " AND j.industry = ?";
-      countQuery += " AND j.industry = ?";
-      params.push(industry);
-      countParams.push(industry);
-    }
-    if (experience_level) {
-      query += " AND j.experience_level = ?";
-      countQuery += " AND j.experience_level = ?";
-      params.push(experience_level);
-      countParams.push(experience_level);
-    }
-    if (date_posted) {
-      let dateFilter;
-      if (date_posted === "last_24_hours") dateFilter = "DATE_SUB(NOW(), INTERVAL 1 DAY)";
-      else if (date_posted === "last_7_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
-      else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 30 DAY)";
-      if (dateFilter) {
-        query += ` AND j.created_at >= ${dateFilter}`;
-        countQuery += ` AND j.created_at >= ${dateFilter}`;
+      if (search) {
+        query += " AND (j.title LIKE ? OR j.description LIKE ?)";
+        countQuery += " AND (j.title LIKE ? OR j.description LIKE ?)";
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm);
+        countParams.push(searchTerm, searchTerm);
       }
+
+      if (location) {
+        query += " AND j.location LIKE ?";
+        countQuery += " AND j.location LIKE ?";
+        const locationTerm = `%${location}%`;
+        params.push(locationTerm);
+        countParams.push(locationTerm);
+      }
+
+      if (job_type) {
+        const mappedJobType = this.mapJobType(job_type);
+        query += " AND j.job_type = ?";
+        countQuery += " AND j.job_type = ?";
+        params.push(mappedJobType);
+        countParams.push(mappedJobType);
+      }
+      if (industry) {
+        query += " AND j.industry = ?";
+        countQuery += " AND j.industry = ?";
+        params.push(industry);
+        countParams.push(industry);
+      }
+      if (experience_level) {
+        query += " AND j.experience_level = ?";
+        countQuery += " AND j.experience_level = ?";
+        params.push(experience_level);
+        countParams.push(experience_level);
+      }
+      if (date_posted) {
+        let dateFilter;
+        if (date_posted === "last_24_hours") dateFilter = "DATE_SUB(NOW(), INTERVAL 1 DAY)";
+        else if (date_posted === "last_7_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 7 DAY)";
+        else if (date_posted === "last_30_days") dateFilter = "DATE_SUB(NOW(), INTERVAL 30 DAY)";
+        if (dateFilter) {
+          query += ` AND j.created_at >= ${dateFilter}`;
+          countQuery += ` AND j.created_at >= ${dateFilter}`;
+        }
+      }
+
+      const offset = (page - 1) * limit;
+      query += ` ORDER BY j.created_at DESC LIMIT ? OFFSET ?`;
+      params.push(limit, (page-1)*limit);
+
+      console.log('Executing job search query:', {
+        query,
+        params,
+        countQuery,
+        countParams
+      });
+
+      const [jobs] = await queryWithTimeout(query, params);
+      const [[{ total }]] = await queryWithTimeout(countQuery, countParams);
+
+      console.log('Job search results:', {
+        jobsFound: jobs.length,
+        total,
+        page,
+        limit
+      });
+
+      return { jobs, total };
+    } catch (error) {
+      console.error('Error in Job.findAll:', {
+        error: error.message,
+        stack: error.stack,
+        query: error.sql,
+        params: error.params,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
     }
-
-     const offset = (page - 1) * limit;
-     query += ` ORDER BY j.created_at DESC LIMIT ? OFFSET ?`;
-     params.push(limit, (page-1)*limit);
-
-    const [jobs] = await queryWithTimeout(query, params);
-     const [[{ total }]] = await queryWithTimeout(countQuery, countParams);
-    return { jobs, total };
   }
 
   async findByEmployer(employerId, { page, limit, search, job_type, industry, experience_level, status, date_posted, includeArchived }) {
