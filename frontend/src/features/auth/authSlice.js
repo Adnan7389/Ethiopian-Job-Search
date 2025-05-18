@@ -159,10 +159,6 @@ export const login = createAsyncThunk(
       localStorage.setItem('email', email);
       localStorage.setItem('resume_url', resume_url || '');
       localStorage.setItem('isVerified', 'true');
-
-      // if (user.userType === 'job_seeker') {
-      //   await dispatch(fetchRecommendedJobs()).unwrap();
-      // }
       
       return {
         token: accessToken,
@@ -174,7 +170,11 @@ export const login = createAsyncThunk(
         resume_url,
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || error.message);
+      console.log('Login error response:', error.response);
+      // Get the error message from the response data
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+      console.log('Login error message:', errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );
