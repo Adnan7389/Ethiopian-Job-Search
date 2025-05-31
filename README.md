@@ -159,6 +159,14 @@ Contributions are what make the open-source community such an amazing place to l
 4.  Push to the Branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
 
+## 🔒 Security & Maintenance
+
+This is a **showcase project** for portfolio purposes. Dependencies are updated periodically to address security vulnerabilities.
+
+- **Automated Updates**: Dependabot is configured to check for updates monthly
+- **Quick Update Script**: Run `./update-deps.sh` to update all dependencies at once
+- **Security Audits**: Run `npm audit` in each directory to check for vulnerabilities
+
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
