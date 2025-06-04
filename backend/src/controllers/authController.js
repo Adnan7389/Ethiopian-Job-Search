@@ -39,14 +39,18 @@ const sendResetCodeEmail = async (email, code) => {
 };
 
 const generateAccessToken = (user) => {
-  return jwt.sign(
+  console.log('🔵 [TOKEN] Generating access token for user:', user.user_id);
+  const token = jwt.sign(
     { userId: user.user_id, user_type: user.user_type },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m" }
   );
+  console.log('✅ [TOKEN] Access token generated successfully');
+  return token;
 };
 
 const generateRefreshToken = async (user) => {
+  console.log('🔵 [TOKEN] Generating refresh token for user:', user.user_id);
   const refreshToken = jwt.sign(
     { userId: user.user_id, user_type: user.user_type },
     process.env.REFRESH_TOKEN_SECRET,
@@ -56,11 +60,12 @@ const generateRefreshToken = async (user) => {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
+  console.log('🔵 [TOKEN] Storing refresh token in database...');
   await db.execute(
     "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
     [user.user_id, refreshToken, expiresAt]
   );
-
+  console.log('✅ [TOKEN] Refresh token generated and stored successfully');
   return refreshToken;
 };
 
@@ -203,27 +208,46 @@ const verifyCode = async (req, res) => {
 
 const login = async (req, res) => {
   const { identifier, password } = req.body;
+  console.log('🔵 [LOGIN] Login attempt for identifier:', identifier);
+  
   try {
+    console.log('🔵 [LOGIN] Searching for user...');
     const user = await User.findByEmailOrUsername(identifier);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    
+    if (!user) {
+      console.log('🔴 [LOGIN] User not found');
       return res.status(401).json({ error: "Invalid credentials" });
     }
+    
+    console.log('🔵 [LOGIN] User found, verifying password...');
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      console.log('🔴 [LOGIN] Invalid password');
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    
     if (!user.is_verified) {
+      console.log('🔴 [LOGIN] User not verified');
       return res.status(403).json({ error: "Please verify your email before logging in" });
     }
+    
     if (user.is_suspended) {
+      console.log('🔴 [LOGIN] User is suspended');
       return res.status(403).json({ error: "Your account has been suspended. Please contact support for assistance." });
     }
 
-    // Log login activity
+    console.log('🔵 [LOGIN] User authenticated, logging activity...');
     const ip = req.headers['x-forwarded-for'] || req.ip;
     await db.execute(
       'INSERT INTO login_logs (user_id, ip_address) VALUES (?, ?)',
       [user.user_id, ip]
     );
 
+    console.log('🔵 [LOGIN] Generating tokens...');
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
+    
+    console.log('✅ [LOGIN] Login successful for user:', user.username);
     res.json({
       accessToken,
       refreshToken,
@@ -234,7 +258,7 @@ const login = async (req, res) => {
       resume_url: user.resume_url || null,
     });
   } catch (error) {
-    console.error(error);
+    console.error('🔴 [LOGIN] Error:', error);
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
