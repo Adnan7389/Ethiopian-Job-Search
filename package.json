@@ -1,9 +1,13 @@
 {
   "dependencies": {
     "@sendgrid/mail": "^8.1.5",
-    "axios": "^1.9.0",
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
-    "nodemailer": "^7.0.3",
+    "nodemailer": "^8.0.1",
     "resend": "^4.5.1"
+  },
+  "overrides": {
+    "form-data": "^4.0.5",
+    "minimatch": "^10.2.4"
   }
 }
