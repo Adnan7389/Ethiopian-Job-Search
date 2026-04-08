@@ -29,7 +29,7 @@
     "node-cron": "^3.0.3",
     "pdf-parse": "^1.1.1",
     "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^1.8.11",
+    "react-window": "^2.2.7",
     "socket.io": "^4.8.1",
     "stopwords": "^0.0.9",
     "validator": "^13.15.26"
