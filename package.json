@@ -4,7 +4,7 @@
     "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "nodemailer": "^8.0.1",
-    "resend": "^4.5.1"
+    "resend": "^6.12.2"
   },
   "overrides": {
     "form-data": "^4.0.5",
